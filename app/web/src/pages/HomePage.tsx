@@ -6,6 +6,8 @@ import ExploreEvents from "@/components/HomePage/ExploreEvents";
 import Feedback from "@/components/HomePage/Feedback";
 import SportsEvents from "@/components/HomePage/SportsEvents";
 import Trending from "@/components/HomePage/Trending";
+import TrustBar from "@/components/HomePage/TrustBar";
+import HowItWorksStrip from "@/components/HomePage/HowItWorksStrip";
 import { Link } from "react-router";
 
 const HomePage = () => {
@@ -13,6 +15,7 @@ const HomePage = () => {
     <>
       <main className="3xl:pb-10 -mt-2 w-[95%] mx-auto 3xl:px-0">
         <Banner />
+        <TrustBar />
         <Container>
           <Event />
           <Trending />
@@ -45,6 +48,7 @@ const HomePage = () => {
           </div>
         </Container>
         <ExploreEvents />
+        <HowItWorksStrip />
         <Container>
           <Feedback />
         </Container>

@@ -20,7 +20,7 @@ import { GetData } from "@/API/API";
 import { ImageProvider } from "../Common/ImageProvider"; 
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
-import { useDateFormat } from "@/lib/formatDate";
+import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 
 const Trending: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -39,6 +39,9 @@ const Trending: React.FC = () => {
     venue: string;
     location: string;
     image: string;
+    city?: string;
+    price?: number;
+    available_quantity?: number;
   };
   
   const { data, isLoading, error } = useQuery<TrendingEvent[], Error>({
@@ -111,11 +114,16 @@ const Trending: React.FC = () => {
               {data &&
                 data?.map((data, index) => {
                   const formattedDate = formatDate(data?.date, data?.time);
+                  const shortDate = formatShortDate(data?.date, data?.time);
+                  const ticketCount = data?.available_quantity;
+                  const lowStock =
+                    typeof ticketCount === "number" && ticketCount <= 5;
                   return (
                     <SwiperSlide key={index}>
                       <Link
                         to={`/event-details/${data?.id}`}
                         className="md:basis-1/2 lg:basis-1/3 hover:-translate-y-2 transition-all duration-300"
+                        data-testid={`trending-card-${data?.id}`}
                       >
                         <div className="p-1 relative w-full h-full rounded-2xl overflow-hidden rounded-b-3xl">
                           <img
@@ -124,17 +132,54 @@ const Trending: React.FC = () => {
                             className="rounded-2xl w-full h-96 object-cover"
                           />
                           <div className="absolute bottom-3 w-[90%] left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md p-4 rounded-xl flex flex-col gap-1 md:gap-2">
-                            <p className="flex items-center justify-between text-white text-xl md:text-2xl line-clamp-2">
+                            <p
+                              className="flex items-center justify-between text-white text-xl md:text-2xl line-clamp-2"
+                              data-testid="trending-card-title"
+                            >
                               {data?.title}
-                              {/* <span className="cursor-pointer">
-                            <BookmarkIcon />
-                          </span> */}
                             </p>
-                            <p className="text-white/70">{data?.venue}, {data?.location}</p>
-                            <p className="text-[#FEC100] flex items-center gap-2">
+                            <p className="text-white/70">
+                              {data?.venue}
+                              {data?.location ? `, ${data?.location}` : ""}
+                            </p>
+                            <p
+                              className="text-[#FEC100] flex items-center gap-2"
+                              data-testid="trending-card-date"
+                            >
                               <ClockIcon />
-                              {formattedDate}
+                              {shortDate || formattedDate}
                             </p>
+                            {data?.city && (
+                              <p
+                                className="text-white/80 text-sm"
+                                data-testid="trending-card-city"
+                              >
+                                {data.city}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              {typeof data?.price === "number" && (
+                                <span
+                                  className="text-white text-sm font-semibold"
+                                  data-testid="trending-card-price"
+                                >
+                                  From \u20b9{data.price.toLocaleString("en-IN")}
+                                </span>
+                              )}
+                              {typeof ticketCount === "number" && (
+                                <span
+                                  data-testid="trending-card-ticket-count"
+                                  className={
+                                    "text-xs font-semibold px-2 py-0.5 rounded-full " +
+                                    (lowStock
+                                      ? "bg-[#FEC100]/90 text-[#181818]"
+                                      : "bg-white/80 text-[#181818]")
+                                  }
+                                >
+                                  {ticketCount} tickets left
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Link>

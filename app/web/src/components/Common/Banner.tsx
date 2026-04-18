@@ -17,12 +17,8 @@ import "swiper/css/scrollbar";
 
 import { bannerBg2, bannerBg3, bannerBg4, bannerBg5 } from "@/assets";
 import {
-  ActionIcon,
   DateIcon,
-  GoingIcon,
-  InterestIcon,
   LocationIcon,
-  ShareIcon,
   StatidumIcon,
 } from "@/assets/Banner/svg/BannerSvg";
 import { useEffect, useRef } from "react";
@@ -129,14 +125,24 @@ const Slider1 = () => {
             Fast, Safe, and Hassle-Free!
           </p>
         </div>
-        <Link
-          to={"/sell-tickets"}
-          className="bg-primary001 px-5 py-2 rounded-4xl w-39"
-        >
-          <button className="font-proximaSemiBold text-white">
-            Sell your tickets
-          </button>
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            to={"/events"}
+            data-testid="hero-cta-find-tickets"
+            style={{ backgroundColor: "#2563EB" }}
+            className="font-proximaSemiBold text-white rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity"
+          >
+            Find Tickets
+          </Link>
+          <Link
+            to={"/sell-tickets"}
+            data-testid="hero-cta-sell-tickets"
+            style={{ borderColor: "#2563EB", color: "#2563EB" }}
+            className="font-proximaSemiBold bg-white rounded-full px-6 py-2.5 border-2 hover:bg-gray-50 transition-colors"
+          >
+            Sell Your Tickets
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -178,32 +184,25 @@ const Slider2 = () => {
               Stadium, India
             </button>
           </div>
-          <div className="flex flex-wrap items-center justify-center  pt-3 gap-3">
-            <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-              <InterestIcon />
-              Interested
-            </button>
-            <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-              <GoingIcon />
-              Going
-            </button>
-            <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-              <ShareIcon />
-              Share
-            </button>
-            <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-              <ActionIcon />
-            </button>
-          </div>
         </div>
-        <Link
-          to={"/sell-tickets"}
-          className="bg-primary001 px-5 py-2 rounded-4xl w-39"
-        >
-          <button className="font-proximaSemiBold text-white">
-            Sell your tickets
-          </button>
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            to={"/events"}
+            data-testid="hero-cta-find-tickets"
+            style={{ backgroundColor: "#2563EB" }}
+            className="font-proximaSemiBold text-white rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity"
+          >
+            Find Tickets
+          </Link>
+          <Link
+            to={"/sell-tickets"}
+            data-testid="hero-cta-sell-tickets"
+            style={{ borderColor: "#2563EB", color: "#2563EB" }}
+            className="font-proximaSemiBold bg-white rounded-full px-6 py-2.5 border-2 hover:bg-gray-50 transition-colors"
+          >
+            Sell Your Tickets
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -233,14 +232,24 @@ const Slider3 = () => {
             ensure a fraud-free experience.
           </p>
         </div>
-        <Link
-          to={"/sell-tickets"}
-          className="bg-primary001 px-5 py-2 rounded-4xl w-39"
-        >
-          <button className="font-proximaSemiBold text-white">
-            Sell your tickets
-          </button>
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            to={"/events"}
+            data-testid="hero-cta-find-tickets"
+            style={{ backgroundColor: "#2563EB" }}
+            className="font-proximaSemiBold text-white rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity"
+          >
+            Find Tickets
+          </Link>
+          <Link
+            to={"/sell-tickets"}
+            data-testid="hero-cta-sell-tickets"
+            style={{ borderColor: "#2563EB", color: "#2563EB" }}
+            className="font-proximaSemiBold bg-white rounded-full px-6 py-2.5 border-2 hover:bg-gray-50 transition-colors"
+          >
+            Sell Your Tickets
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -270,14 +279,24 @@ const Slider4 = () => {
             ensure a fraud-free experience.
           </p>
         </div>
-        <Link
-          to={"/sell-tickets"}
-          className="bg-primary001 px-5 py-2 rounded-4xl w-39"
-        >
-          <button className="font-proximaSemiBold text-white">
-            Sell your tickets
-          </button>
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            to={"/events"}
+            data-testid="hero-cta-find-tickets"
+            style={{ backgroundColor: "#2563EB" }}
+            className="font-proximaSemiBold text-white rounded-full px-6 py-2.5 hover:opacity-90 transition-opacity"
+          >
+            Find Tickets
+          </Link>
+          <Link
+            to={"/sell-tickets"}
+            data-testid="hero-cta-sell-tickets"
+            style={{ borderColor: "#2563EB", color: "#2563EB" }}
+            className="font-proximaSemiBold bg-white rounded-full px-6 py-2.5 border-2 hover:bg-gray-50 transition-colors"
+          >
+            Sell Your Tickets
+          </Link>
+        </div>
       </div>
     </div>
   );

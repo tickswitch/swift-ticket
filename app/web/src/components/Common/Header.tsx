@@ -293,7 +293,7 @@ const Header = () => {
           <input
             className="focus:outline-none font-proximaRegular text-sm w-full"
             type="search"
-            placeholder="Find events, artists, venues, or cities effortlessly"
+            placeholder="Search events, artists, venues or cities..."
             value={query}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)} // delay to allow click
@@ -434,7 +434,7 @@ const Header = () => {
                     <input
                       className="focus:outline-none font-proximaRegular text-sm w-full"
                       type="search"
-                      placeholder="Find events, artists, venues, or cities effortlessly"
+                      placeholder="Search events, artists, venues or cities..."
                     />
                     <img
                       src={headerSearchIcon}

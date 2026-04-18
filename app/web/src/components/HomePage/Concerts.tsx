@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
-import { useDateFormat } from "@/lib/formatDate"; 
+import { useDateFormat, formatShortDate } from "@/lib/formatDate"; 
 import { AvailableTicketIcon } from "@/components/PaymentMethod/Icons";
 
 const Concerts = () => {
@@ -46,11 +46,15 @@ const Concerts = () => {
         <div className="py-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data?.slice(0, 10)?.map((concert) => {
-              const formattedDate = formatDate(concert?.date, concert?.time);
-              console.log("date", formattedDate);
+              const shortDate = formatShortDate(concert?.date, concert?.time);
+              const longDate = formatDate(concert?.date, concert?.time);
+              const ticketCount = concert?.available_quantity;
+              const lowStock =
+                typeof ticketCount === "number" && ticketCount <= 5;
               return (
                 <Link
                   to={`/event-details/${concert?.id}`}
+                  data-testid={`concert-card-${concert?.id}`}
                   className="md:basis-1/2 lg:basis-1/3 hover:-translate-y-2 transition-all duration-300 bg-slate-200 px-4 py-2 rounded-xl"
                 >
                   <div className="p-1 flex items-center gap-3 w-full h-full rounded-2xl overflow-hidden rounded-b-3xl">
@@ -59,22 +63,57 @@ const Concerts = () => {
                       className="rounded-xl w-20 h-20 object-cover"
                     />
 
-                    <div className="flex-col gap-1 md:gap-2">
-                      <p className="flex items-center justify-between text-black text-xl md:text-2xl truncate">
+                    <div className="flex-col gap-1 md:gap-2 min-w-0">
+                      <p
+                        className="flex items-center justify-between text-black text-xl md:text-2xl truncate"
+                        data-testid="concert-card-title"
+                      >
                         {concert?.title}
                       </p>
-                      <p className="text-gray-500">
-                        {concert?.venue}, {concert?.location}
+                      <p className="text-gray-500 truncate">
+                        {concert?.venue}
+                        {concert?.location ? `, ${concert?.location}` : ""}
                       </p>
-                      <p className="text-red-500 text-sm flex items-center gap-2">
+                      {concert?.city && (
+                        <p
+                          className="text-gray-600 text-sm"
+                          data-testid="concert-card-city"
+                        >
+                          {concert.city}
+                        </p>
+                      )}
+                      <p
+                        className="text-red-500 text-sm flex items-center gap-2"
+                        data-testid="concert-card-date"
+                      >
                         <TimerIcon size={20} />
-                        {/* {getLocalTime(concert?.date, concert?.time)}{" "} */}
-                        {/* {formatEventDate(concert?.date, concert?.time)} */}
-                        {formattedDate},{" "}
-                        <span className="flex items-center gap-1 text-primary001 text-base">
-                          <AvailableTicketIcon /> {concert?.available_quantity}
-                        </span>
+                        {shortDate || longDate}
                       </p>
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        {typeof concert?.price === "number" && (
+                          <span
+                            className="text-primary001 text-sm font-semibold"
+                            data-testid="concert-card-price"
+                          >
+                            From \u20b9{Number(concert.price).toLocaleString(
+                              "en-IN"
+                            )}
+                          </span>
+                        )}
+                        {typeof ticketCount === "number" && (
+                          <span
+                            data-testid="concert-card-ticket-count"
+                            className={
+                              "text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 " +
+                              (lowStock
+                                ? "bg-[#FEC100]/20 text-[#B88700]"
+                                : "bg-primary001/10 text-primary001")
+                            }
+                          >
+                            <AvailableTicketIcon /> {ticketCount} tickets left
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>
