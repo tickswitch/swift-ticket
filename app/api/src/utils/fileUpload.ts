@@ -1,6 +1,10 @@
-import multer from 'multer';
+import multer, { FileFilterCallback } from 'multer';
+import { Request } from 'express';
 import path from 'path';
 import fs from 'fs';
+
+type DestinationCallback = (error: Error | null, destination: string) => void;
+type FilenameCallback = (error: Error | null, filename: string) => void;
 
 const createStorage = (folder: string) => {
   const uploadPath = path.join(process.cwd(), 'uploads', folder);
@@ -9,10 +13,10 @@ const createStorage = (folder: string) => {
   }
 
   return multer.diskStorage({
-    destination: (_req, _file, cb) => {
+    destination: (_req: Request, _file: Express.Multer.File, cb: DestinationCallback) => {
       cb(null, uploadPath);
     },
-    filename: (_req, file, cb) => {
+    filename: (_req: Request, file: Express.Multer.File, cb: FilenameCallback) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
       cb(null, uniqueSuffix + path.extname(file.originalname));
     },
@@ -22,7 +26,7 @@ const createStorage = (folder: string) => {
 export const avatarUpload = multer({
   storage: createStorage('avatars'),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     const allowed = /jpeg|jpg|png|gif|svg/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
     const mime = allowed.test(file.mimetype);
