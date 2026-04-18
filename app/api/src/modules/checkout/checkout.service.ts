@@ -52,8 +52,8 @@ const checkout = async (userId: number, couponCode?: string) => {
     });
 
     const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID as string,
-      key_secret: process.env.RAZORPAY_KEY_SECRET as string,
+      key_id: process.env.RAZORPAY_KEY as string,
+      key_secret: process.env.RAZORPAY_SECRET as string,
     });
 
     const options = {
