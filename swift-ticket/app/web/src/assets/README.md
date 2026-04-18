@@ -1,0 +1,1 @@
+📁 `assets/`: Store static files such as images, icons, fonts, or SVGs.

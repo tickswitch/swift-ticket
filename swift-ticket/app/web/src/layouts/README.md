@@ -1,0 +1,1 @@
+📁 `layouts/`: Application layout components (e.g., sidebar + header wrapper).

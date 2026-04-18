@@ -1,0 +1,390 @@
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { 
+  TicketDeleteIcon,
+  TicketPdfIcon,
+  TicketPdfUpload,
+  TicketUploadIcon,
+} from "./TicketIcons";
+import CheckElement from "../AddToCart/CheckElement";
+import {
+  Link,
+  Location,
+  NavigateFunction,
+  useLocation,
+  useNavigate,
+} from "react-router";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import { setStep } from "@/features/StepperSlice";
+import { updateData } from "@/features/SellTicketSlice";
+import { UploadPdf } from "@/types/FileTypes";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+const TicketsUpload = () => {
+  const location: Location = useLocation();
+  const isEdit = location.state;
+  const progress = useSelector((state: RootState) => state.stepper.progress);
+  const sellTicketData = useSelector((state: RootState) => state.sellTicket.data);
+
+  const dispatch: AppDispatch = useDispatch();
+  const navigate: NavigateFunction = useNavigate();
+
+  // Store files separately from Redux to maintain File objects
+  const [pdfFileUrl, setPdfFileUrl] = useState<UploadPdf[]>([]);
+  const [showPdfPreview, setShowPdfPreview] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+   
+  const [, setNumPages] = useState<number>(0);
+  const [pageNumber] = useState<number>(1);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handlePdfFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(
+      (file) => file.type === "application/pdf"
+    );
+
+    if (files.length === 0) {
+      toast.error("Please upload valid PDF files");
+      return;
+    }
+
+    console.log("=== File Upload Debug ===");
+    files.forEach((file, index) => {
+      console.log(`File ${index}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        instanceof: file instanceof File,
+        constructor: file.constructor.name,
+        lastModified: file.lastModified
+      });
+    });
+
+    // Store File objects in component state for previews and actual files
+    const newFiles = files.map((file) => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+
+    setPdfFileUrl((prev) => {
+      const updated = [...prev, ...newFiles];
+      
+      // Store files in a global variable - CRITICAL: Ensure these remain File objects
+      const fileObjects = updated.map(item => item.file);
+      window.uploadedTicketFiles = fileObjects;
+      
+      console.log("=== Global Storage Debug ===");
+      console.log("Files stored globally:", fileObjects);
+      console.log("Global files are File instances:", fileObjects.map(f => f instanceof File));
+      console.log("Global files constructors:", fileObjects.map(f => f.constructor.name));
+      
+      // Immediate verification
+      setTimeout(() => {
+        console.log("=== Global Storage Verification (async) ===");
+        console.log("window.uploadedTicketFiles:", window.uploadedTicketFiles);
+        console.log("Still File instances?", window.uploadedTicketFiles?.map(f => f instanceof File));
+      }, 100);
+      
+      // Store file metadata in Redux (not the actual files)
+      dispatch(
+        updateData({
+          ticket_file_metadata: updated.map(item => ({
+            name: item.name,
+            size: item.file.size,
+            type: item.file.type,
+            lastModified: item.file.lastModified
+          })),
+        })
+      );
+      
+      return updated;
+    });
+  };
+
+  // Initialize files from global variable on component mount
+  useEffect(() => {
+    console.log("=== Component Mount - Checking for Existing Files ===");
+    
+    const storedFiles = window.uploadedTicketFiles;
+    const storedMetadata = sellTicketData.ticket_file_metadata;
+    
+    console.log("Global files on mount:", storedFiles);
+    console.log("Redux metadata on mount:", storedMetadata);
+    
+    if (storedFiles && Array.isArray(storedFiles) && storedFiles.length > 0) {
+      console.log("Restoring files from global storage...");
+      
+      // Verify files are still File objects
+      const validFiles = storedFiles.filter((file, index) => {
+        const isValid = file instanceof File;
+        console.log(`File ${index} is valid:`, isValid, file);
+        return isValid;
+      });
+      
+      if (validFiles.length > 0) {
+        const restoredFiles = validFiles.map((file: File) => ({
+          name: file.name,
+          url: URL.createObjectURL(file),
+          file,
+        }));
+        
+        console.log("Successfully restored files:", restoredFiles.length);
+        setPdfFileUrl(restoredFiles);
+      } else {
+        console.warn("No valid File objects found in global storage");
+      }
+    } else if (storedMetadata && Array.isArray(storedMetadata) && storedMetadata.length > 0) {
+      console.log("Found metadata but no files - files may have been lost during navigation");
+      // toast.error("Files were lost during navigation. Please upload again.");
+    }
+  }, [sellTicketData.ticket_file_metadata]);
+
+  const openModal = (url: string) => {
+    setPreviewUrl(url);
+    setShowPdfPreview(true);
+  };
+
+  const closeModal = () => {
+    setShowPdfPreview(false);
+    setPreviewUrl(null);
+  };
+
+  const handleNext = () => {
+    if (pdfFileUrl.length === 0) {
+      toast.error("Must upload at least one PDF file");
+      return;
+    }
+    // Make sure files are available globally
+    window.uploadedTicketFiles = pdfFileUrl.map(item => item.file);
+    dispatch(setStep(3));
+    navigate("/add-ticket-details");
+  };
+
+  const gotoEditWithNextPage = () => {
+    if (pdfFileUrl.length === 0) {
+      toast.error("Must upload at least one PDF file");
+      return;
+    }
+    // Make sure files are available globally
+    window.uploadedTicketFiles = pdfFileUrl.map(item => item.file);
+    navigate("/review-finish");
+  };
+
+  const handleDeleteFile = (idx: number) => {
+    setPdfFileUrl((prev) => {
+      const fileToDelete = prev[idx];
+      const newFiles = prev.filter((_, i) => i !== idx);
+      
+      // Cleanup URL
+      URL.revokeObjectURL(fileToDelete.url);
+      
+      // Update global files
+      window.uploadedTicketFiles = newFiles.map(item => item.file);
+      
+      // Update Redux metadata
+      dispatch(
+        updateData({
+          ticket_file_metadata: newFiles.map(item => ({
+            name: item.name,
+            size: item.file.size,
+            type: item.file.type,
+            lastModified: item.file.lastModified
+          })),
+        })
+      );
+      
+      toast.success("Your PDF file deleted");
+      return newFiles;
+    });
+  };
+
+  // Close modal on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
+        closeModal();
+      }
+    };
+    if (showPdfPreview) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showPdfPreview]);
+
+  // Clean up URLs on unmount
+  useEffect(() => {
+    return () => {
+      pdfFileUrl.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, [pdfFileUrl]);
+
+  return (
+    <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">
+      <h3 className="text-2xl md:text-[36px] font-semibold text-[#181818] mb-4">
+        Upload Ticket
+      </h3>
+
+      {/* Stepper */}
+      <div>
+        <p className="text-base md:text-xl lg:text-2xl font-semibold text-secondaryText001">
+          Which event do you want to sell tickets for, sahal?
+        </p>
+        <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
+          <div
+            className="bg-secondary001 h-1 rounded-full"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Ticket upload list */}
+      <div className="flex flex-col justify-start gap-[14px] pt-6">
+        {pdfFileUrl.map((fileName, idx) => (
+          <div
+            key={idx}
+            className="px-[14px] py-[17px] rounded-[8px] border border-[#EBECEF] bg-white flex items-center gap-3"
+          >
+            <div className="py-[14px] px-[10px] border border-[#EBECEF] rounded-[6px] w-[89px] h-[98px] flex items-center justify-center">
+              <TicketPdfUpload />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <h5 className="text-[#606060] text-base md:text-xl lg:text-2xl font-semibold">
+                {fileName.name}
+              </h5>
+              <div className="flex flex-col sm:flex-row gap-3 pt-[14px]">
+                <button
+                  onClick={() => openModal(fileName.url)}
+                  className="text-sm md:text-base w-fit text-[#606060] rounded-[8px] border border-[#C1C4CC] py-[6px] px-4 cursor-pointer"
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+            <div
+              onClick={() => handleDeleteFile(idx)}
+              className="items-end justify-end bg-[#EBECEF] rounded-[13px] p-[6px] cursor-pointer"
+            >
+              <TicketDeleteIcon />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal for PDF preview */}
+      {showPdfPreview && previewUrl && (
+        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
+          <div
+            ref={modalRef}
+            className="bg-gray-200 rounded-3xl w-11/12 md:w-3/4 h-[95vh] relative"
+          >
+            <button
+              onClick={closeModal}
+              className="absolute top-[-13px] right-[-10px] text-white text-3xl font-bold cursor-pointer px-2 bg-gray-500 rounded-2xl z-10"
+            >
+              &times;
+            </button>
+            <Document
+              className="absolute w-full h-full overflow-y-auto left-0"
+              file={previewUrl}
+              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+              onLoadError={(err) => console.error("PDF Load Error:", err)}
+            >
+              <Page pageNumber={pageNumber} />
+            </Document>
+          </div>
+        </div>
+      )}
+
+      {/* Upload tickets */}
+      <div>
+        <div className="flex flex-col md:flex-row pt-6 gap-[15px]">
+          <div className="max-w-[622px] flex flex-col justify-center items-center text-center rounded-[12px] px-4 pb-3 pt-[6px] border-dashed border-[#178AFF] bg-[rgba(23, 138, 255, 0.10)]">
+            <TicketUploadIcon />
+            <h4 className="text-[#606060] text-[20px] font-semibold">
+              Upload your tickets
+            </h4>
+            <p className="text-[#606060] text-base md:text-[20px]">
+              Check the tips below per file format. You can choose which tickets
+              to sell next.
+            </p>
+            <label className="flex items-center justify-center w-fit">
+              <span className="text-base md:text-[20px] font-semibold text-[#178AFF] underline cursor-pointer">
+                Drop files here or click to select
+              </span>
+              <input
+                className="hidden"
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handlePdfFileUpload}
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-col justify-center items-center gap-1 text-center rounded-[12px] border border-[#DDD] bg-white px-4 py-[13px] w-full md:w-[235px]">
+            <TicketPdfIcon />
+            <span className="text-[20px] text-[#FEC100] font-semibold">PDF</span>
+            <p className="text-[#949494] text-base">
+              Kindly upload the unmodified original file.
+            </p>
+            <h4 className="text-base md:text-[20px] text-[#606060] font-semibold">
+              Files you can upload
+            </h4>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="pt-6 pb-[50px] flex gap-[10px] items-center">
+          <Link to="/sell-tickets">
+            <button
+              className={`${
+                isEdit ? "hidden" : "block"
+              } text-base text-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] cursor-pointer`}
+            >
+              Back
+            </button>
+          </Link>
+
+          <button
+            onClick={handleNext}
+            disabled={pdfFileUrl.length === 0}
+            className={`${
+              isEdit ? "hidden" : "block"
+            } text-base text-white py-2 px-16 rounded-[38px] border bg-[#178AFF] border-[#178AFF] ${
+              pdfFileUrl.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
+            Next
+          </button>
+
+          <button
+            onClick={gotoEditWithNextPage}
+            disabled={pdfFileUrl.length === 0}
+            className={`${
+              isEdit ? "block" : "hidden"
+            } text-base text-white py-2 px-16 rounded-[38px] border bg-[#178AFF] border-[#178AFF] ${
+              pdfFileUrl.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
+            Continue
+          </button>
+        </div>
+
+        <CheckElement />
+      </div>
+    </div>
+  );
+};
+
+export default TicketsUpload;

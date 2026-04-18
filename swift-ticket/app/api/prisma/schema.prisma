@@ -1,0 +1,407 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
+enum TicketStatus {
+  pending
+  approved
+  rejected
+}
+
+enum CmsStatus {
+  active
+  inactive
+}
+
+enum CouponType {
+  fixed
+  percent
+}
+
+enum FavoriteStatus {
+  interest
+  going
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  provider         String?
+  provider_id      String?
+  name             String
+  email            String            @unique
+  email_verified_at DateTime?
+  password         String
+  role             UserRole          @default(user)
+  status           UserStatus        @default(active)
+  avatar           String?
+  phone            String?
+  remember_token   String?
+  otp              String?
+  otp_expiration   DateTime?
+  reset_token      String?
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+
+  financialProfiles FinancialProfile[]
+  resaleTickets     ResaleTicket[]
+  orders            Order[]
+  reviews           Review[]
+  carts             Cart[]
+  favorites         Favorite[]
+  notifications     EventNotification[]
+
+  @@map("users")
+}
+
+model FinancialProfile {
+  id                    Int      @id @default(autoincrement())
+  user_id               Int
+  address               String?
+  city                  String?
+  country_of_residence  String?
+  postal_code           String?
+  dob                   String?
+  bank_country          String?
+  account_holder_name   String?
+  phone_number          String?
+  bank_account_number   String?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  resaleTickets ResaleTicket[]
+
+  @@map("financial_profiles")
+}
+
+model ResaleTicket {
+  id                   Int              @id @default(autoincrement())
+  user_id              Int
+  financial_profile_id Int
+  event_id             String?
+  ticketmaster_id      String?
+  title                String?
+  venue                String?
+  artist               String?
+  category             String?
+  start_date           DateTime?        @db.Date
+  end_date             DateTime?        @db.Date
+  time                 String?
+  quantity             Int              @default(0)
+  reserved_quantity    Int              @default(0)
+  sold_quantity        Int              @default(0)
+  original_price       Decimal          @db.Decimal(10, 2)
+  price                Decimal          @db.Decimal(10, 2)
+  ticket_type          String           @default("Regular")
+  seat_info            String?
+  additional_info      String?
+  ticket_file          String?
+  status               TicketStatus     @default(pending)
+  admin_notes          String?
+  created_at           DateTime         @default(now())
+  updated_at           DateTime         @updatedAt
+
+  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  financialProfile FinancialProfile @relation(fields: [financial_profile_id], references: [id], onDelete: Cascade)
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+
+  @@map("resale_tickets")
+}
+
+model Cart {
+  id         Int        @id @default(autoincrement())
+  user_id    Int
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  user  User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id               Int       @id @default(autoincrement())
+  cart_id          Int
+  resale_ticket_id Int
+  quantity         Int       @default(1)
+  price            Decimal   @db.Decimal(10, 2)
+  total_price      Decimal   @db.Decimal(10, 2)
+  reserved_until   DateTime?
+  is_purchased     Boolean   @default(false)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  cart         Cart         @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  resaleTicket ResaleTicket @relation(fields: [resale_ticket_id], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+model Coupon {
+  id               Int        @id @default(autoincrement())
+  code             String     @unique
+  type             CouponType @default(fixed)
+  value            Decimal    @db.Decimal(10, 2)
+  min_order_amount Decimal?   @db.Decimal(10, 2)
+  is_active        Boolean    @default(true)
+  expires_at       DateTime?
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+
+  orders Order[]
+
+  @@map("coupons")
+}
+
+model Order {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  order_number     String        @unique
+  subtotal         Decimal       @db.Decimal(10, 2)
+  discount         Decimal       @default(0) @db.Decimal(10, 2)
+  total            Decimal       @db.Decimal(10, 2)
+  coupon_id        Int?
+  payment_method   String?
+  payment_status   PaymentStatus @default(pending)
+  razorpay_order_id String?
+  transaction_id   String?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  coupon     Coupon?     @relation(fields: [coupon_id], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id               Int      @id @default(autoincrement())
+  order_id         Int
+  resale_ticket_id Int
+  quantity         Int
+  price            Decimal  @db.Decimal(10, 2)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  order        Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  ticket       ResaleTicket @relation(fields: [resale_ticket_id], references: [id])
+
+  @@map("order_items")
+}
+
+model Faq {
+  id         Int      @id @default(autoincrement())
+  type       String?
+  question   String?
+  answer     String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+model Contact {
+  id           Int      @id @default(autoincrement())
+  first_name   String
+  last_name    String?
+  company_name String
+  company_type String
+  region       String
+  email        String
+  phone        String
+  message      String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("contacts")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model CMS {
+  id               Int       @id @default(autoincrement())
+  page             String?
+  section          String?
+  title            String?
+  sub_title        String?
+  image            String?
+  video            String?
+  description      String?   @db.Text
+  sub_description  String?   @db.Text
+  main_text        String?   @db.Text
+  sub_text         String?   @db.Text
+  button_text      String?
+  sub_button_text  String?
+  link_url         String?
+  email            String?
+  phone            String?
+  location         String?
+  status           CmsStatus @default(active)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  galleries Gallery[]
+
+  @@map("c_m_s")
+}
+
+model Gallery {
+  id         Int      @id @default(autoincrement())
+  cms_id     Int
+  gallery    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  cms CMS @relation(fields: [cms_id], references: [id], onDelete: Cascade)
+
+  @@map("galleries")
+}
+
+model Service {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  image       String?
+  status      CmsStatus @default(active)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("services")
+}
+
+model CurrentSpecial {
+  id          Int       @id @default(autoincrement())
+  title       String?
+  description String?   @db.Text
+  image       String?
+  status      CmsStatus @default(active)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("current_specials")
+}
+
+model LinkSocial {
+  id         Int      @id @default(autoincrement())
+  platform   String?
+  url        String?
+  icon       String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("link_socials")
+}
+
+model SystemSetting {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  value      String?  @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model DynamicPage {
+  id         Int       @id @default(autoincrement())
+  title      String
+  slug       String    @unique
+  content    String?   @db.Text
+  status     CmsStatus @default(active)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@map("dynamic_pages")
+}
+
+model MailSetting {
+  id         Int      @id @default(autoincrement())
+  host       String?
+  port       String?
+  username   String?
+  password   String?
+  from_email String?
+  from_name  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("mail_settings")
+}
+
+model CustomScript {
+  id         Int       @id @default(autoincrement())
+  title      String?
+  script     String?   @db.Text
+  position   String?
+  status     CmsStatus @default(active)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@map("custom_scripts")
+}
+
+model Favorite {
+  id         Int            @id @default(autoincrement())
+  user_id    Int
+  event_id   String
+  status     FavoriteStatus @default(interest)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, event_id])
+  @@map("favorites")
+}
+
+model EventNotification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  event_id   String
+  notify     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, event_id])
+  @@map("notifications")
+}

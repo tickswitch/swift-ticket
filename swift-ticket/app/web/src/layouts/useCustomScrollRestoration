@@ -1,0 +1,30 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router";
+
+const useCustomScrollRestoration = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Restore scroll position when the component mounts
+    const savedScrollPosition = localStorage.getItem(`scrollPosition_${pathname}`);
+    if (savedScrollPosition) {
+      window.scrollTo(0, parseInt(savedScrollPosition, 10));
+    } else {
+      window.scrollTo(0, 0); // Scroll to top for new routes
+    }
+
+    // Save scroll position when navigating away
+    const handleBeforeUnload = () => {
+      localStorage.setItem(`scrollPosition_${pathname}`, window.scrollY.toString());
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [pathname]);
+};
+
+export default useCustomScrollRestoration;
