@@ -9,6 +9,10 @@ const findByEmail = async (email: string) => {
   return prisma.user.findUnique({ where: { email } });
 };
 
+const findByPhone = async (phone: string) => {
+  return prisma.user.findFirst({ where: { phone } });
+};
+
 const findById = async (id: number) => {
   return prisma.user.findUnique({ where: { id } });
 };
@@ -28,6 +32,7 @@ const deleteById = async (id: number) => {
 export const authRepository = {
   create,
   findByEmail,
+  findByPhone,
   findById,
   findByRememberToken,
   updateById,

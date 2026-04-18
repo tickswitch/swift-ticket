@@ -18,6 +18,8 @@ router.post('/forgot-password', uploadNone, authController.forgotPassword);
 router.post('/verify-otp', uploadNone, authController.verifyOtp);
 router.post('/reset-password', uploadNone, authController.resetPassword);
 router.post('/resend-otp', otpLimiter, uploadNone, authController.resendOtp);
+router.post('/auth/phone/send-otp', otpLimiter, uploadNone, authController.sendPhoneOtp);
+router.post('/auth/phone/verify-otp', uploadNone, authController.verifyPhoneOtp);
 router.post('/logout', authenticate, authController.logout);
 
 export default router;
