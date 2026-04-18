@@ -1,16 +1,16 @@
-
 import { ReactNode } from "react";
+import { Navigate } from "react-router";
 
 interface PublicOnlyRouteProps {
   children: ReactNode;
-}  
+}
 
 const PublicOnlyRoute = ({ children }: PublicOnlyRouteProps) => {
-  // const { currentUser } = useAuth();
+  const token = localStorage.getItem("token");
 
-  // if (currentUser) {
-  //   return <Navigate to="/dashboard" replace />;
-  // }
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
 
   return children;
 };

@@ -30,7 +30,6 @@ const AddTicketDetails = () => {
       })
     );
     gotoEditWithNextPage();
-    navigate("/ticket-price");
   };
 
   const handleNext = () => {

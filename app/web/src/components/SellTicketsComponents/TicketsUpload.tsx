@@ -19,7 +19,7 @@ import toast from "react-hot-toast";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { setStep } from "@/features/StepperSlice";
-import { updateData } from "@/features/SellTicketSlice";
+import { updateData, setUploadedFiles } from "@/features/SellTicketSlice";
 import { UploadPdf } from "@/types/FileTypes";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -28,7 +28,6 @@ const TicketsUpload = () => {
   const location: Location = useLocation();
   const isEdit = location.state;
   const progress = useSelector((state: RootState) => state.stepper.progress);
-  const sellTicketData = useSelector((state: RootState) => state.sellTicket.data);
 
   const dispatch: AppDispatch = useDispatch();
   const navigate: NavigateFunction = useNavigate();
@@ -74,76 +73,46 @@ const TicketsUpload = () => {
 
     setPdfFileUrl((prev) => {
       const updated = [...prev, ...newFiles];
-      
-      // Store files in a global variable - CRITICAL: Ensure these remain File objects
-      const fileObjects = updated.map(item => item.file);
-      window.uploadedTicketFiles = fileObjects;
-      
-      console.log("=== Global Storage Debug ===");
-      console.log("Files stored globally:", fileObjects);
-      console.log("Global files are File instances:", fileObjects.map(f => f instanceof File));
-      console.log("Global files constructors:", fileObjects.map(f => f.constructor.name));
-      
-      // Immediate verification
-      setTimeout(() => {
-        console.log("=== Global Storage Verification (async) ===");
-        console.log("window.uploadedTicketFiles:", window.uploadedTicketFiles);
-        console.log("Still File instances?", window.uploadedTicketFiles?.map(f => f instanceof File));
-      }, 100);
-      
+
+      // Store File objects in Redux (non-persisted field)
+      const fileObjects = updated.map((item) => item.file);
+      dispatch(setUploadedFiles(fileObjects));
+
       // Store file metadata in Redux (not the actual files)
       dispatch(
         updateData({
-          ticket_file_metadata: updated.map(item => ({
+          ticket_file_metadata: updated.map((item) => ({
             name: item.name,
             size: item.file.size,
             type: item.file.type,
-            lastModified: item.file.lastModified
+            lastModified: item.file.lastModified,
           })),
         })
       );
-      
+
       return updated;
     });
   };
 
-  // Initialize files from global variable on component mount
+  // Initialize files from Redux store on component mount
+  const storedFiles = useSelector(
+    (state: RootState) => state.sellTicket.uploadedFiles
+  );
   useEffect(() => {
-    console.log("=== Component Mount - Checking for Existing Files ===");
-    
-    const storedFiles = window.uploadedTicketFiles;
-    const storedMetadata = sellTicketData.ticket_file_metadata;
-    
-    console.log("Global files on mount:", storedFiles);
-    console.log("Redux metadata on mount:", storedMetadata);
-    
-    if (storedFiles && Array.isArray(storedFiles) && storedFiles.length > 0) {
-      console.log("Restoring files from global storage...");
-      
-      // Verify files are still File objects
-      const validFiles = storedFiles.filter((file, index) => {
-        const isValid = file instanceof File;
-        console.log(`File ${index} is valid:`, isValid, file);
-        return isValid;
-      });
-      
-      if (validFiles.length > 0) {
-        const restoredFiles = validFiles.map((file: File) => ({
+    if (storedFiles && storedFiles.length > 0 && pdfFileUrl.length === 0) {
+      const restoredFiles = storedFiles
+        .filter((file) => file instanceof File)
+        .map((file: File) => ({
           name: file.name,
           url: URL.createObjectURL(file),
           file,
         }));
-        
-        console.log("Successfully restored files:", restoredFiles.length);
+      if (restoredFiles.length > 0) {
         setPdfFileUrl(restoredFiles);
-      } else {
-        console.warn("No valid File objects found in global storage");
       }
-    } else if (storedMetadata && Array.isArray(storedMetadata) && storedMetadata.length > 0) {
-      console.log("Found metadata but no files - files may have been lost during navigation");
-      // toast.error("Files were lost during navigation. Please upload again.");
     }
-  }, [sellTicketData.ticket_file_metadata]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openModal = (url: string) => {
     setPreviewUrl(url);
@@ -160,8 +129,8 @@ const TicketsUpload = () => {
       toast.error("Must upload at least one PDF file");
       return;
     }
-    // Make sure files are available globally
-    window.uploadedTicketFiles = pdfFileUrl.map(item => item.file);
+    // Make sure files are available in Redux
+    dispatch(setUploadedFiles(pdfFileUrl.map((item) => item.file)));
     dispatch(setStep(3));
     navigate("/add-ticket-details");
   };
@@ -171,8 +140,8 @@ const TicketsUpload = () => {
       toast.error("Must upload at least one PDF file");
       return;
     }
-    // Make sure files are available globally
-    window.uploadedTicketFiles = pdfFileUrl.map(item => item.file);
+    // Make sure files are available in Redux
+    dispatch(setUploadedFiles(pdfFileUrl.map((item) => item.file)));
     navigate("/review-finish");
   };
 
@@ -183,18 +152,18 @@ const TicketsUpload = () => {
       
       // Cleanup URL
       URL.revokeObjectURL(fileToDelete.url);
-      
-      // Update global files
-      window.uploadedTicketFiles = newFiles.map(item => item.file);
-      
+
+      // Update Redux store with the File objects
+      dispatch(setUploadedFiles(newFiles.map((item) => item.file)));
+
       // Update Redux metadata
       dispatch(
         updateData({
-          ticket_file_metadata: newFiles.map(item => ({
+          ticket_file_metadata: newFiles.map((item) => ({
             name: item.name,
             size: item.file.size,
             type: item.file.type,
-            lastModified: item.file.lastModified
+            lastModified: item.file.lastModified,
           })),
         })
       );

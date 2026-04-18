@@ -50,7 +50,7 @@ const YourTicketPrice = () => {
         price: Number(amount),
       })
     );
-    navigate("/sell-tickets");
+    navigate("/your-address");
   };
 
   const progress = useSelector((state: RootState) => state.stepper.progress);
