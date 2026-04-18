@@ -78,7 +78,7 @@ const checkout = async (userId: number, couponCode?: string) => {
       order,
       razorpay: {
         order_id: rzpOrder.id,
-        key: process.env.RAZORPAY_KEY_ID,
+        key: process.env.RAZORPAY_KEY,
         amount: Math.round(total * 100),
         currency: 'INR',
       },
@@ -91,7 +91,7 @@ const verify = async (
   razorpay_payment_id: string,
   razorpay_signature: string
 ) => {
-  const secret = process.env.RAZORPAY_KEY_SECRET as string;
+  const secret = process.env.RAZORPAY_SECRET as string;
   const body = razorpay_order_id + '|' + razorpay_payment_id;
 
   const expectedSignature = crypto
