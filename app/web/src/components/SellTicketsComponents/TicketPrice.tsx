@@ -40,6 +40,7 @@ const TicketPrice = () => {
     dispatch(
       updateData({
         original_price: Number(amount),
+        originalFaceValue: Number(amount),
       })
     );
     navigate("/your-ticket-price");

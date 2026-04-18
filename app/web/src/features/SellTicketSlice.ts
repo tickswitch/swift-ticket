@@ -32,6 +32,7 @@ export interface SellTicketData {
   account_holder_name?: string;
   phone_number?: string;
   bank_account_number?: string;
+  originalFaceValue?: number;
   // Store file metadata instead of actual files
   ticket_file_metadata?: FileMetadata[];
 }

@@ -24,6 +24,7 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setStep } from "@/features/StepperSlice";
 import { updateData } from "@/features/SellTicketSlice";
+import { priceCap } from "@/utils/priceCap";
 
 const YourTicketPrice = () => {
   const location: Location = useLocation();
@@ -31,8 +32,20 @@ const YourTicketPrice = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [amount, setAmount] = useState<string>("");
 
+  const faceValue =
+    useSelector(
+      (state: RootState) => state.sellTicket.data.originalFaceValue
+    ) ?? 0;
+  const maxAllowed = priceCap.maxListingPrice(faceValue);
+  const numericPrice = Number(amount);
+  const priceExceedsCap =
+    amount.trim() !== "" && !isNaN(numericPrice) && numericPrice > maxAllowed;
+
   const isButtonDisabled =
-    !selectedOption || amount.trim() === "" || isNaN(Number(amount));
+    !selectedOption ||
+    amount.trim() === "" ||
+    isNaN(numericPrice) ||
+    numericPrice > maxAllowed;
 
   const dispatch: AppDispatch = useDispatch();
   const navigate: NavigateFunction = useNavigate();
@@ -67,20 +80,6 @@ const YourTicketPrice = () => {
   };
 
   const info = JSON.parse(localStorage.getItem("sellTicket") || "null");
-
-  // per ticket price
-  const perTicket = Number(amount) * 0.05;
-  const perTicketPrice = Number(amount) - perTicket;
-
-  // buyer price
-  const buyerPecentageAmount = Number(amount) * 0.1;
-  const buyerPrice = parseInt(amount) + buyerPecentageAmount;
-
-  const maximumPricePercentage = parseInt(amount) * 0.2;
-  console.log(maximumPricePercentage);
-  const maximumPrice = parseInt(amount) + maximumPricePercentage || 0;
-  const pp = info?.data?.original_price * 0.2;
-  const maxPrice = parseInt(info?.data?.original_price) + parseInt(pp);
   return (
     <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">
       <h3 className="text-2xl md:text-[36px] font-semibold text-[#181818] mb-4">
@@ -99,6 +98,21 @@ const YourTicketPrice = () => {
             style={{ width: `${progress}%` }}
           ></div>
         </div>
+      </div>
+
+      {/* Face-value and cap info */}
+      <div className="pt-6 flex flex-col gap-1">
+        <p className="text-base md:text-xl text-[#606060]" data-testid="face-value-label">
+          Original face value: ₹{faceValue.toLocaleString("en-IN")}
+        </p>
+        <p
+          className="text-base md:text-xl font-semibold"
+          style={{ color: "#FEC100" }}
+          data-testid="max-listing-price-label"
+        >
+          Maximum you can list for: ₹
+          {maxAllowed.toLocaleString("en-IN")}
+        </p>
       </div>
 
       {/* ticket select buttons */}
@@ -126,11 +140,28 @@ const YourTicketPrice = () => {
         <div className="w-full inline-flex relative">
           <input
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            defaultValue={"400"}
-            type="text"
+            onChange={(e) => {
+              const raw = e.target.value;
+              const digitsOnly = raw.replace(/[^0-9]/g, "");
+              const parsed = digitsOnly === "" ? NaN : Number(digitsOnly);
+              if (!isNaN(parsed) && faceValue > 0 && parsed > maxAllowed) {
+                toast.error(
+                  `SwiftTickets enforces fair pricing. Maximum price is ₹${maxAllowed.toLocaleString(
+                    "en-IN"
+                  )}`
+                );
+                setAmount(String(maxAllowed));
+                return;
+              }
+              setAmount(digitsOnly);
+            }}
+            type="number"
+            min={0}
+            max={maxAllowed}
+            step={50}
             placeholder="00"
             inputMode="numeric"
+            data-testid="listing-price-input"
             className="w-full ps-5 bg-white text-right border border-[#606060] pr-[122px] h-[60px] text-[#181818] font-semibold text-2xl focus:border-0 focus:outline-0 focus:ring-0 rounded-[12px] placeholder:text-[#A8A8A8] placeholder:text-[20px]"
           />
           <span className="absolute right-[25px] top-1/2 -translate-y-1/2 text-[#A8A8A8] text-[20px] pointer-events-none">
@@ -140,7 +171,8 @@ const YourTicketPrice = () => {
 
         <div className="w-full inline-flex relative">
           <input
-            value={"$" + info?.data?.original_price}
+            readOnly
+            value={"₹" + (info?.data?.original_price ?? faceValue)}
             type="text"
             placeholder="00"
             inputMode="numeric"
@@ -153,7 +185,8 @@ const YourTicketPrice = () => {
 
         <div className="w-full inline-flex relative">
           <input
-            value={"$" + maxPrice || "0"}
+            readOnly
+            value={"₹" + maxAllowed}
             type="text"
             placeholder="00"
             inputMode="numeric"
@@ -163,6 +196,39 @@ const YourTicketPrice = () => {
             Maximum
           </span>
         </div>
+      </div>
+
+      {/* Cap violation error */}
+      {priceExceedsCap && (
+        <p
+          className="text-red-600 text-sm md:text-base mt-3"
+          data-testid="price-cap-error"
+        >
+          SwiftTickets enforces fair pricing. Maximum price is ₹
+          {maxAllowed.toLocaleString("en-IN")}
+        </p>
+      )}
+
+      {/* Live fee preview */}
+      <div
+        className="mt-4 flex flex-col gap-1"
+        data-testid="price-preview-block"
+      >
+        <p className="text-base md:text-xl text-[#606060]">
+          Platform fee (5%): ₹
+          {priceCap
+            .sellerFee(isNaN(numericPrice) ? 0 : numericPrice)
+            .toLocaleString("en-IN")}
+        </p>
+        <p
+          className="text-base md:text-xl font-semibold text-[#2FA75F]"
+          data-testid="seller-receives-label"
+        >
+          You will receive: ₹
+          {priceCap
+            .sellerReceives(isNaN(numericPrice) ? 0 : numericPrice)
+            .toLocaleString("en-IN")}
+        </p>
       </div>
 
       {/* your facilities when you buy tickets */}
@@ -177,7 +243,7 @@ const YourTicketPrice = () => {
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />
             <h6 className="text-[#606060] text-2xl md:text-[32px] font-semibold">
-              {perTicketPrice || "0"}{" "}
+              {priceCap.sellerReceives(isNaN(numericPrice) ? 0 : numericPrice) || "0"}{" "}
               <small className="text-[#9F9F9F] text-base md:text-[20px] font-normal">
                 Per ticket
               </small>
@@ -190,12 +256,12 @@ const YourTicketPrice = () => {
             Byer pays per ticket
           </h3>
           <span className="text-base md:text-[20px] text-[#606060]">
-            Your price plus 7% service fee & 3% transaction fee.
+            Your price plus 5% service fee.
           </span>
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />
             <h6 className="text-[#606060] text-2xl md:text-[32px] font-semibold">
-              {buyerPrice || "0"}{" "}
+              {priceCap.totalBuyerPays(isNaN(numericPrice) ? 0 : numericPrice) || "0"}{" "}
               <small className="text-[#9F9F9F] text-base md:text-[20px] font-normal">
                 Per ticket
               </small>
