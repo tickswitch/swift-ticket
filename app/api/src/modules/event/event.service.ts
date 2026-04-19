@@ -55,6 +55,7 @@ const mapEvent = async (
     title: event.name,
     image: (event.images as { url: string }[])?.[0]?.url ?? null,
     start_date: dates?.start?.localDate ?? null,
+    date: dates?.start?.localDate ?? null,       // alias used by frontend components
     end_date: dates?.end?.localDate ?? dates?.start?.localDate ?? null,
     time: dates?.start?.localTime ?? null,
     venue: (venue as { name?: string }).name ?? null,
@@ -137,6 +138,16 @@ const getEventDetails = async (eventId: string) => {
   };
 };
 
+const dedupeByName = (events: Record<string, unknown>[]) => {
+  const seen = new Set<string>();
+  return events.filter((e) => {
+    const name = (e.name as string)?.toLowerCase().trim();
+    if (!name || seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+};
+
 const trendingNearby = async (lat: string, lng: string, radius: number) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const data = await tmGet(`${TM_BASE}/events.json`, {
@@ -145,7 +156,7 @@ const trendingNearby = async (lat: string, lng: string, radius: number) => {
     size: 20,
     sort: "relevance,desc",
   });
-  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const events = dedupeByName(data?._embedded?.events ?? []);
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
@@ -154,11 +165,11 @@ const sportsinArea = async (lat: string, lng: string, radius: number, page: numb
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
     ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-    size: 10,
+    size: 20,
     page,
     classificationName: "Sports",
   });
-  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const events = dedupeByName(data?._embedded?.events ?? []);
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
   return { pagination: data?.page ?? {}, data: mapped };
 };
@@ -168,11 +179,11 @@ const concertsinArea = async (lat: string, lng: string, radius: number, page: nu
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
     ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-    size: 10,
+    size: 20,
     page,
     classificationName: "Music",
   });
-  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const events = dedupeByName(data?._embedded?.events ?? []);
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
   return { pagination: data?.page ?? {}, data: mapped };
 };
@@ -185,7 +196,7 @@ const popularEvents = async (lat: string, lng: string, radius: number) => {
     size: 6,
     sort: "relevance,desc",
   });
-  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const events = dedupeByName(data?._embedded?.events ?? []);
   return Promise.all(events.map((e) => mapEvent(e)));
 };
 
