@@ -5,6 +5,19 @@ import { AppError } from "../../utils/AppError";
 const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 const apikey = () => process.env.TICKETMASTER_API_KEY as string;
 
+// Safe Ticketmaster GET — returns null instead of throwing on API errors
+const tmGet = async (url: string, params: Record<string, unknown>) => {
+  try {
+    const { data } = await axios.get(url, { params });
+    return data;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const msg = err?.response?.data?.fault?.faultstring || err?.message || "Ticketmaster error";
+    console.error(`[TM] ${status || "network"} error — ${msg}`);
+    return null;
+  }
+};
+
 // Helper: compute resale ticket availability for an event
 const getResaleAvailability = async (eventId: string) => {
   const tickets = await prisma.resaleTicket.findMany({
@@ -70,24 +83,17 @@ const mapEvent = async (
 const filterEvents = async (
   params: Record<string, string | number | undefined>,
 ) => {
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), ...params },
-  });
-
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
-  const pageInfo = data.page ?? {};
+  const data = await tmGet(`${TM_BASE}/events.json`, { apikey: apikey(), ...params });
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const pageInfo = data?.page ?? {};
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
-
   return { pagination: pageInfo, data: mapped };
 };
 
 const searchEvents = async (keyword: string | undefined) => {
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), keyword, size: 50 },
-  });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
-  const mapped = await Promise.all(events.map((e) => mapEvent(e, false)));
-  return mapped;
+  const data = await tmGet(`${TM_BASE}/events.json`, { apikey: apikey(), keyword, size: 50 });
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
 const getEventDetails = async (eventId: string) => {
@@ -133,99 +139,74 @@ const getEventDetails = async (eventId: string) => {
 
 const trendingNearby = async (lat: string, lng: string, radius: number) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-      size: 20,
-      sort: "relevance,desc",
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+    size: 20,
+    sort: "relevance,desc",
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
-const sportsinArea = async (
-  lat: string,
-  lng: string,
-  radius: number,
-  page: number,
-) => {
+const sportsinArea = async (lat: string, lng: string, radius: number, page: number) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-      size: 10,
-      page,
-      classificationName: "Sports",
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+    size: 10,
+    page,
+    classificationName: "Sports",
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
-  return { pagination: data.page ?? {}, data: mapped };
+  return { pagination: data?.page ?? {}, data: mapped };
 };
 
-const concertsinArea = async (
-  lat: string,
-  lng: string,
-  radius: number,
-  page: number,
-) => {
+const concertsinArea = async (lat: string, lng: string, radius: number, page: number) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-      size: 10,
-      page,
-      classificationName: "Music",
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+    size: 10,
+    page,
+    classificationName: "Music",
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
-  return { pagination: data.page ?? {}, data: mapped };
+  return { pagination: data?.page ?? {}, data: mapped };
 };
 
 const popularEvents = async (lat: string, lng: string, radius: number) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
-      size: 6,
-      sort: "relevance,desc",
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+    size: 6,
+    sort: "relevance,desc",
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   return Promise.all(events.map((e) => mapEvent(e)));
 };
 
 const similarEvents = async (eventId: string) => {
-  const detailRes = await axios.get(`${TM_BASE}/events/${eventId}.json`, {
-    params: { apikey: apikey() },
-  });
-  const segment = detailRes.data.classifications?.[0]?.segment?.name;
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), classificationName: segment, size: 10 },
-  });
-  const events: Record<string, unknown>[] = (
-    data._embedded?.events ?? []
-  ).filter((e: Record<string, unknown>) => e.id !== eventId);
+  const detailData = await tmGet(`${TM_BASE}/events/${eventId}.json`, { apikey: apikey() });
+  const segment = detailData?.classifications?.[0]?.segment?.name;
+  const data = await tmGet(`${TM_BASE}/events.json`, { apikey: apikey(), classificationName: segment, size: 10 });
+  const events: Record<string, unknown>[] = (data?._embedded?.events ?? [])
+    .filter((e: Record<string, unknown>) => e.id !== eventId);
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
 const bestVenues = async (lat?: string, lng?: string) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
-  const { data } = await axios.get(`${TM_BASE}/venues.json`, {
-    params: {
-      apikey: apikey(),
-      size: 10,
-      sort: "relevance,desc",
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 100 } : {}),
-    },
+  const data = await tmGet(`${TM_BASE}/venues.json`, {
+    apikey: apikey(),
+    size: 10,
+    sort: "relevance,desc",
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 100 } : {}),
   });
-  const venues: Record<string, unknown>[] = data._embedded?.venues ?? [];
+  const venues: Record<string, unknown>[] = data?._embedded?.venues ?? [];
   return venues.map((v) => ({
     id: v.id,
     name: v.name,
@@ -276,15 +257,13 @@ const citiesSearch = async (keyword: string) => {
 };
 const eventsBygrouped = async (lat?: string, lng?: string) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      size: 100,
-      classificationName: "Sports",
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    size: 100,
+    classificationName: "Sports",
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const formatted = events.map((e) => {
     const classifications =
       (e.classifications as Record<string, unknown>[]) ?? [];
@@ -316,18 +295,16 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
 
 const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
-  const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: {
-      apikey: apikey(),
-      classificationName: genre,
-      size: 50,
-      page,
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
-    },
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    classificationName: genre,
+    size: 50,
+    page,
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
   });
-  const events: Record<string, unknown>[] = data._embedded?.events ?? [];
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
-  return { genre, data: mapped, pagination: data.page ?? {} };
+  return { genre, data: mapped, pagination: data?.page ?? {} };
 };
 
 // Favorites
