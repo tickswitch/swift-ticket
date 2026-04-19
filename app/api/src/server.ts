@@ -19,6 +19,9 @@ dotenv.config();
 
 const app: Express = express();
 
+// Trust the first proxy hop (Render/Heroku/etc.) so req.ip and rate-limit keys reflect the real client
+app.set('trust proxy', 1);
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
