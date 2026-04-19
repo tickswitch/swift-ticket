@@ -182,11 +182,11 @@ const concertsinArea = async (
 };
 
 const popularEvents = async (lat: string, lng: string, radius: number) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
     params: {
       apikey: apikey(),
-      latlong: `${lat},${lng}`,
-      radius,
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
       size: 6,
       sort: "relevance,desc",
     },
@@ -209,9 +209,15 @@ const similarEvents = async (eventId: string) => {
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
-const bestVenues = async () => {
+const bestVenues = async (lat?: string, lng?: string) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const { data } = await axios.get(`${TM_BASE}/venues.json`, {
-    params: { apikey: apikey(), size: 10, sort: "relevance,desc" },
+    params: {
+      apikey: apikey(),
+      size: 10,
+      sort: "relevance,desc",
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 100 } : {}),
+    },
   });
   const venues: Record<string, unknown>[] = data._embedded?.venues ?? [];
   return venues.map((v) => ({
@@ -262,9 +268,15 @@ const citiesSearch = async (keyword: string) => {
 
   return Array.from(uniqueCitiesMap.values());
 };
-const eventsBygrouped = async () => {
+const eventsBygrouped = async (lat?: string, lng?: string) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), size: 100, classificationName: "Sports" },
+    params: {
+      apikey: apikey(),
+      size: 100,
+      classificationName: "Sports",
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
+    },
   });
   const events: Record<string, unknown>[] = data._embedded?.events ?? [];
   const formatted = events.map((e) => {
@@ -296,14 +308,20 @@ const eventsBygrouped = async () => {
   return grouped;
 };
 
-const getEventsByGenre = async (genre: string, page: number) => {
+const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), size: 50, page },
+    params: {
+      apikey: apikey(),
+      classificationName: genre,
+      size: 50,
+      page,
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
+    },
   });
   const events: Record<string, unknown>[] = data._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
-  const filtered = mapped.filter((e) => (e.genres as string[]).includes(genre));
-  return { genre, data: filtered };
+  return { genre, data: mapped, pagination: data.page ?? {} };
 };
 
 // Favorites

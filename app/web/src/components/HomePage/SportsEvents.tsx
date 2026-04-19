@@ -21,15 +21,18 @@ import "swiper/css/scrollbar";
 import React from "react";
 
 const SportsEvents = () => {
- 
-  // Create refs using React.useRef instead of the imported useRef
+  const locationCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+  const locationQuery = locationCoords?.lat && locationCoords?.lon
+    ? `?lat=${locationCoords.lat}&lng=${locationCoords.lon}`
+    : "";
+
   const navigationPrevRef = React.useRef<HTMLButtonElement>(null);
   const navigationNextRef = React.useRef<HTMLButtonElement>(null);
   const swiperRef = React.useRef<SwiperClass | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events/by-groupe"],
-    queryFn: () => GetData(`events/by-groupe`),
+    queryKey: ["events/by-groupe", locationCoords?.lat, locationCoords?.lon],
+    queryFn: () => GetData(`events/by-groupe${locationQuery}`),
   });
 
   return (
@@ -95,7 +98,7 @@ const SportsEvents = () => {
             >
               <SwiperSlide>
                 <Link
-                  to={`/events?genre=Basketball`}
+                  to={`/events?genre=Basketball${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
                   className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
                 >
                   <img
@@ -121,7 +124,7 @@ const SportsEvents = () => {
               </SwiperSlide>
               <SwiperSlide>
                 <Link
-                  to={`/events?genre=Hockey`}
+                  to={`/events?genre=Hockey${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
                   className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
                 >
                   <img
@@ -147,7 +150,7 @@ const SportsEvents = () => {
               </SwiperSlide>
               <SwiperSlide>
                 <Link
-                  to={`/events?genre=Football`}
+                  to={`/events?genre=Football${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
                   className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
                 >
                   <img

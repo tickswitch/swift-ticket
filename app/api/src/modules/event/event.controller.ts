@@ -137,12 +137,8 @@ const concertsinArea = catchAsync(async (req: Request, res: Response) => {
 });
 
 const popularEvents = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat = "0",
-    lng = "0",
-    radius = "100",
-  } = req.query as Record<string, string>;
-  const data = await eventService.popularEvents(lat, lng, Number(radius));
+  const { lat, lng, radius = "100" } = req.query as Record<string, string>;
+  const data = await eventService.popularEvents(lat ?? "", lng ?? "", Number(radius));
   return res.json({ status: true, data });
 });
 
@@ -151,8 +147,9 @@ const similarEvents = catchAsync(async (req: Request, res: Response) => {
   return res.json({ status: true, data });
 });
 
-const bestVenues = catchAsync(async (_req: Request, res: Response) => {
-  const data = await eventService.bestVenues();
+const bestVenues = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.bestVenues(lat, lng);
   return res.json({ status: true, data });
 });
 
@@ -163,14 +160,15 @@ const citiesSearch = catchAsync(async (req: Request, res: Response) => {
   return res.json({ status: true, cities: data });
 });
 
-const eventsBygrouped = catchAsync(async (_req: Request, res: Response) => {
-  const data = await eventService.eventsBygrouped();
+const eventsBygrouped = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.eventsBygrouped(lat, lng);
   return res.json({ status: true, data });
 });
 
 const getEventsByGenre = catchAsync(async (req: Request, res: Response) => {
-  const page = Number(req.query.page ?? 0);
-  const result = await eventService.getEventsByGenre(req.params.genre, page);
+  const { page = "0", lat, lng } = req.query as Record<string, string>;
+  const result = await eventService.getEventsByGenre(req.params.genre, Number(page), lat, lng);
   return res.json({ status: true, ...result });
 });
 
