@@ -158,7 +158,7 @@ const bestVenues = catchAsync(async (_req: Request, res: Response) => {
 
 const citiesSearch = catchAsync(async (req: Request, res: Response) => {
   const data = await eventService.citiesSearch(
-    (req.query.keyword as string) ?? "",
+    ((req.query.query ?? req.query.keyword) as string) ?? "",
   );
   return res.json({ status: true, cities: data });
 });

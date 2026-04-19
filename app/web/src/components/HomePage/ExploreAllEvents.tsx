@@ -17,8 +17,17 @@ import { EventsListWithPagination } from './EventsListWithPagination';
  * - API queries with all filter parameters
  */
 const ExploreAllEvents = () => {
-  // Location state
-  const [location, setLocation] = useState('New York');
+  // Location state — initialise coords from localStorage so first render uses saved location
+  const [location, setLocation] = useState(() => {
+    return localStorage.getItem("selectedLocation") || "Nearby";
+  });
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lon: number } | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+    } catch {
+      return null;
+    }
+  });
 
   // Filter states
   const [time, setTime] = useState('today');
@@ -62,6 +71,13 @@ const ExploreAllEvents = () => {
   const handleLocationChange = (value: string) => {
     setLocation(value);
     setCurrentPage(0);
+    // Re-read coords from localStorage each time location changes
+    try {
+      const coords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+      setLocationCoords(coords);
+    } catch {
+      setLocationCoords(null);
+    }
   };
 
   // Build API query with all filters
@@ -81,13 +97,8 @@ const ExploreAllEvents = () => {
     }
 
     // Location coordinates
-    try {
-      const locationCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
-      if (locationCoords && locationCoords.lat && locationCoords.lon) {
-        params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
-      }
-    } catch (e) {
-      console.error("Error parsing location coords:", e);
+    if (locationCoords && locationCoords.lat && locationCoords.lon) {
+      params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
     }
 
     // Event type filter (only if not 'All events')
@@ -108,7 +119,7 @@ const ExploreAllEvents = () => {
 
   // Fetch events data with React Query
   const { data: responseData, isLoading, error } = useQuery({
-    queryKey: ['events', time, customDateRange, selectedGenres, currentPage, eventType, category, location],
+    queryKey: ['events', time, customDateRange, selectedGenres, currentPage, eventType, category, location, locationCoords],
     queryFn: () => GetSingleData(buildApiQuery()),
   });
 
