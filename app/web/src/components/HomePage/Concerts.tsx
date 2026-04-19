@@ -13,10 +13,10 @@ const Concerts = () => {
     localStorage.getItem("selectedLocationCoords") || "null"
   );
 
+  const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}` : "";
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events/concerts"],
-    queryFn: () =>
-      GetData(`/events/concerts?lat=${latlong.lat}&lng=${latlong.lon}`),
+    queryKey: ["events/concerts", latlong?.lat, latlong?.lon],
+    queryFn: () => GetData(`/events/concerts${locationQuery}`),
   });
 
   const { formatDate } = useDateFormat();

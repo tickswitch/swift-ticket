@@ -44,10 +44,10 @@ const Trending: React.FC = () => {
     available_quantity?: number;
   };
   
+  const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}` : "";
   const { data, isLoading, error } = useQuery<TrendingEvent[], Error>({
-    queryKey: ["trending"],
-    queryFn: () =>
-      GetData(`events/trending-nearby?lat=${latlong?.lat}&lng=${latlong?.lon}`),
+    queryKey: ["trending", latlong?.lat, latlong?.lon],
+    queryFn: () => GetData(`events/trending-nearby${locationQuery}`),
   });
 
   const { formatDate } = useDateFormat();

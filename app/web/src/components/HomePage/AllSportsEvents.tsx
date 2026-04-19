@@ -12,9 +12,10 @@ const AllSportsEvents = () => {
     const latlong = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
 
 
+    const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}&radius=100` : "";
     const { data, isLoading, error } = useQuery({
-        queryKey: ["sports-nearby"],
-        queryFn: () => GetData(`events/sports-in-area?lat=${latlong?.lat}&lng=${latlong.lon}&radius=100`),
+        queryKey: ["sports-nearby", latlong?.lat, latlong?.lon],
+        queryFn: () => GetData(`events/sports-in-area${locationQuery}`),
     });
 
 

@@ -94,45 +94,19 @@ const getEventDetails = catchAsync(async (req: Request, res: Response) => {
 
 const trendingNearby = catchAsync(async (req: Request, res: Response) => {
   const { lat, lng, radius = "100" } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const data = await eventService.trendingNearby(lat, lng, Number(radius));
+  const data = await eventService.trendingNearby(lat ?? "", lng ?? "", Number(radius));
   return res.json({ status: true, data });
 });
 
 const sportsinArea = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat,
-    lng,
-    radius = "100",
-    page = "0",
-  } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const result = await eventService.sportsinArea(
-    lat,
-    lng,
-    Number(radius),
-    Number(page),
-  );
+  const { lat, lng, radius = "100", page = "0" } = req.query as Record<string, string>;
+  const result = await eventService.sportsinArea(lat ?? "", lng ?? "", Number(radius), Number(page));
   return res.json({ status: true, ...result });
 });
 
 const concertsinArea = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat,
-    lng,
-    radius = "100",
-    page = "0",
-  } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const result = await eventService.concertsinArea(
-    lat,
-    lng,
-    Number(radius),
-    Number(page),
-  );
+  const { lat, lng, radius = "100", page = "0" } = req.query as Record<string, string>;
+  const result = await eventService.concertsinArea(lat ?? "", lng ?? "", Number(radius), Number(page));
   return res.json({ status: true, ...result });
 });
 

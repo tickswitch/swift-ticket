@@ -132,8 +132,14 @@ const getEventDetails = async (eventId: string) => {
 };
 
 const trendingNearby = async (lat: string, lng: string, radius: number) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
-    params: { apikey: apikey(), latlong: `${lat},${lng}`, radius, size: 20 },
+    params: {
+      apikey: apikey(),
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+      size: 20,
+      sort: "relevance,desc",
+    },
   });
   const events: Record<string, unknown>[] = data._embedded?.events ?? [];
   return Promise.all(events.map((e) => mapEvent(e, false)));
@@ -145,11 +151,11 @@ const sportsinArea = async (
   radius: number,
   page: number,
 ) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
     params: {
       apikey: apikey(),
-      latlong: `${lat},${lng}`,
-      radius,
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
       size: 10,
       page,
       classificationName: "Sports",
@@ -166,14 +172,14 @@ const concertsinArea = async (
   radius: number,
   page: number,
 ) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const { data } = await axios.get(`${TM_BASE}/events.json`, {
     params: {
       apikey: apikey(),
-      latlong: `${lat},${lng}`,
-      radius,
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
       size: 10,
       page,
-      keyword: "concerts",
+      classificationName: "Music",
     },
   });
   const events: Record<string, unknown>[] = data._embedded?.events ?? [];
