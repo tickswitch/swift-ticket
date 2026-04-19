@@ -200,6 +200,20 @@ const popularEvents = async (lat: string, lng: string, radius: number) => {
   return Promise.all(events.map((e) => mapEvent(e)));
 };
 
+const festivalsNearby = async (lat: string, lng: string, radius: number) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius } : {}),
+    classificationName: "Music",
+    keyword: "festival",
+    size: 20,
+    sort: "relevance,desc",
+  });
+  const events = dedupeByName(data?._embedded?.events ?? []);
+  return Promise.all(events.map((e) => mapEvent(e, false)));
+};
+
 const similarEvents = async (eventId: string) => {
   const detailData = await tmGet(`${TM_BASE}/events/${eventId}.json`, { apikey: apikey() });
   const segment = detailData?.classifications?.[0]?.segment?.name;
@@ -462,6 +476,7 @@ export const eventService = {
   searchEvents,
   getEventDetails,
   trendingNearby,
+  festivalsNearby,
   sportsinArea,
   concertsinArea,
   popularEvents,

@@ -6,6 +6,7 @@ import ExploreEvents from "@/components/HomePage/ExploreEvents";
 import Feedback from "@/components/HomePage/Feedback";
 import SportsEvents from "@/components/HomePage/SportsEvents";
 import Trending from "@/components/HomePage/Trending";
+import FestivalsForYou from "@/components/HomePage/FestivalsForYou";
 import TrustBar from "@/components/HomePage/TrustBar";
 import HowItWorksStrip from "@/components/HomePage/HowItWorksStrip";
 import { Link } from "react-router";
@@ -19,6 +20,7 @@ const HomePage = () => {
         <Container>
           <Event />
           <Trending />
+          <FestivalsForYou />
           <SportsEvents />
           <Concerts />
           <div className="flex items-center justify-center py-10">

@@ -98,6 +98,12 @@ const trendingNearby = catchAsync(async (req: Request, res: Response) => {
   return res.json({ status: true, data });
 });
 
+const festivalsNearby = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng, radius = "150" } = req.query as Record<string, string>;
+  const data = await eventService.festivalsNearby(lat ?? "", lng ?? "", Number(radius));
+  return res.json({ status: true, data });
+});
+
 const sportsinArea = catchAsync(async (req: Request, res: Response) => {
   const { lat, lng, radius = "100", page = "0" } = req.query as Record<string, string>;
   const result = await eventService.sportsinArea(lat ?? "", lng ?? "", Number(radius), Number(page));
@@ -229,6 +235,7 @@ export const eventController = {
   search,
   getEventDetails,
   trendingNearby,
+  festivalsNearby,
   sportsinArea,
   concertsinArea,
   popularEvents,
