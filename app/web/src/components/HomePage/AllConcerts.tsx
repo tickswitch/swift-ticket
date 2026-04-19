@@ -9,7 +9,6 @@ import { useDateFormat } from "@/lib/formatDate";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Container from "@/components/Common/Container";
-import { getSelectedCity } from "./LocationSelector";
 
 const AllConcerts = () => {
   const [currentPage, setCurrentPage] = useState(0); 
@@ -18,14 +17,13 @@ const AllConcerts = () => {
     localStorage.getItem("selectedLocationCoords") || "null"
   );
 
-  const selectedCity = getSelectedCity();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events/concerts", currentPage, latlong, selectedCity],
+    queryKey: ["events/concerts", currentPage, latlong],
     queryFn: () =>
       GetSingleData(
-        `/events/concerts?lat=${latlong?.lat}&lng=${latlong?.lon}&page=${
+        `/events/concerts?lat=${latlong.lat}&lng=${latlong.lon}&page=${
           currentPage + 1
-        }&city=${encodeURIComponent(selectedCity)}`
+        }`
       ), // API uses 0-based page numbers
   });
 

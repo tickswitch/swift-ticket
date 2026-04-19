@@ -7,7 +7,6 @@ import Feedback from "@/components/HomePage/Feedback";
 import SportsEvents from "@/components/HomePage/SportsEvents";
 import Trending from "@/components/HomePage/Trending";
 import TrustBar from "@/components/HomePage/TrustBar";
-import LocationSelector from "@/components/HomePage/LocationSelector";
 import HowItWorksStrip from "@/components/HomePage/HowItWorksStrip";
 import { Link } from "react-router";
 
@@ -18,21 +17,6 @@ const HomePage = () => {
         <Banner />
         <TrustBar />
         <Container>
-          <div
-            className="bg-white border-b border-gray-200 py-3 flex items-center justify-between gap-4 flex-wrap"
-            data-testid="discover-location-row"
-          >
-            <div className="flex items-center">
-              <button
-                type="button"
-                data-testid="discover-tab"
-                className="text-[#181818] text-base md:text-lg font-semibold pb-1 border-b-2 border-[#2563EB]"
-              >
-                Discover
-              </button>
-            </div>
-            <LocationSelector />
-          </div>
           <Event />
           <Trending />
           <SportsEvents />

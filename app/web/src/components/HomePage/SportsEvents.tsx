@@ -19,7 +19,6 @@ import "swiper/css/pagination";
 // @ts-expect-error: Scrollbar CSS module not typed
 import "swiper/css/scrollbar";
 import React from "react";
-import { getSelectedCity } from "./LocationSelector";
 
 const SportsEvents = () => {
  
@@ -28,13 +27,9 @@ const SportsEvents = () => {
   const navigationNextRef = React.useRef<HTMLButtonElement>(null);
   const swiperRef = React.useRef<SwiperClass | null>(null);
 
-  const selectedCity = getSelectedCity();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events/by-groupe", selectedCity],
-    queryFn: () =>
-      GetData(
-        `events/by-groupe?city=${encodeURIComponent(selectedCity)}`
-      ),
+    queryKey: ["events/by-groupe"],
+    queryFn: () => GetData(`events/by-groupe`),
   });
 
   return (

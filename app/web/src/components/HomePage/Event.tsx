@@ -11,13 +11,23 @@ const Event = () => {
 
   return (
     <div className="pt-8">
-      <div className="flex flex-wrap items-center justify-between gap-5 pb-4">
-        <Title className="sm:pb-4">Find Events</Title>
-      <div className="flex items-end justify-end max-w-[1480px] sm:px-2">
-        <div className="flex flex-wrap items-center gap-2 font-semibold">
-          Recommended in <Dropdown />
-        </div>
+      {/* Discover tab + location pill row (TicketSwap-style) */}
+      <div
+        className="flex items-center justify-between gap-4 flex-wrap py-3 border-b border-gray-200"
+        data-testid="discover-location-row"
+      >
+        <button
+          type="button"
+          data-testid="discover-tab"
+          className="text-[#181818] text-base md:text-lg font-semibold pb-1 border-b-2 border-[#2563EB]"
+        >
+          Discover
+        </button>
+        <Dropdown />
       </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-5 pb-4 pt-6">
+        <Title className="sm:pb-4">Find Events</Title>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 items-center justify-center gap-4">
         <div className="relative hover:-translate-y-2 transition-all duration-300 h-[420px]">
