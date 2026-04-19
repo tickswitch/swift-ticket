@@ -7,16 +7,22 @@ import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate"; 
 import { AvailableTicketIcon } from "@/components/PaymentMethod/Icons";
+import { getSelectedCity } from "./LocationSelector";
 
 const Concerts = () => {
   const latlong = JSON.parse(
     localStorage.getItem("selectedLocationCoords") || "null"
   );
 
+  const selectedCity = getSelectedCity();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events/concerts"],
+    queryKey: ["events/concerts", selectedCity],
     queryFn: () =>
-      GetData(`/events/concerts?lat=${latlong.lat}&lng=${latlong.lon}`),
+      GetData(
+        `/events/concerts?lat=${latlong?.lat}&lng=${latlong?.lon}&city=${encodeURIComponent(
+          selectedCity
+        )}`
+      ),
   });
 
   const { formatDate } = useDateFormat();

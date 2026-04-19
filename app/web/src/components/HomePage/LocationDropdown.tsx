@@ -18,6 +18,19 @@ import {
 } from '@/components/ui/dialog';
 import Loader from '@/components/Common/Loader';
 
+// Keep the homepage LocationSelector in sync with this header dropdown.
+const persistCity = (city: string) => {
+  try {
+    localStorage.setItem('selectedLocation', city);
+    localStorage.setItem('swifttickets_city', city);
+    window.dispatchEvent(
+      new CustomEvent('swifttickets:city-change', { detail: city })
+    );
+  } catch {
+    // ignore
+  }
+};
+
 // Types
 interface City {
   city: string;
@@ -74,7 +87,7 @@ export function LocationDropdown({
   useEffect(() => {
     if (hasLoadedInitialLocation.current) return;
 
-    const savedLocation = localStorage.getItem("selectedLocation");
+    const savedLocation = localStorage.getItem("swifttickets_city") || localStorage.getItem("selectedLocation");
     if (savedLocation) {
       setSelectedLocation(savedLocation);
       onLocationChange(savedLocation);
@@ -105,7 +118,7 @@ export function LocationDropdown({
 
           setUserLocation(city);
 
-          const savedLocation = localStorage.getItem("selectedLocation");
+          const savedLocation = localStorage.getItem("swifttickets_city") || localStorage.getItem("selectedLocation");
           if (!savedLocation) {
             setSelectedLocation(city);
             onLocationChange(city);
@@ -150,7 +163,7 @@ export function LocationDropdown({
                 "selectedLocationCoords",
                 JSON.stringify({ lat: latitude, lon: longitude })
               );
-              localStorage.setItem("selectedLocation", city);
+              persistCity(city);
 
               resolve({ city, lat: latitude, lon: longitude });
             } catch (err) {
@@ -192,7 +205,7 @@ export function LocationDropdown({
     setSelectedLocation(value);
     onLocationChange(value);
     onLocationSelect?.(value);
-    localStorage.setItem("selectedLocation", value);
+    persistCity(value);
     window.location.reload();
   };
 
@@ -203,7 +216,7 @@ export function LocationDropdown({
       setSelectedLocation(city.city);
       onLocationChange(city.city);
       onLocationSelect?.(city.city);
-      localStorage.setItem("selectedLocation", city.city);
+      persistCity(city.city);
       localStorage.setItem(
         "selectedLocationCoords",
         JSON.stringify({
@@ -230,7 +243,7 @@ export function LocationDropdown({
     }
   }, [customLocation, isModalOpen]);
 
-  const loc = localStorage.getItem("selectedLocation");
+  const loc = localStorage.getItem("swifttickets_city") || localStorage.getItem("selectedLocation");
 
   // Debounce custom location input
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { GetSingleData } from '@/API/API';
+import { getSelectedCity } from './LocationSelector';
 import { LocationDropdown } from './LocationDropdown';
 import { EventFiltersBar } from './EventFiltersBar';
 import { EventsListWithPagination } from './EventsListWithPagination';
@@ -98,6 +99,12 @@ const ExploreAllEvents = () => {
     // Category filter (only if not 'Category')
     if (category && category !== 'Category') {
       params.push(`category=${category}`);
+    }
+
+    // City filter
+    const selectedCity = getSelectedCity();
+    if (selectedCity) {
+      params.push(`city=${encodeURIComponent(selectedCity)}`);
     }
 
     // Pagination

@@ -21,6 +21,7 @@ import { ImageProvider } from "../Common/ImageProvider";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
+import { getSelectedCity } from "@/components/HomePage/LocationSelector";
 
 const Trending: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -44,10 +45,15 @@ const Trending: React.FC = () => {
     available_quantity?: number;
   };
   
+  const selectedCity = getSelectedCity();
   const { data, isLoading, error } = useQuery<TrendingEvent[], Error>({
-    queryKey: ["trending"],
+    queryKey: ["trending", selectedCity],
     queryFn: () =>
-      GetData(`events/trending-nearby?lat=${latlong?.lat}&lng=${latlong?.lon}`),
+      GetData(
+        `events/trending-nearby?lat=${latlong?.lat}&lng=${latlong?.lon}&city=${encodeURIComponent(
+          selectedCity
+        )}`
+      ),
   });
 
   const { formatDate } = useDateFormat();
