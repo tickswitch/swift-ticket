@@ -226,30 +226,40 @@ const bestVenues = async () => {
 };
 
 const citiesSearch = async (keyword: string) => {
-  const { data } = await axios.get(`${TM_BASE}/venues.json`, {
-    params: { apikey: apikey(), keyword, size: 10 },
-  });
-  console.log(data);
-  const venues = data._embedded?.venues ?? [];
+  if (!keyword.trim()) return [];
+
+  const { data } = await axios.get(
+    "https://nominatim.openstreetmap.org/search",
+    {
+      params: {
+        q: keyword,
+        format: "json",
+        limit: 8,
+        featuretype: "city",
+        addressdetails: 1,
+      },
+      headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
+    }
+  );
 
   const uniqueCitiesMap = new Map();
 
-  venues.forEach((v: any) => {
-    const cityName = v.city?.name;
-    const countryName = v.country?.name;
-    const lat = v.location?.latitude;
-    const lon = v.location?.longitude;
+  (data as any[]).forEach((place: any) => {
+    const cityName =
+      place.address?.city ||
+      place.address?.town ||
+      place.address?.village ||
+      place.address?.county ||
+      place.display_name?.split(",")[0];
+    const country = place.address?.country || "";
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
 
     if (cityName && !uniqueCitiesMap.has(cityName)) {
-      uniqueCitiesMap.set(cityName, {
-        city: cityName,
-        country: countryName || "",
-        latitude: lat ? parseFloat(lat) : null,
-        longitude: lon ? parseFloat(lon) : null,
-      });
+      uniqueCitiesMap.set(cityName, { city: cityName, country, latitude: lat, longitude: lon });
     }
   });
-  console.log(Array.from(uniqueCitiesMap.values()));
+
   return Array.from(uniqueCitiesMap.values());
 };
 const eventsBygrouped = async () => {
