@@ -304,10 +304,16 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
   const formatted = events.map((e) => {
     const classifications =
       (e.classifications as Record<string, unknown>[]) ?? [];
+    const venue =
+      ((e._embedded as Record<string, unknown[]>)?.venues?.[0] as Record<string, unknown>) ?? {};
     return {
       id: e.id,
       title: e.name,
       image: (e.images as { url: string }[])?.[0]?.url ?? null,
+      location: (venue as { city?: { name?: string } }).city?.name ?? null,
+      country: (venue as { country?: { name?: string } }).country?.name ?? null,
+      latitude: (venue as { location?: { latitude?: string } }).location?.latitude ?? null,
+      longitude: (venue as { location?: { longitude?: string } }).location?.longitude ?? null,
       genres: classifications
         .map((c) => (c.genre as { name?: string })?.name)
         .filter(Boolean),
