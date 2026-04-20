@@ -11,6 +11,7 @@ import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import toast from "react-hot-toast";
 import { TicketIcon } from "lucide-react";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 // Types
 interface CartItem {
@@ -455,13 +456,15 @@ const DiscountCart = () => {
     return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   };
 
-  const suggestions: any[] = [
+  const merged: any[] = [
     ...resaleSuggestions.map((t) => ({
       title: t.title,
       date: formatShortDate(t.start_date),
       subtitle: `${t.venue ?? ""}${t.ticket_type ? ` · ${t.ticket_type}` : ""}`,
       price: t.price,
       image: null,
+      latitude: null,
+      longitude: null,
       type: "resale" as const,
       navigateTo: t.event_id ? `/event-details/${t.event_id}` : null,
     })),
@@ -471,10 +474,14 @@ const DiscountCart = () => {
       subtitle: `${e.venue ?? ""}${e.location ? `, ${e.location}` : ""}`,
       price: null,
       image: e.image ?? null,
+      latitude: e.latitude ?? null,
+      longitude: e.longitude ?? null,
       type: "tm" as const,
       navigateTo: `/event-details/${e.id}`,
     })),
   ];
+
+  const suggestions: any[] = sortByDistance(merged, location.lat || null, location.lon || null);
 
   return (
     <div className="bg-[#F4F4F4] py-[50px]">
