@@ -544,14 +544,14 @@ const eventsNearbyPHQ = async (lat: string, lng: string, radius: number, keyword
   const now = new Date().toISOString().split("T")[0];
   const params: Record<string, unknown> = {
     limit: 20,
-    sort: "-rank",
+    sort: "start",
     "start.gte": now,
     state: "active",
     category: "concerts,festivals,sports,community,conferences,expos",
   };
+  // Free tier uses `within` param: "radiuskm@lat,lng"
   if (hasLocation) {
-    params["location_around.origin"] = `${lat},${lng}`;
-    params["location_around.offset"] = `${radius}km`;
+    params.within = `${radius}km@${lat},${lng}`;
   }
   if (keyword) params.q = keyword;
 
