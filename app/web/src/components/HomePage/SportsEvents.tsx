@@ -76,105 +76,55 @@ const SportsEvents = () => {
           <div>
             <Swiper
               modules={[Navigation, Pagination, Scrollbar, A11y]}
-              spaceBetween={50}
-              slidesPerView={3}
               onSwiper={(swiper) => {
                 swiperRef.current = swiper;
               }}
               breakpoints={{
-                320: {
-                  slidesPerView: 1,
-                  spaceBetween: 20,
-                },
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 30,
-                },
-                1024: {
-                  slidesPerView: 3,
-                  spaceBetween: 50,
-                },
+                320: { slidesPerView: 1.5, spaceBetween: 16 },
+                640: { slidesPerView: 2, spaceBetween: 20 },
+                1024: { slidesPerView: 3, spaceBetween: 24 },
               }}
             >
-              <SwiperSlide>
-                <Link
-                  to={`/events?genre=Basketball${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
-                  className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
-                >
-                  <img
-                    src={data?.Basketball?.[0]?.image || ""}
-                    className="w-full h-[200px] rounded-md object-cover"
-                  />
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex flex-col gap-1 w-full ps-3">
-                      <div className="flex items-center justify-between w-full">
-                        <p className="font-semibold text-base md:text-lg line-clamp-1">
-                          Basketball
-                        </p>
-                      </div>
-                      <p className="px-2 border border-gray-400 rounded-full w-fit text-xs">
-                        Sports
-                      </p>
-                    </div>
-                    {/* <button>
-                  <BookmarkIcon2 />
-                </button> */}
-                  </div>
-                </Link>
-              </SwiperSlide>
-              <SwiperSlide>
-                <Link
-                  to={`/events?genre=Hockey${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
-                  className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
-                >
-                  <img
-                    src={data?.Hockey?.[0]?.image || ""}
-                    className="w-full h-[200px] rounded-md object-cover"
-                  />
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex flex-col gap-1 w-full ps-3">
-                      <div className="flex items-center justify-between w-full">
-                        <p className="font-semibold text-base md:text-lg line-clamp-1">
-                          Hockey
-                        </p>
-                      </div>
-                      <p className="px-2 border border-gray-400 rounded-full w-fit text-xs">
-                        Sports
-                      </p>
-                    </div>
-                    {/* <button>
-                  <BookmarkIcon2 />
-                </button> */}
-                  </div>
-                </Link>
-              </SwiperSlide>
-              <SwiperSlide>
-                <Link
-                  to={`/events?genre=Football${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
-                  className="w-full bg-primary001/10 px-2 py-2 rounded-2xl flex flex-col items-start gap-3 hover:-translate-y-2 transition-all duration-300"
-                >
-                  <img
-                    src={data?.Football?.[0]?.image || ""}
-                    className="w-full h-[200px] rounded-md object-cover"
-                  />
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex flex-col gap-1 w-full ps-3">
-                      <div className="flex items-center justify-between w-full">
-                        <p className="font-semibold text-base md:text-lg line-clamp-1">
-                          Football
-                        </p>
-                      </div>
-                      <p className="px-2 border border-gray-400 rounded-full w-fit text-xs">
-                        Sports
-                      </p>
-                    </div>
-                    {/* <button>
-                  <BookmarkIcon2 />
-                </button> */}
-                  </div>
-                </Link>
-              </SwiperSlide>
-             
+              {(
+                [
+                  { genre: "Basketball", image: data?.Basketball?.[0]?.image },
+                  { genre: "Hockey",     image: data?.Hockey?.[0]?.image     },
+                  { genre: "Football",   image: data?.Football?.[0]?.image   },
+                ] as { genre: string; image?: string }[]
+              ).map(({ genre, image }) => (
+                <SwiperSlide key={genre}>
+                  <Link
+                    to={`/events?genre=${genre}${locationCoords?.lat ? `&lat=${locationCoords.lat}&lng=${locationCoords.lon}` : ""}`}
+                    className="block relative rounded-xl overflow-hidden h-[200px] cursor-pointer group"
+                  >
+                    {/* Full-bleed image */}
+                    <img
+                      src={image || ""}
+                      alt={genre}
+                      className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    />
+
+                    {/* Dark gradient overlay */}
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.10) 60%, transparent 100%)",
+                      }}
+                    />
+
+                    {/* "Events" pill — top left */}
+                    <span className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
+                      Events
+                    </span>
+
+                    {/* Sport name — bottom left */}
+                    <p className="absolute bottom-3 left-3 text-white font-bold text-base">
+                      {genre}
+                    </p>
+                  </Link>
+                </SwiperSlide>
+              ))}
             </Swiper>
           </div>
         </div>
