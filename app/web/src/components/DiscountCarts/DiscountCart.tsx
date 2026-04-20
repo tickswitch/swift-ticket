@@ -450,9 +450,17 @@ const DiscountCart = () => {
 
   const tmSuggestions: any[] = SeachData?.data?.events ?? (Array.isArray(SeachData?.data) ? SeachData.data : []);
   const resaleSuggestions: any[] = SeachData?.data?.resaleTickets ?? [];
+  const formatShortDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
   const suggestions: any[] = [
     ...resaleSuggestions.map((t) => ({
       title: t.title,
+      date: formatShortDate(t.start_date),
       subtitle: `${t.venue ?? ""}${t.ticket_type ? ` · ${t.ticket_type}` : ""}`,
       price: t.price,
       image: null,
@@ -461,6 +469,7 @@ const DiscountCart = () => {
     })),
     ...tmSuggestions.map((e) => ({
       title: e.title,
+      date: formatShortDate(e.start_date ?? e.date),
       subtitle: `${e.venue ?? ""}${e.location ? `, ${e.location}` : ""}`,
       price: null,
       image: e.image ?? null,
@@ -565,9 +574,11 @@ const DiscountCart = () => {
                       {/* Text */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{item.title}</p>
-                        {item.subtitle && (
-                          <p className="text-xs text-gray-400 truncate mt-0.5">{item.subtitle}</p>
-                        )}
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                          {item.date && <span>{item.date}</span>}
+                          {item.date && item.subtitle && <span className="mx-1">·</span>}
+                          {item.subtitle && <span>{item.subtitle}</span>}
+                        </p>
                       </div>
 
                       {/* Price or arrow */}
