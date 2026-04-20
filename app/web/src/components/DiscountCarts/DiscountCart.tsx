@@ -10,6 +10,7 @@ import { formatEventDate } from "@/lib/formatEventDate";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import toast from "react-hot-toast";
+import { TicketIcon } from "lucide-react";
 
 // Types
 interface CartItem {
@@ -454,12 +455,16 @@ const DiscountCart = () => {
       title: t.title,
       subtitle: `${t.venue ?? ""}${t.ticket_type ? ` · ${t.ticket_type}` : ""}`,
       price: t.price,
+      image: null,
+      type: "resale" as const,
       navigateTo: t.event_id ? `/event-details/${t.event_id}` : null,
     })),
     ...tmSuggestions.map((e) => ({
       title: e.title,
       subtitle: `${e.venue ?? ""}${e.location ? `, ${e.location}` : ""}`,
       price: null,
+      image: e.image ?? null,
+      type: "tm" as const,
       navigateTo: `/event-details/${e.id}`,
     })),
   ];
@@ -537,17 +542,46 @@ const DiscountCart = () => {
                         handleSelect(item.title ?? "");
                         if (item.navigateTo) navigate(item.navigateTo);
                       }}
-                      className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer flex items-center justify-between gap-2"
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
                     >
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium truncate">{item.title}</span>
-                        {item.subtitle && (
-                          <span className="text-xs text-gray-500 truncate">{item.subtitle}</span>
+                      {/* Thumbnail */}
+                      <div className="flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt=""
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              (e.target as HTMLImageElement).parentElement!.classList.add("bg-primary001/10");
+                            }}
+                          />
+                        ) : (
+                          <TicketIcon size={18} className="text-primary001/60" />
                         )}
                       </div>
-                      {item.price !== null && (
-                        <span className="text-xs font-semibold text-primary001 whitespace-nowrap">₹{item.price}</span>
-                      )}
+
+                      {/* Text */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{item.title}</p>
+                        {item.subtitle && (
+                          <p className="text-xs text-gray-400 truncate mt-0.5">{item.subtitle}</p>
+                        )}
+                      </div>
+
+                      {/* Price or arrow */}
+                      <div className="flex-shrink-0">
+                        {item.price !== null ? (
+                          <span className="text-xs font-bold text-white bg-primary001 px-2 py-1 rounded-full">
+                            ₹{item.price}
+                          </span>
+                        ) : (
+                          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
