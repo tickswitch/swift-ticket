@@ -61,12 +61,9 @@ export function LocationDropdown({
   const hasLoadedInitialLocation = useRef(false);
 
   // Fetch city suggestions
-  const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useQuery<CitiesResponse, Error>({
+  const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useQuery({
     queryKey: ["cities", debouncedQuery],
-    queryFn: async () => {
-      const response = await GetSingleData<CitiesResponse>(`cities/search?query=${debouncedQuery}`);
-      return response.data;
-    },
+    queryFn: () => GetSingleData(`cities/search?query=${encodeURIComponent(debouncedQuery)}`),
     enabled: !!debouncedQuery && debouncedQuery.length > 0,
   });
 
