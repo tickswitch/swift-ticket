@@ -435,11 +435,9 @@ const DiscountCart = () => {
     isLoading: SeachDataLoading,
     error: SeachDataError,
   } = useQuery({
-    queryKey: ["cart-search-events", debouncedQuery, location.lat, location.lon],
+    queryKey: ["cart-search-events", debouncedQuery],
     queryFn: () =>
-      GetSingleData(
-        `search-events?keyword=${encodeURIComponent(debouncedQuery)}${location.lat ? `&lat=${location.lat}&lng=${location.lon}` : ""}`
-      ),
+      GetSingleData(`search-events?keyword=${encodeURIComponent(debouncedQuery)}`),
     enabled: !!debouncedQuery,
   });
 
