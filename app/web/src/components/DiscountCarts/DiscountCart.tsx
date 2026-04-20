@@ -447,8 +447,8 @@ const DiscountCart = () => {
     setIsFocused(false);
   }, []);
 
-  const tmSuggestions: any[] = SeachData?.events ?? (Array.isArray(SeachData) ? SeachData : []);
-  const resaleSuggestions: any[] = SeachData?.resaleTickets ?? [];
+  const tmSuggestions: any[] = SeachData?.data?.events ?? (Array.isArray(SeachData?.data) ? SeachData.data : []);
+  const resaleSuggestions: any[] = SeachData?.data?.resaleTickets ?? [];
   const suggestions: any[] = [
     ...resaleSuggestions.map((t) => ({
       title: t.title,
