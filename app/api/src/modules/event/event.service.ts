@@ -240,6 +240,10 @@ const bestVenues = async (lat?: string, lng?: string) => {
     country: (v as { country?: { name?: string } }).country?.name ?? null,
     address: (v as { address?: { line1?: string } }).address?.line1 ?? null,
     url: v.url ?? null,
+    latitude: (v as { location?: { latitude?: string } }).location?.latitude ?? null,
+    longitude: (v as { location?: { longitude?: string } }).location?.longitude ?? null,
+    postalCode: (v as { postalCode?: string }).postalCode ?? null,
+    timezone: (v as { timezone?: string }).timezone ?? null,
   }));
 };
 
