@@ -300,23 +300,31 @@ const bestVenues = async (lat?: string, lng?: string) => {
 const citiesSearch = async (keyword: string) => {
   if (!keyword.trim()) return [];
 
-  const { data } = await axios.get(
-    "https://nominatim.openstreetmap.org/search",
-    {
-      params: {
-        q: keyword,
-        format: "json",
-        limit: 8,
-        featuretype: "city",
-        addressdetails: 1,
-      },
-      headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
-    }
-  );
+  let places: any[] = [];
+  try {
+    const { data } = await axios.get(
+      "https://nominatim.openstreetmap.org/search",
+      {
+        params: {
+          q: keyword,
+          format: "json",
+          limit: 8,
+          featuretype: "city",
+          addressdetails: 1,
+        },
+        headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
+        timeout: 8000,
+      }
+    );
+    places = Array.isArray(data) ? data : [];
+  } catch (err: any) {
+    console.error(`[Nominatim] error — ${err?.message}`);
+    return [];
+  }
 
   const uniqueCitiesMap = new Map();
 
-  (data as any[]).forEach((place: any) => {
+  places.forEach((place: any) => {
     const cityName =
       place.address?.city ||
       place.address?.town ||
