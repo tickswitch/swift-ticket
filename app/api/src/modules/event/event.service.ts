@@ -5,8 +5,8 @@ import { AppError } from "../../utils/AppError";
 const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 const apikey = () => process.env.TICKETMASTER_API_KEY as string;
 
-const EB_BASE = "https://www.eventbriteapi.com/v3";
-const ebToken = () => process.env.EVENTBRITE_TOKEN as string;
+const PHQ_BASE = "https://api.predicthq.com/v1";
+const phqToken = () => process.env.PREDICTHQ_TOKEN as string;
 
 // Safe Ticketmaster GET — returns null instead of throwing on API errors
 const tmGet = async (url: string, params: Record<string, unknown>) => {
@@ -21,54 +21,60 @@ const tmGet = async (url: string, params: Record<string, unknown>) => {
   }
 };
 
-// Safe Eventbrite GET — uses Authorization header, returns null on error
-const ebGet = async (url: string, params: Record<string, unknown> = {}) => {
+// Safe PredictHQ GET — uses Authorization header, returns null on error
+const phqGet = async (url: string, params: Record<string, unknown> = {}) => {
   try {
     const { data } = await axios.get(url, {
       params,
-      headers: { Authorization: `Bearer ${ebToken()}` },
+      headers: { Authorization: `Bearer ${phqToken()}` },
     });
     return data;
   } catch (err: any) {
     const status = err?.response?.status;
-    const msg = err?.response?.data?.error_description || err?.message || "Eventbrite error";
-    console.error(`[EB] ${status || "network"} error — ${msg}`);
+    const msg = err?.response?.data?.error || err?.message || "PredictHQ error";
+    console.error(`[PHQ] ${status || "network"} error — ${msg}`);
     return null;
   }
 };
 
-// Normalize an Eventbrite event to the same shape as mapEvent output
-const mapEventbrite = (event: any): Record<string, unknown> => {
-  const venue = event.venue ?? {};
-  const addr = venue.address ?? {};
-  const lat = addr.latitude ?? null;
-  const lng = addr.longitude ?? null;
-  const localStart: string = event.start?.local ?? "";
-  const [startDate, startTime] = localStart ? localStart.split("T") : [null, null];
-  const localEnd: string = event.end?.local ?? "";
-  const [endDate] = localEnd ? localEnd.split("T") : [null];
-  const minPrice = event.ticket_availability?.minimum_ticket_price?.value;
+// Normalize a PredictHQ event to the same shape as mapEvent output
+const mapPHQ = (event: any): Record<string, unknown> => {
+  // PredictHQ location is [longitude, latitude]
+  const coords = event.location ?? [];
+  const lng = coords[0] ?? null;
+  const lat = coords[1] ?? null;
+
+  const venueEntity = (event.entities ?? []).find((e: any) => e.type === "venue");
+  const venueName = venueEntity?.name ?? null;
+
+  const isoStart: string = event.start ?? "";
+  const [startDate, startTimeFull] = isoStart ? isoStart.split("T") : [null, null];
+  const startTime = startTimeFull ? startTimeFull.replace("Z", "").split("+")[0] : null;
+
+  const isoEnd: string = event.end ?? "";
+  const [endDate] = isoEnd ? isoEnd.split("T") : [null];
 
   return {
-    id: `eb_${event.id}`,
-    title: event.name?.text ?? null,
-    image: event.logo?.original?.url ?? event.logo?.url ?? null,
+    id: `phq_${event.id}`,
+    title: event.title ?? null,
+    image: null,
     start_date: startDate ?? null,
     date: startDate ?? null,
     end_date: endDate ?? startDate ?? null,
     time: startTime ?? null,
-    venue: venue.name ?? null,
-    location: addr.city ?? null,
-    latitude: lat,
-    longitude: lng,
+    venue: venueName,
+    location: event.geo?.address?.locality ?? event.country ?? null,
+    latitude: lat ? String(lat) : null,
+    longitude: lng ? String(lng) : null,
     mapUrl: lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : null,
-    ticket_url: event.url ?? null,
-    genres: [],
-    segment: [],
+    ticket_url: null,
+    genres: event.labels ?? [],
+    segment: [event.category ?? null].filter(Boolean),
     available_quantity: 0,
-    is_free: event.is_free ?? false,
-    price: typeof minPrice === "number" && minPrice > 0 ? minPrice : undefined,
-    source: "eventbrite",
+    is_free: false,
+    phq_rank: event.rank ?? null,
+    phq_attendance: event.phq_attendance ?? null,
+    source: "predicthq",
   };
 };
 
@@ -533,25 +539,25 @@ const ticketAlert = async (userId: number) => {
   });
 };
 
-const eventsNearbyEB = async (lat: string, lng: string, radius: number, keyword?: string) => {
+const eventsNearbyPHQ = async (lat: string, lng: string, radius: number, keyword?: string) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const now = new Date().toISOString();
+  const now = new Date().toISOString().split("T")[0];
   const params: Record<string, unknown> = {
-    expand: "venue",
-    sort_by: "best",
-    page_size: 20,
-    "start_date.range_start": now,
+    limit: 20,
+    sort: "-rank",
+    "start.gte": now,
+    state: "active",
+    category: "concerts,festivals,sports,community,conferences,expos",
   };
   if (hasLocation) {
-    params["location.latitude"] = lat;
-    params["location.longitude"] = lng;
-    params["location.within"] = `${radius}km`;
+    params["location_around.origin"] = `${lat},${lng}`;
+    params["location_around.offset"] = `${radius}km`;
   }
   if (keyword) params.q = keyword;
 
-  const data = await ebGet(`${EB_BASE}/events/search/`, params);
-  const events: any[] = data?.events ?? [];
-  return events.map(mapEventbrite);
+  const data = await phqGet(`${PHQ_BASE}/events/`, params);
+  const events: any[] = data?.results ?? [];
+  return events.map(mapPHQ);
 };
 
 export const eventService = {
@@ -568,7 +574,7 @@ export const eventService = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
-  eventsNearbyEB,
+  eventsNearbyPHQ,
   favoCalendar,
   myFavorites,
   toggleNotification,

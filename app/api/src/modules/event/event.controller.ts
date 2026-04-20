@@ -190,9 +190,9 @@ const ticketAlert = catchAsync(async (req: AuthRequest, res: Response) => {
   return res.json({ status: true, data });
 });
 
-const nearbyEB = catchAsync(async (req: Request, res: Response) => {
+const nearbyPHQ = catchAsync(async (req: Request, res: Response) => {
   const { lat, lng, radius = "50", keyword } = req.query as Record<string, string>;
-  const data = await eventService.eventsNearbyEB(lat ?? "", lng ?? "", Number(radius), keyword);
+  const data = await eventService.eventsNearbyPHQ(lat ?? "", lng ?? "", Number(radius), keyword);
   return res.json({ status: true, data });
 });
 
@@ -250,7 +250,7 @@ export const eventController = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
-  nearbyEB,
+  nearbyPHQ,
   favoCalendar,
   myFavorites,
   toggleNotification,
