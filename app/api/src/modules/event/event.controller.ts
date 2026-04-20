@@ -190,11 +190,6 @@ const ticketAlert = catchAsync(async (req: AuthRequest, res: Response) => {
   return res.json({ status: true, data });
 });
 
-const nearbyPHQ = catchAsync(async (req: Request, res: Response) => {
-  const { lat, lng, radius = "50", keyword } = req.query as Record<string, string>;
-  const data = await eventService.eventsNearbyPHQ(lat ?? "", lng ?? "", Number(radius), keyword);
-  return res.json({ status: true, data });
-});
 
 // ---- Date helpers ----
 function addDays(date: Date, days: number): Date {
@@ -250,7 +245,6 @@ export const eventController = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
-  nearbyPHQ,
   favoCalendar,
   myFavorites,
   toggleNotification,

@@ -5,9 +5,6 @@ import { AppError } from "../../utils/AppError";
 const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 const apikey = () => process.env.TICKETMASTER_API_KEY as string;
 
-const PHQ_BASE = "https://api.predicthq.com/v1";
-const phqToken = () => process.env.PREDICTHQ_TOKEN as string;
-
 // Safe Ticketmaster GET — returns null instead of throwing on API errors
 const tmGet = async (url: string, params: Record<string, unknown>) => {
   try {
@@ -19,63 +16,6 @@ const tmGet = async (url: string, params: Record<string, unknown>) => {
     console.error(`[TM] ${status || "network"} error — ${msg}`);
     return null;
   }
-};
-
-// Safe PredictHQ GET — uses Authorization header, returns null on error
-const phqGet = async (url: string, params: Record<string, unknown> = {}) => {
-  try {
-    const { data } = await axios.get(url, {
-      params,
-      headers: { Authorization: `Bearer ${phqToken()}` },
-    });
-    return data;
-  } catch (err: any) {
-    const status = err?.response?.status;
-    const msg = err?.response?.data?.error || err?.message || "PredictHQ error";
-    console.error(`[PHQ] ${status || "network"} error — ${msg}`);
-    return null;
-  }
-};
-
-// Normalize a PredictHQ event to the same shape as mapEvent output
-const mapPHQ = (event: any): Record<string, unknown> => {
-  // PredictHQ location is [longitude, latitude]
-  const coords = event.location ?? [];
-  const lng = coords[0] ?? null;
-  const lat = coords[1] ?? null;
-
-  const venueEntity = (event.entities ?? []).find((e: any) => e.type === "venue");
-  const venueName = venueEntity?.name ?? null;
-
-  const isoStart: string = event.start ?? "";
-  const [startDate, startTimeFull] = isoStart ? isoStart.split("T") : [null, null];
-  const startTime = startTimeFull ? startTimeFull.replace("Z", "").split("+")[0] : null;
-
-  const isoEnd: string = event.end ?? "";
-  const [endDate] = isoEnd ? isoEnd.split("T") : [null];
-
-  return {
-    id: `phq_${event.id}`,
-    title: event.title ?? null,
-    image: null,
-    start_date: startDate ?? null,
-    date: startDate ?? null,
-    end_date: endDate ?? startDate ?? null,
-    time: startTime ?? null,
-    venue: venueName,
-    location: event.geo?.address?.locality ?? event.country ?? null,
-    latitude: lat ? String(lat) : null,
-    longitude: lng ? String(lng) : null,
-    mapUrl: lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : null,
-    ticket_url: null,
-    genres: event.labels ?? [],
-    segment: [event.category ?? null].filter(Boolean),
-    available_quantity: 0,
-    is_free: false,
-    phq_rank: event.rank ?? null,
-    phq_attendance: event.phq_attendance ?? null,
-    source: "predicthq",
-  };
 };
 
 // Helper: compute resale ticket availability for an event
@@ -539,27 +479,6 @@ const ticketAlert = async (userId: number) => {
   });
 };
 
-const eventsNearbyPHQ = async (lat: string, lng: string, radius: number, keyword?: string) => {
-  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const now = new Date().toISOString().split("T")[0];
-  const params: Record<string, unknown> = {
-    limit: 20,
-    sort: "start",
-    "start.gte": now,
-    state: "active",
-    category: "concerts,festivals,sports,community,conferences,expos",
-  };
-  // Free tier uses `within` param: "radiuskm@lat,lng"
-  if (hasLocation) {
-    params.within = `${radius}km@${lat},${lng}`;
-  }
-  if (keyword) params.q = keyword;
-
-  const data = await phqGet(`${PHQ_BASE}/events/`, params);
-  const events: any[] = data?.results ?? [];
-  return events.map(mapPHQ);
-};
-
 export const eventService = {
   filterEvents,
   searchEvents,
@@ -574,7 +493,6 @@ export const eventService = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
-  eventsNearbyPHQ,
   favoCalendar,
   myFavorites,
   toggleNotification,
