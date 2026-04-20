@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
-import { useDateFormat, formatShortDate } from "@/lib/formatDate"; 
+import { useDateFormat, formatShortDate } from "@/lib/formatDate";
+import { sortByDistance } from "@/lib/sortByDistance";
 import { AvailableTicketIcon } from "@/components/PaymentMethod/Icons";
 
 const Concerts = () => {
@@ -45,7 +46,7 @@ const Concerts = () => {
       ) : (
         <div className="py-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {data?.slice(0, 10)?.map((concert) => {
+            {sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon).slice(0, 10)?.map((concert) => {
               const shortDate = formatShortDate(concert?.date, concert?.time);
               const longDate = formatDate(concert?.date, concert?.time);
               const ticketCount = concert?.available_quantity;

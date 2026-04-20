@@ -6,6 +6,7 @@ import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
 import { useDateFormat } from "@/lib/formatDate";
+import { sortByDistance } from "@/lib/sortByDistance";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Container from "@/components/Common/Container";
@@ -32,7 +33,7 @@ const AllConcerts = () => {
   // Pagination calculations from API response
   const totalItems = data?.pagination?.totalElements || 1;
   const totalPages = data?.pagination?.totalPages || 1;
-  const currentData = data?.data || [];
+  const currentData = sortByDistance(data?.data ?? [], latlong?.lat, latlong?.lon);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

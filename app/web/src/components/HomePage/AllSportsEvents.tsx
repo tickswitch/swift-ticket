@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import Container from "../Common/Container";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 const AllSportsEvents = () => {
 
@@ -45,7 +46,7 @@ const AllSportsEvents = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-5">
                         {data &&
-                            data?.map((data, idx) => (
+                            sortByDistance(data as any[], latlong?.lat, latlong?.lon)?.map((data, idx) => (
                                 <Link
                                     to={`/event-details/${data?.id}`}
                                     key={`index - ${idx}`}

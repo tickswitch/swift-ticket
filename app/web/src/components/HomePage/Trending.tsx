@@ -21,6 +21,7 @@ import { ImageProvider } from "../Common/ImageProvider";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 const Trending: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -51,6 +52,7 @@ const Trending: React.FC = () => {
   });
 
   const { formatDate } = useDateFormat();
+  const sortedData = sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon) as typeof data;
 
   return (
     <div className="pt-12 relative">
@@ -111,8 +113,8 @@ const Trending: React.FC = () => {
                 },
               }}
             >
-              {data &&
-                data?.map((data, index) => {
+              {sortedData &&
+                sortedData?.map((data, index) => {
                   const formattedDate = formatDate(data?.date, data?.time);
                   const shortDate = formatShortDate(data?.date, data?.time);
                   const ticketCount = data?.available_quantity;

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Loader from "../Common/Loader";
 import { formatShortDate } from "@/lib/formatDate";
 import { TimerIcon } from "lucide-react";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 const TicketBadge = ({ count }: { count: number }) => (
   <span
@@ -31,7 +32,7 @@ const FestivalsForYou = () => {
   if (isLoading) return <Loader />;
   if (!data || (data as any[]).length === 0) return null;
 
-  const festivals = (data as any[]).slice(0, 10);
+  const festivals = sortByDistance(data as any[], latlong?.lat, latlong?.lon).slice(0, 10);
 
   return (
     <div className="pt-12">

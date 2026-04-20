@@ -5,6 +5,7 @@ import { GetData } from "@/API/API";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText"; 
 import { useDateFormat } from "@/lib/formatDate";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 interface PopularEventData {
   id: string;
@@ -39,7 +40,7 @@ const PopularEvents = () => {
         <ErrorText>No events found.</ErrorText>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {data && data.length > 0 && data.map((event) => {
+          {data && data.length > 0 && sortByDistance(data as any[], location?.lat, location?.lon).map((event) => {
             const formattedDate = formatDate(event?.date, event?.time);
             return (
               <Link
