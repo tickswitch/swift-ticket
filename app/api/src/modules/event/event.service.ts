@@ -91,8 +91,14 @@ const filterEvents = async (
   return { pagination: pageInfo, data: mapped };
 };
 
-const searchEvents = async (keyword: string | undefined) => {
-  const data = await tmGet(`${TM_BASE}/events.json`, { apikey: apikey(), keyword, size: 50 });
+const searchEvents = async (keyword: string | undefined, lat?: string, lng?: string) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    keyword,
+    size: 50,
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
+  });
   const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };

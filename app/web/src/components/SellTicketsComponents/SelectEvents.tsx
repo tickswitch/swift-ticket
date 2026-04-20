@@ -21,6 +21,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { updateData } from "@/features/SellTicketSlice";
 import { getLocalTime } from "@/lib/getLocalTime";
 import { formatEventDate } from "@/lib/formatEventDate";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 // Proper EventItem type to match API response
 type EventItem = {
@@ -68,19 +69,24 @@ const SelectEvents = () => {
   };
 
   // debounce for search query
-  const debouncedQuery = useDebounce(query, 1000);
+  const debouncedQuery = useDebounce(query, 500);
+
+  const userCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+  const locationParams = userCoords?.lat && userCoords?.lon
+    ? `&lat=${userCoords.lat}&lng=${userCoords.lon}`
+    : "";
 
   // get search events
-  const { data, isLoading, error } = useQuery<EventItem[]>({
-    queryKey: ["search-events", debouncedQuery],
+  const { data: rawData, isLoading, error } = useQuery<EventItem[]>({
+    queryKey: ["search-events", debouncedQuery, userCoords?.lat, userCoords?.lon],
     queryFn: () =>
       GetData(
-        `search-events${
-          debouncedQuery ? `?keyword=${encodeURIComponent(debouncedQuery)}` : ""
-        }`
+        `search-events?keyword=${encodeURIComponent(debouncedQuery || "")}${locationParams}`
       ),
-    enabled: true // Fixed: removed the OR condition
+    enabled: true,
   });
+
+  const data = sortByDistance(rawData ?? [], userCoords?.lat, userCoords?.lon) as EventItem[];
 
   return (
     <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">

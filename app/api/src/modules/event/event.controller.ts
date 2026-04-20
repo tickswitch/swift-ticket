@@ -83,7 +83,8 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
 });
 
 const search = catchAsync(async (req: Request, res: Response) => {
-  const data = await eventService.searchEvents(req.query.keyword as string);
+  const { keyword, lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.searchEvents(keyword, lat, lng);
   return res.json({ status: true, data });
 });
 

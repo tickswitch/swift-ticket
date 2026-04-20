@@ -1,6 +1,6 @@
 import { bannerBg } from "@/assets";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { AppleIcon, EyeIcon, FacebookIcon, GoogleIcon } from "./AuthIcons";
 import { useState, useEffect } from "react";
 import { BeatLoader } from "react-spinners";
@@ -58,6 +58,8 @@ const Login = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const redirectTo: string = (state as any)?.from ?? "/";
   const { login } = useAuth();
 
   const fullPhone = `+91${phoneDigits}`;
@@ -131,7 +133,7 @@ const Login = () => {
             if (res.data) {
               localStorage.setItem("token", res?.data?.token);
               toast.success("Google login successful");
-              navigate("/");
+              navigate(redirectTo);
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -176,7 +178,7 @@ const Login = () => {
     try {
       setIsPending(true);
       await login(data.email, data.password);
-      navigate("/");
+      navigate(redirectTo);
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -232,7 +234,7 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(userData));
       }
       toast.success(res?.data?.message || "Phone login successful");
-      navigate("/");
+      navigate(redirectTo);
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       const msg =
