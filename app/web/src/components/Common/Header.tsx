@@ -263,7 +263,7 @@ const Header = () => {
   }, []);
 
   const userCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
-  const rawEvents: any[] = eventsData?.data ?? [];
+  const rawEvents: any[] = eventsData?.data?.events ?? (Array.isArray(eventsData?.data) ? eventsData.data : []);
   const eventResults = sortByDistance(rawEvents, userCoords?.lat, userCoords?.lon);
 
   const cityResults: any[] = citiesData?.cities ?? [];

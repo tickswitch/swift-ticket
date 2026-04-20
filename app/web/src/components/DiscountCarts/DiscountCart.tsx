@@ -434,12 +434,12 @@ const DiscountCart = () => {
     isLoading: SeachDataLoading,
     error: SeachDataError,
   } = useQuery({
-    queryKey: ["cities", debouncedQuery],
+    queryKey: ["cart-search-events", debouncedQuery, location.lat, location.lon],
     queryFn: () =>
       GetSingleData(
-        `events?query=${debouncedQuery}&radius=50&lat=${location.lat}&lng=${location.lon}`
+        `search-events?keyword=${encodeURIComponent(debouncedQuery)}${location.lat ? `&lat=${location.lat}&lng=${location.lon}` : ""}`
       ),
-    enabled: !!debouncedQuery, // only fetch if query isn't empty
+    enabled: !!debouncedQuery,
   });
 
   const handleSelect = useCallback((city: string) => {
@@ -447,7 +447,22 @@ const DiscountCart = () => {
     setIsFocused(false);
   }, []);
 
-  const suggestions: SearchEvent[] = Array.isArray(SeachData?.data) ? SeachData.data : [];
+  const tmSuggestions: any[] = SeachData?.events ?? (Array.isArray(SeachData) ? SeachData : []);
+  const resaleSuggestions: any[] = SeachData?.resaleTickets ?? [];
+  const suggestions: any[] = [
+    ...resaleSuggestions.map((t) => ({
+      title: t.title,
+      subtitle: `${t.venue ?? ""}${t.ticket_type ? ` · ${t.ticket_type}` : ""}`,
+      price: t.price,
+      navigateTo: t.event_id ? `/event-details/${t.event_id}` : null,
+    })),
+    ...tmSuggestions.map((e) => ({
+      title: e.title,
+      subtitle: `${e.venue ?? ""}${e.location ? `, ${e.location}` : ""}`,
+      price: null,
+      navigateTo: `/event-details/${e.id}`,
+    })),
+  ];
 
   return (
     <div className="bg-[#F4F4F4] py-[50px]">
@@ -496,9 +511,9 @@ const DiscountCart = () => {
               </p>
               {/* Suggestions Dropdown */}
               {isFocused && debouncedQuery && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-72 overflow-y-auto">
                   {SeachDataLoading && (
-                    <div className="px-4 py-2 text-gray-500 text-sm">
+                    <div className="px-4 py-3 flex items-center justify-center">
                       <Loader parentClass="h-fit" size={30} />
                     </div>
                   )}
@@ -509,29 +524,32 @@ const DiscountCart = () => {
                     </div>
                   )}
 
-                  {!SeachDataLoading && suggestions.length === 0 && (
+                  {!SeachDataLoading && !SeachDataError && suggestions.length === 0 && (
                     <div className="px-4 py-2 text-gray-500 text-sm">
                       No results found
                     </div>
                   )}
 
-                  {suggestions &&
-                    suggestions?.map((item: any, idx: number) => (
-                      <div
-                        key={idx}
-                        onMouseDown={() => {
-                          if (item.title && item.latitude && item.longitude) {
-                            handleSelect(item.title);
-                            navigate(
-                              `/events?lat=${item.latitude}&lng=${item.longitude}`
-                            );
-                          }
-                        }} // onMouseDown avoids blur-before-click issue
-                        className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
-                      >
-                        {item?.title}, {item?.venue}, {item?.location}
+                  {suggestions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onMouseDown={() => {
+                        handleSelect(item.title ?? "");
+                        if (item.navigateTo) navigate(item.navigateTo);
+                      }}
+                      className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium truncate">{item.title}</span>
+                        {item.subtitle && (
+                          <span className="text-xs text-gray-500 truncate">{item.subtitle}</span>
+                        )}
                       </div>
-                    ))}
+                      {item.price !== null && (
+                        <span className="text-xs font-semibold text-primary001 whitespace-nowrap">₹{item.price}</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

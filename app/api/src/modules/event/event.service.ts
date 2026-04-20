@@ -93,14 +93,65 @@ const filterEvents = async (
 
 const searchEvents = async (keyword: string | undefined, lat?: string, lng?: string) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
-  const data = await tmGet(`${TM_BASE}/events.json`, {
-    apikey: apikey(),
-    keyword,
-    size: 50,
-    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
-  });
-  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
-  return Promise.all(events.map((e) => mapEvent(e, false)));
+
+  const [tmData, dbTickets] = await Promise.all([
+    tmGet(`${TM_BASE}/events.json`, {
+      apikey: apikey(),
+      keyword,
+      size: 30,
+      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
+    }),
+    keyword
+      ? prisma.resaleTicket.findMany({
+          where: {
+            status: "approved",
+            OR: [
+              { title: { contains: keyword, mode: "insensitive" } },
+              { venue: { contains: keyword, mode: "insensitive" } },
+              { artist: { contains: keyword, mode: "insensitive" } },
+            ],
+            AND: [
+              { quantity: { gt: 0 } },
+            ],
+          },
+          take: 10,
+          select: {
+            id: true,
+            title: true,
+            venue: true,
+            artist: true,
+            start_date: true,
+            time: true,
+            ticket_type: true,
+            price: true,
+            event_id: true,
+            quantity: true,
+            reserved_quantity: true,
+            sold_quantity: true,
+          },
+        })
+      : [],
+  ]);
+
+  const tmEvents = await Promise.all(
+    ((tmData?._embedded?.events ?? []) as Record<string, unknown>[]).map((e) => mapEvent(e, false))
+  );
+
+  const resaleTickets = dbTickets.map((t) => ({
+    id: t.id,
+    title: t.title,
+    venue: t.venue,
+    artist: t.artist,
+    start_date: t.start_date,
+    time: t.time,
+    ticket_type: t.ticket_type,
+    price: Number(t.price),
+    event_id: t.event_id,
+    available_quantity: Math.max(0, t.quantity - t.reserved_quantity - t.sold_quantity),
+    source: "resale" as const,
+  }));
+
+  return { events: tmEvents, resaleTickets };
 };
 
 const getEventDetails = async (eventId: string) => {
