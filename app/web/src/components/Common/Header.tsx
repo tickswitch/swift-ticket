@@ -261,7 +261,27 @@ const Header = () => {
     setIsFocused(false);
   }, []);
 
-  const eventResults: any[] = eventsData?.data ?? [];
+  const userCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+
+  const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const rawEvents: any[] = eventsData?.data ?? [];
+  const eventResults = userCoords?.lat && userCoords?.lon
+    ? [...rawEvents].sort((a, b) => {
+        const distA = a.latitude && a.longitude ? haversineKm(userCoords.lat, userCoords.lon, Number(a.latitude), Number(a.longitude)) : Infinity;
+        const distB = b.latitude && b.longitude ? haversineKm(userCoords.lat, userCoords.lon, Number(b.latitude), Number(b.longitude)) : Infinity;
+        return distA - distB;
+      })
+    : rawEvents;
+
   const cityResults: any[] = citiesData?.cities ?? [];
   const isLoadingData = activeTab === "events" ? eventsLoading : citiesLoading;
   const errorData = activeTab === "events" ? eventsError : citiesError;
