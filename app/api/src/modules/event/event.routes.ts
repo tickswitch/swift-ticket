@@ -11,6 +11,7 @@ router.get("/events-seats/:eventId", eventController.getEventDetails);
 
 router.get("/events/trending-nearby", eventController.trendingNearby);
 router.get("/events/festivals", eventController.festivalsNearby);
+router.get("/events/nearby-eb", eventController.nearbyEB);
 router.get("/events/sports-in-area", eventController.sportsinArea);
 router.get("/events/concerts", eventController.concertsinArea);
 router.get("/events/popular", eventController.popularEvents);

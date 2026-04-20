@@ -5,6 +5,9 @@ import { AppError } from "../../utils/AppError";
 const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 const apikey = () => process.env.TICKETMASTER_API_KEY as string;
 
+const EB_BASE = "https://www.eventbriteapi.com/v3";
+const ebToken = () => process.env.EVENTBRITE_TOKEN as string;
+
 // Safe Ticketmaster GET — returns null instead of throwing on API errors
 const tmGet = async (url: string, params: Record<string, unknown>) => {
   try {
@@ -16,6 +19,57 @@ const tmGet = async (url: string, params: Record<string, unknown>) => {
     console.error(`[TM] ${status || "network"} error — ${msg}`);
     return null;
   }
+};
+
+// Safe Eventbrite GET — uses Authorization header, returns null on error
+const ebGet = async (url: string, params: Record<string, unknown> = {}) => {
+  try {
+    const { data } = await axios.get(url, {
+      params,
+      headers: { Authorization: `Bearer ${ebToken()}` },
+    });
+    return data;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const msg = err?.response?.data?.error_description || err?.message || "Eventbrite error";
+    console.error(`[EB] ${status || "network"} error — ${msg}`);
+    return null;
+  }
+};
+
+// Normalize an Eventbrite event to the same shape as mapEvent output
+const mapEventbrite = (event: any): Record<string, unknown> => {
+  const venue = event.venue ?? {};
+  const addr = venue.address ?? {};
+  const lat = addr.latitude ?? null;
+  const lng = addr.longitude ?? null;
+  const localStart: string = event.start?.local ?? "";
+  const [startDate, startTime] = localStart ? localStart.split("T") : [null, null];
+  const localEnd: string = event.end?.local ?? "";
+  const [endDate] = localEnd ? localEnd.split("T") : [null];
+  const minPrice = event.ticket_availability?.minimum_ticket_price?.value;
+
+  return {
+    id: `eb_${event.id}`,
+    title: event.name?.text ?? null,
+    image: event.logo?.original?.url ?? event.logo?.url ?? null,
+    start_date: startDate ?? null,
+    date: startDate ?? null,
+    end_date: endDate ?? startDate ?? null,
+    time: startTime ?? null,
+    venue: venue.name ?? null,
+    location: addr.city ?? null,
+    latitude: lat,
+    longitude: lng,
+    mapUrl: lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : null,
+    ticket_url: event.url ?? null,
+    genres: [],
+    segment: [],
+    available_quantity: 0,
+    is_free: event.is_free ?? false,
+    price: typeof minPrice === "number" && minPrice > 0 ? minPrice : undefined,
+    source: "eventbrite",
+  };
 };
 
 // Helper: compute resale ticket availability for an event
@@ -471,6 +525,27 @@ const ticketAlert = async (userId: number) => {
   });
 };
 
+const eventsNearbyEB = async (lat: string, lng: string, radius: number, keyword?: string) => {
+  const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
+  const now = new Date().toISOString();
+  const params: Record<string, unknown> = {
+    expand: "venue",
+    sort_by: "best",
+    page_size: 20,
+    "start_date.range_start": now,
+  };
+  if (hasLocation) {
+    params["location.latitude"] = lat;
+    params["location.longitude"] = lng;
+    params["location.within"] = `${radius}km`;
+  }
+  if (keyword) params.q = keyword;
+
+  const data = await ebGet(`${EB_BASE}/events/search/`, params);
+  const events: any[] = data?.events ?? [];
+  return events.map(mapEventbrite);
+};
+
 export const eventService = {
   filterEvents,
   searchEvents,
@@ -485,6 +560,7 @@ export const eventService = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
+  eventsNearbyEB,
   favoCalendar,
   myFavorites,
   toggleNotification,

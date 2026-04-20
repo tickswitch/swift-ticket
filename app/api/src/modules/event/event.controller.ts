@@ -190,6 +190,12 @@ const ticketAlert = catchAsync(async (req: AuthRequest, res: Response) => {
   return res.json({ status: true, data });
 });
 
+const nearbyEB = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng, radius = "50", keyword } = req.query as Record<string, string>;
+  const data = await eventService.eventsNearbyEB(lat ?? "", lng ?? "", Number(radius), keyword);
+  return res.json({ status: true, data });
+});
+
 // ---- Date helpers ----
 function addDays(date: Date, days: number): Date {
   const d = new Date(date);
@@ -244,6 +250,7 @@ export const eventController = {
   citiesSearch,
   eventsBygrouped,
   getEventsByGenre,
+  nearbyEB,
   favoCalendar,
   myFavorites,
   toggleNotification,
