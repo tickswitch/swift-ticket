@@ -264,9 +264,9 @@ const citiesSearch = async (keyword: string) => {
         params: {
           q: keyword,
           format: "json",
-          limit: 8,
-          featuretype: "city",
+          limit: 10,
           addressdetails: 1,
+          "accept-language": "en",
         },
         headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
         timeout: 8000,
