@@ -234,45 +234,38 @@ const Header = () => {
 
   // --- Debounce ---
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedQuery(query), 900);
+    const handler = setTimeout(() => setDebouncedQuery(query), 400);
     return () => clearTimeout(handler);
   }, [query]);
 
-  // --- Fetch Suggestions cities---
-  const { data, isLoading, error } = useQuery({
+  // --- Fetch city suggestions ---
+  const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useQuery({
     queryKey: ["cities", debouncedQuery],
     queryFn: () => GetSingleData(`cities/search?query=${debouncedQuery}`),
-    enabled: !!debouncedQuery && activeTab === "cities", // only fetch if query isn't empty and cities tab is active
-  });
-  const location = JSON.parse(
-    localStorage.getItem("selectedLocationCoords") || "{}"
-  );
-  // --- Fetch Suggestions events---
-  const {
-    data: eventsData,
-    isLoading: eventsDataLoading,
-    error: eventsDataError,
-  } = useQuery({
-    queryKey: ["events", debouncedQuery], // Fixed: changed from "cities" to "events"
-    queryFn: () =>
-      GetSingleData(
-        // `events?query=${debouncedQuery}&radius=50&lat=${location.lat}&lng=${location.lon}`
-        `events?query=${debouncedQuery}&radius=50&lat=${location.lat}&lng=${location.lon}`
-      ),
-    enabled: !!debouncedQuery && activeTab === "events", // only fetch if query isn't empty and events tab is active
+    enabled: !!debouncedQuery && activeTab === "cities",
   });
 
-  const handleSelect = useCallback((city: string) => {
-    setQuery(city);
+  // --- Fetch event suggestions via lightweight search endpoint ---
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    error: eventsError,
+  } = useQuery({
+    queryKey: ["search-events", debouncedQuery],
+    queryFn: () => GetSingleData(`search-events?keyword=${encodeURIComponent(debouncedQuery)}`),
+    enabled: !!debouncedQuery && activeTab === "events",
+  });
+
+  const handleSelect = useCallback((label: string) => {
+    setQuery(label);
     setIsFocused(false);
   }, []);
 
-  // Get suggestions based on active tab
-  const suggestions = activeTab === "events" ? eventsData : data;
-  const isLoadingData = activeTab === "events" ? eventsDataLoading : isLoading;
-  const errorData = activeTab === "events" ? eventsDataError : error;
-
-  console.log("suggestions", suggestions);
+  const eventResults: any[] = eventsData?.data ?? [];
+  const cityResults: any[] = citiesData?.cities ?? [];
+  const isLoadingData = activeTab === "events" ? eventsLoading : citiesLoading;
+  const errorData = activeTab === "events" ? eventsError : citiesError;
+  const hasResults = activeTab === "events" ? eventResults.length > 0 : cityResults.length > 0;
   return (
     <div className="z-20 ">
       <div className="max-w-[1720px] px-5 md:px-10 mx-auto my-0 rounded-2xl py-4 flex items-center justify-between gap-5 fixed top-0 left-1/2 -translate-x-1/2 w-[94%] md:w-[94%] lg:w-[95%] z-50 bg-[#000000]/50">
@@ -306,93 +299,88 @@ const Header = () => {
           />
           {/* Suggestions Dropdown */}
           {isFocused && debouncedQuery && (
-            <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded w-fit shadow-lg z-50 max-h-60 overflow-y-auto overflow-x-hidden">
-              {/* Categories */}
-              <div className="flex items-start justify-start gap-5 px-4 py-2 bg-primary/10 fixed w-fit border-4">
+            <div className="absolute top-full left-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              {/* Tab bar */}
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50">
                 <button
-                  onClick={() => setActiveTab("events")}
+                  onMouseDown={(e) => { e.preventDefault(); setActiveTab("events"); }}
                   className={cn(
-                    "font-semibold px-3 rounded-md",
-                    activeTab === "events"
-                      ? "text-white bg-primary001"
-                      : "text-primary001"
+                    "text-sm font-semibold px-3 py-1 rounded-full transition-colors",
+                    activeTab === "events" ? "bg-primary001 text-white" : "text-primary001 hover:bg-primary001/10"
                   )}
                 >
                   Events
                 </button>
-                <button 
-                  // onClick={(e) => {
-                  //   e.preventDefault();
-                  //   setActiveTab("cities")
-                  // }}
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // Prevent input blur
-                    setActiveTab("cities");
-                  }}
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setActiveTab("cities"); }}
                   className={cn(
-                    "font-semibold px-3 rounded-md",
-                    activeTab === "cities"
-                      ? "text-white bg-primary001"
-                      : "text-primary001"
+                    "text-sm font-semibold px-3 py-1 rounded-full transition-colors",
+                    activeTab === "cities" ? "bg-primary001 text-white" : "text-primary001 hover:bg-primary001/10"
                   )}
                 >
                   Cities
                 </button>
               </div>
-              {isLoadingData && (
-                <div className="px-4 py-2 text-gray-500 text-sm h-40 flex items-center justify-center">
-                  <Loader parentClass="h-fit" size={30} />
-                </div>
-              )}
 
-              {errorData && (
-                <div className="px-4 py-2 text-red-500 text-sm pt-20">
-                  Failed to load suggestions
-                </div>
-              )}
-
-              {!isLoadingData &&
-                (!suggestions ||
-                  (activeTab === "cities"
-                    ? suggestions?.cities?.length === 0
-                    : suggestions?.length === 0)) && (
-                  <div className="px-4 py-2 text-gray-500 text-sm">
-                    No results found
+              <div className="max-h-80 overflow-y-auto">
+                {isLoadingData && (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader parentClass="h-fit" size={28} />
                   </div>
                 )}
+                {errorData && (
+                  <p className="px-4 py-3 text-red-500 text-sm">Failed to load suggestions</p>
+                )}
+                {!isLoadingData && !errorData && !hasResults && (
+                  <p className="px-4 py-4 text-gray-500 text-sm text-center">No results for "{debouncedQuery}"</p>
+                )}
 
-              <div className="pt-14">
-                {activeTab === "cities" &&
-                  suggestions?.cities?.map((item: any, idx: number) => (
-                    <div
-                      key={idx}
-                      onMouseDown={() => {
-                        handleSelect(item.city);
-                        navigate(
-                          `/events?lat=${item.latitude}&lng=${item.longitude}`
-                        );
-                        window.location.reload();
-                      }}
-                      className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
-                    >
-                      {item?.city}, {item?.country}
+                {/* Event results */}
+                {activeTab === "events" && eventResults.map((item: any, idx: number) => (
+                  <div
+                    key={idx}
+                    onMouseDown={() => {
+                      handleSelect(item.title ?? item.name ?? "");
+                      navigate(`/event-details/${item.id}`);
+                    }}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                  >
+                    {item.image ? (
+                      <img src={item.image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-primary001/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary001 text-xs font-bold">TM</span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-black truncate">{item.title ?? item.name}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {[item.date, item.venue, item.location].filter(Boolean).join(" · ")}
+                      </p>
                     </div>
-                  ))}
-                {activeTab === "events" &&
-                  suggestions &&
-                  suggestions?.data?.map((item: any, idx: number) => (
-                    <div
-                      key={idx}
-                      onMouseDown={() => {
-                        // Handle event selection - adjust based on your event data structure
-                        handleSelect(item.name || item.title);
-                        // Navigate to event detail or handle as needed
-                      }}
-                      className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
-                    >
-                      {item?.name || item?.title}
+                  </div>
+                ))}
+
+                {/* City results */}
+                {activeTab === "cities" && cityResults.map((item: any, idx: number) => (
+                  <div
+                    key={idx}
+                    onMouseDown={() => {
+                      handleSelect(item.city);
+                      navigate(`/events?lat=${item.latitude}&lng=${item.longitude}`);
+                      window.location.reload();
+                    }}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     </div>
-                  ))}
+                    <div>
+                      <p className="text-sm font-semibold text-black">{item.city}</p>
+                      <p className="text-xs text-gray-500">{item.country}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
