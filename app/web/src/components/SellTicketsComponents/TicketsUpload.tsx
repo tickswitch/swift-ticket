@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { 
+import {
   TicketDeleteIcon,
   TicketPdfIcon,
   TicketPdfUpload,
@@ -14,6 +14,13 @@ import {
   useLocation,
   useNavigate,
 } from "react-router";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -200,6 +207,7 @@ const TicketsUpload = () => {
 
   return (
     <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">
+
       <h3 className="text-2xl md:text-[36px] font-semibold text-[#181818] mb-4">
         Upload Ticket
       </h3>
@@ -207,7 +215,7 @@ const TicketsUpload = () => {
       {/* Stepper */}
       <div>
         <p className="text-base md:text-xl lg:text-2xl font-semibold text-secondaryText001">
-          Which event do you want to sell tickets for, sahal?
+          Fans will only be able to see your tickets once they've bought them.
         </p>
         <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
           <div
@@ -313,41 +321,73 @@ const TicketsUpload = () => {
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="pt-6 pb-[50px] flex gap-[10px] items-center">
+        {/* Back / Next buttons */}
+        <div className={`pt-6 flex items-center justify-between ${isEdit ? "hidden" : "flex"}`}>
           <Link to="/sell-tickets">
-            <button
-              className={`${
-                isEdit ? "hidden" : "block"
-              } text-base text-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] cursor-pointer`}
-            >
+            <button className="flex items-center gap-2 bg-blue-50 text-[#178AFF] font-medium px-5 py-2.5 rounded-xl hover:bg-blue-100 transition-colors">
+              <ChevronLeft size={18} />
               Back
             </button>
           </Link>
-
           <button
             onClick={handleNext}
             disabled={pdfFileUrl.length === 0}
-            className={`${
-              isEdit ? "hidden" : "block"
-            } text-base text-white py-2 px-16 rounded-[38px] border bg-[#178AFF] border-[#178AFF] ${
-              pdfFileUrl.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            }`}
+            className={`bg-[#178AFF] text-white font-medium px-8 py-2.5 rounded-xl hover:bg-[#1279e6] transition-colors ${pdfFileUrl.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             Next
           </button>
+        </div>
 
+        {/* Continue button (edit mode only) */}
+        <div className={`pt-6 ${isEdit ? "block" : "hidden"}`}>
           <button
             onClick={gotoEditWithNextPage}
             disabled={pdfFileUrl.length === 0}
-            className={`${
-              isEdit ? "block" : "hidden"
-            } text-base text-white py-2 px-16 rounded-[38px] border bg-[#178AFF] border-[#178AFF] ${
+            className={`text-base text-white py-2 px-16 rounded-[38px] border bg-[#178AFF] border-[#178AFF] ${
               pdfFileUrl.length === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
             }`}
           >
             Continue
           </button>
+        </div>
+
+        {/* Quick tips accordion */}
+        <div className="mt-10 pb-10">
+          <h4 className="text-2xl font-bold text-[#181818] mb-4">Quick tips on uploading tickets</h4>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="text-base text-[#181818]">
+                What if I don't want to sell all tickets in a file?
+              </AccordionTrigger>
+              <AccordionContent className="text-[#606060]">
+                You can select which tickets to sell on the next step. Upload the full file and choose which ones to list.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="text-base text-[#181818]">
+                I don't have a PDF or Apple Wallet ticket – what can I do?
+              </AccordionTrigger>
+              <AccordionContent className="text-[#606060]">
+                Contact the event organiser or your ticket provider to request a PDF version of your ticket. Most platforms allow you to download a PDF from your account.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="text-base text-[#181818]">
+                Why do I need the original file?
+              </AccordionTrigger>
+              <AccordionContent className="text-[#606060]">
+                We verify tickets using the original file to protect buyers from fraud. Modified or screenshot files cannot be verified and will be rejected.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="text-base text-[#181818]">
+                When does a buyer get access to my tickets?
+              </AccordionTrigger>
+              <AccordionContent className="text-[#606060]">
+                Whenever someone buys a ticket, they won't have access to view it until they've finished paying. Once they've completed payment, they'll be able to download the ticket or access it in the app or online.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         <CheckElement />
