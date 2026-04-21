@@ -16,6 +16,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router";
+import { ChevronLeft } from "lucide-react";
 import CheckElement from "../AddToCart/CheckElement"; 
 import { RiMoneyRupeeCircleLine } from "react-icons/ri";
 import { TbCoinTaka } from "react-icons/tb"; 
@@ -29,7 +30,7 @@ import { priceCap } from "@/utils/priceCap";
 const YourTicketPrice = () => {
   const location: Location = useLocation();
   const isEdit = location.state;
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>("Rupe");
   const [amount, setAmount] = useState<string>("");
 
   const faceValue =
@@ -118,19 +119,17 @@ const YourTicketPrice = () => {
       {/* ticket select buttons */}
       <div className="pt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-center gap-[9px]">
         <div className="w-full">
-          <Select2 onValueChange={(value) => setSelectedOption(value)}>
-            <SelectTrigger className="w-full rounded-[12px] flex-none bg-white border border-[#606060] py-[30px] ">
+          <Select2 defaultValue="Rupe" onValueChange={(value) => setSelectedOption(value)}>
+            <SelectTrigger className="w-full rounded-[12px] flex-none bg-white border border-[#606060] py-[30px]">
               <SelectValue placeholder="Select a Currency" /> <DownArrow />
             </SelectTrigger>
             <SelectContent className="bg-white border shadow-md">
               <SelectGroup>
                 <SelectItem value="Rupe">
-                  Rupee
-                  <RiMoneyRupeeCircleLine className=" text-[#606060]" />
+                  Rupee <RiMoneyRupeeCircleLine className="text-[#606060]" />
                 </SelectItem>
                 <SelectItem value="BDT">
-                  Taka
-                  <TbCoinTaka className="text-[#606060]" />
+                  Taka <TbCoinTaka className="text-[#606060]" />
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
@@ -210,25 +209,19 @@ const YourTicketPrice = () => {
       )}
 
       {/* Live fee preview */}
-      <div
-        className="mt-4 flex flex-col gap-1"
-        data-testid="price-preview-block"
-      >
-        <p className="text-base md:text-xl text-[#606060]">
-          Platform fee (5%): ₹
-          {priceCap
-            .sellerFee(isNaN(numericPrice) ? 0 : numericPrice)
-            .toLocaleString("en-IN")}
-        </p>
-        <p
-          className="text-base md:text-xl font-semibold text-[#2FA75F]"
-          data-testid="seller-receives-label"
-        >
-          You will receive: ₹
-          {priceCap
-            .sellerReceives(isNaN(numericPrice) ? 0 : numericPrice)
-            .toLocaleString("en-IN")}
-        </p>
+      <div className="mt-4 flex flex-col gap-1" data-testid="price-preview-block">
+        <div className="flex items-center justify-between text-base md:text-xl text-[#606060]">
+          <span>What you'll get per ticket <span className="text-sm">(your price minus 5% seller fee)</span></span>
+          <span className="font-semibold text-[#2FA75F]" data-testid="seller-receives-label">
+            ₹{priceCap.sellerReceives(isNaN(numericPrice) ? 0 : numericPrice).toLocaleString("en-IN")}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-base md:text-xl text-[#606060]">
+          <span>Buyer pays per ticket <span className="text-sm">(your price plus 6% service fee & 3% transaction fee)</span></span>
+          <span className="font-semibold text-[#181818]">
+            ₹{priceCap.totalBuyerPays(isNaN(numericPrice) ? 0 : numericPrice).toLocaleString("en-IN")}
+          </span>
+        </div>
       </div>
 
       {/* your facilities when you buy tickets */}
@@ -278,68 +271,29 @@ const YourTicketPrice = () => {
       </span>
 
       {/* buttons */}
-      <div className="pt-6 pb-[50px] flex gap-[10px] items-center">
-        <Link to={"/ticket-price"}>
-          <button
-            className={` ${
-              isEdit ? " hidden" : "block"
-            } text-base text-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] cursor-pointer`}
-          >
+      <div className={`pt-6 pb-10 flex items-center justify-between ${isEdit ? "hidden" : "flex"}`}>
+        <Link to="/add-ticket-details">
+          <button className="flex items-center gap-2 bg-blue-50 text-[#178AFF] font-medium px-5 py-2.5 rounded-xl hover:bg-blue-100 transition-colors">
+            <ChevronLeft size={18} />
             Back
           </button>
         </Link>
-        {isButtonDisabled ? (
-          <Link className={`${isButtonDisabled && "cursor-not-allowed"}`} to="">
-            <button
-              // disabled={isButtonDisabled}
-              className={` ${
-                isEdit ? " hidden" : "block"
-              } text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF]  ${
-                isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-              }`}
-            >
-              Next
-            </button>
-          </Link>
-        ) : (
-          <Link onClick={handleSubmit} to="/your-address">
-            <button
-              // disabled={isButtonDisabled}
-              className={` ${
-                isEdit ? " hidden" : "block"
-              } text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] ${
-                isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-              }`}
-            >
-              Next
-            </button>
-          </Link>
-        )}
-
-        {isButtonDisabled ? (
-          <button
-            onClick={gotoEditWithNextPage}
-            className={` ${
-              isEdit ? " block" : "hidden"
-            } text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF]  ${
-              isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-            }`}
-          >
-            Continue
-          </button>
-        ) : (
-          <button
-            onClick={gotoEditWithNextPage}
-            className={` ${
-              isEdit ? " block" : "hidden"
-            } text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] ${
-              isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-            }`}
-          >
-            Continue
-          </button>
-        )}
+        <button
+          onClick={handleSubmit}
+          disabled={isButtonDisabled}
+          className={`bg-[#178AFF] text-white font-medium px-8 py-2.5 rounded-xl hover:bg-[#1279e6] transition-colors ${isButtonDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          Next
+        </button>
       </div>
+
+      <button
+        onClick={gotoEditWithNextPage}
+        disabled={isButtonDisabled}
+        className={`mb-10 ${isEdit ? "block" : "hidden"} text-base text-white bg-primary001 py-2 px-10 rounded-4xl border border-primary001 ${isButtonDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+      >
+        Continue
+      </button>
 
       <CheckElement />
     </div>

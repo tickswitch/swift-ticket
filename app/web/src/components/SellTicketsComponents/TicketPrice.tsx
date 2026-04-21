@@ -12,15 +12,16 @@ import { DownArrow } from "./TicketIcons";
 import CheckElement from "../AddToCart/CheckElement";
 import { Link, NavigateFunction, useNavigate } from "react-router";
 import { useState } from "react";
-import toast from "react-hot-toast"; 
-import { TbCoinTaka } from "react-icons/tb"; 
+import toast from "react-hot-toast";
+import { TbCoinTaka } from "react-icons/tb";
 import { RiMoneyRupeeCircleLine } from "react-icons/ri";
 import { useDispatch } from "react-redux";
+import { ChevronLeft } from "lucide-react";
 import { setStep } from "@/features/StepperSlice";
 import { updateData } from "@/features/SellTicketSlice";
 
 const TicketPrice = () => {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>("Rupe");
   const [amount, setAmount] = useState<string>("");
 
   // chech is select input and number input has valu or not
@@ -69,20 +70,18 @@ const TicketPrice = () => {
 
       <div className="pt-8 flex flex-col lg:flex-row items-center gap-[9px]">
         <div className="w-full">
-          <Select2 onValueChange={(value) => setSelectedOption(value)}>
-            <SelectTrigger className="w-full rounded-[12px] flex-none bg-white border border-[#606060] py-[30px] ">
+          <Select2 defaultValue="Rupe" onValueChange={(value) => setSelectedOption(value)}>
+            <SelectTrigger className="w-full rounded-[12px] flex-none bg-white border border-[#606060] py-[30px]">
               <SelectValue placeholder="Select a Currency" /> <DownArrow />
             </SelectTrigger>
             <SelectContent className="bg-white border shadow-md">
               <SelectGroup>
                 <SelectItem value="Rupe">
-                  {/* <IndianRupeIcon className="text-[#606060]" /> */}
-                  Rupee<RiMoneyRupeeCircleLine className=" text-[#606060]" />
-                </SelectItem> 
-                <SelectItem value="BDT">
-                  Taka<TbCoinTaka className="text-[#606060]" />
+                  Rupee <RiMoneyRupeeCircleLine className="text-[#606060]" />
                 </SelectItem>
-                
+                <SelectItem value="BDT">
+                  Taka <TbCoinTaka className="text-[#606060]" />
+                </SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select2>
@@ -104,34 +103,20 @@ const TicketPrice = () => {
       </div>
 
       {/* buttons */}
-      <div className="pt-6 pb-[50px] flex gap-[10px] items-center">
-        <Link to={"/add-ticket-details"}>
-          <button className="text-base text-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF] cursor-pointer">
+      <div className="pt-6 pb-10 flex items-center justify-between">
+        <Link to="/add-ticket-details">
+          <button className="flex items-center gap-2 bg-blue-50 text-[#178AFF] font-medium px-5 py-2.5 rounded-xl hover:bg-blue-100 transition-colors">
+            <ChevronLeft size={18} />
             Back
           </button>
         </Link>
-
-        {isButtonDisabled ? (
-          <Link className={`${isButtonDisabled && "cursor-not-allowed"}`} to="">
-            <button
-              // disabled={isButtonDisabled}
-              className={`text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF]  ${
-                isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-              }`}
-            >
-              Next
-            </button>
-          </Link>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            className={`text-base text-white bg-[#178AFF] py-2 px-16 rounded-[38px] border border-[#178AFF]  ${
-              isButtonDisabled ? "cursor-not-allowed " : "cursor-pointer"
-            }`}
-          >
-            Next
-          </button>
-        )}
+        <button
+          onClick={handleSubmit}
+          disabled={isButtonDisabled}
+          className={`bg-[#178AFF] text-white font-medium px-8 py-2.5 rounded-xl hover:bg-[#1279e6] transition-colors ${isButtonDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          Next
+        </button>
       </div>
 
       <CheckElement />
