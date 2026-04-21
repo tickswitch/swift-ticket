@@ -166,9 +166,16 @@ const sendPhoneOtp = async (phone: string) => {
 };
 
 const sendEmailOtp = async (email: string) => {
-  const user = await authRepository.findByEmail(email);
+  let user = await authRepository.findByEmail(email);
   if (!user) {
-    throw new AppError('No account found with this email. Please register first.', 404);
+    const placeholderPassword = await bcrypt.hash(`email-otp-${email}-${Date.now()}`, 10);
+    user = await authRepository.create({
+      name: email.split('@')[0],
+      email,
+      phone: null,
+      password: placeholderPassword,
+      avatar: null,
+    });
   }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
