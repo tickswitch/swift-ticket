@@ -31,7 +31,10 @@ const YourTicketPrice = () => {
   const location: Location = useLocation();
   const isEdit = location.state;
   const [selectedOption, setSelectedOption] = useState<string | null>("Rupe");
-  const [amount, setAmount] = useState<string>("");
+  const [amount, setAmount] = useState<string>(() => {
+    const saved = JSON.parse(localStorage.getItem("sellTicket") || "null");
+    return saved?.data?.original_price ? String(saved.data.original_price) : "";
+  });
 
   const faceValue =
     useSelector(
@@ -90,7 +93,7 @@ const YourTicketPrice = () => {
       {/* stepper */}
       <div>
         <p className="text-xl md:text-2xl font-semibold text-secondaryText001">
-          The original ticket price was ${info?.data?.original_price}. To keep
+          The original ticket price was ₹{info?.data?.original_price}. To keep
           things fair, you can list it for up to 20% more than the face value.
         </p>
         <div className="w-full bg-gray-200 h-1 rounded-full mt-4">
@@ -208,21 +211,6 @@ const YourTicketPrice = () => {
         </p>
       )}
 
-      {/* Live fee preview */}
-      <div className="mt-4 flex flex-col gap-1" data-testid="price-preview-block">
-        <div className="flex items-center justify-between text-base md:text-xl text-[#606060]">
-          <span>What you'll get per ticket <span className="text-sm">(your price minus 5% seller fee)</span></span>
-          <span className="font-semibold text-[#2FA75F]" data-testid="seller-receives-label">
-            ₹{priceCap.sellerReceives(isNaN(numericPrice) ? 0 : numericPrice).toLocaleString("en-IN")}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-base md:text-xl text-[#606060]">
-          <span>Buyer pays per ticket <span className="text-sm">(your price plus 6% service fee & 3% transaction fee)</span></span>
-          <span className="font-semibold text-[#181818]">
-            ₹{priceCap.totalBuyerPays(isNaN(numericPrice) ? 0 : numericPrice).toLocaleString("en-IN")}
-          </span>
-        </div>
-      </div>
 
       {/* your facilities when you buy tickets */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-[9px] pt-4">
@@ -231,7 +219,7 @@ const YourTicketPrice = () => {
             What you’ll get per ticket
           </h3>
           <span className="text-base md:text-[20px] text-[#606060]">
-            Your price minus 5% service fee
+            Your price minus 5% seller fee
           </span>
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />
@@ -246,10 +234,10 @@ const YourTicketPrice = () => {
 
         <div className="w-full  bg-white rounded-[12px] border border-[] py-[32px] px-5 md:px-10 lg:px-[76px] flex flex-col justify-start items-center text-center">
           <h3 className="text-[#606060] text-xl md:text-2xl font-semibold">
-            Byer pays per ticket
+            Buyer pays per ticket
           </h3>
           <span className="text-base md:text-[20px] text-[#606060]">
-            Your price plus 5% service fee.
+            Your price plus 6% service fee & 3% transaction fee.
           </span>
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />
