@@ -38,8 +38,8 @@ declare global {
   }
 }
 
-type AuthTab = "email" | "phone";
-type PhoneScreen = "enter-number" | "enter-otp";
+type AuthTab = "email" | "emailOtp";
+type OtpScreen = "enter-email" | "enter-otp";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -49,9 +49,9 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<AuthTab>("email");
 
-  // Phone flow state
-  const [phoneScreen, setPhoneScreen] = useState<PhoneScreen>("enter-number");
-  const [phoneDigits, setPhoneDigits] = useState(""); // just the 10 digits, no +91
+  // Email OTP flow state
+  const [otpScreen, setOtpScreen] = useState<OtpScreen>("enter-email");
+  const [otpEmail, setOtpEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
@@ -62,8 +62,7 @@ const Login = () => {
   const redirectTo: string = (state as any)?.from ?? "/";
   const { login } = useAuth();
 
-  const fullPhone = `+91${phoneDigits}`;
-  const phoneIsValid = /^[6-9]\d{9}$/.test(phoneDigits);
+  const otpEmailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(otpEmail);
 
   // Load Google OAuth script
   useEffect(() => {
@@ -85,13 +84,13 @@ const Login = () => {
 
   // Resend cooldown timer (only while on OTP screen)
   useEffect(() => {
-    if (phoneScreen !== "enter-otp" || resendCooldown <= 0) return;
+    if (otpScreen !== "enter-otp" || resendCooldown <= 0) return;
     const id = window.setTimeout(
       () => setResendCooldown((s) => s - 1),
       1000
     );
     return () => window.clearTimeout(id);
-  }, [resendCooldown, phoneScreen]);
+  }, [resendCooldown, otpScreen]);
 
   const handleGoogleSignIn = async () => {
     if (!window.google) {
@@ -187,20 +186,20 @@ const Login = () => {
   };
 
   const handleSendOtp = async () => {
-    if (!phoneIsValid) {
-      toast.error("Enter a valid 10-digit Indian mobile number");
+    if (!otpEmailIsValid) {
+      toast.error("Enter a valid email address");
       return;
     }
     try {
       setIsSendingOtp(true);
       await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/phone/send-otp`,
-        { phone: fullPhone }
+        `${import.meta.env.VITE_BASE_URL}/auth/email/send-otp`,
+        { email: otpEmail }
       );
-      toast.success("OTP sent to your number");
+      toast.success("OTP sent to your email");
       setOtpCode("");
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-      setPhoneScreen("enter-otp");
+      setOtpScreen("enter-otp");
     } catch (error) {
       const msg =
         axios.isAxiosError(error) && error.response?.data?.message
@@ -220,8 +219,8 @@ const Login = () => {
     try {
       setIsVerifyingOtp(true);
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/auth/phone/verify-otp`,
-        { phone: fullPhone, otp: otpCode }
+        `${import.meta.env.VITE_BASE_URL}/auth/email/verify-otp`,
+        { email: otpEmail, otp: otpCode }
       );
       const token = res?.data?.token;
       const userData = res?.data?.userData;
@@ -233,7 +232,7 @@ const Login = () => {
       if (userData) {
         localStorage.setItem("user", JSON.stringify(userData));
       }
-      toast.success(res?.data?.message || "Phone login successful");
+      toast.success(res?.data?.message || "Login successful");
       navigate(redirectTo);
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
@@ -252,8 +251,8 @@ const Login = () => {
     await handleSendOtp();
   };
 
-  const handleBackToNumber = () => {
-    setPhoneScreen("enter-number");
+  const handleBackToEmail = () => {
+    setOtpScreen("enter-email");
     setOtpCode("");
     setResendCooldown(0);
   };
@@ -362,15 +361,15 @@ const Login = () => {
                   <button
                     type="button"
                     role="tab"
-                    aria-selected={activeTab === "phone"}
-                    data-testid="login-tab-phone"
+                    aria-selected={activeTab === "emailOtp"}
+                    data-testid="login-tab-otp"
                     onClick={() => {
-                      setActiveTab("phone");
-                      setPhoneScreen("enter-number");
+                      setActiveTab("emailOtp");
+                      setOtpScreen("enter-email");
                     }}
-                    className={tabButtonCls(activeTab === "phone")}
+                    className={tabButtonCls(activeTab === "emailOtp")}
                   >
-                    Login with phone
+                    Login with OTP
                   </button>
                 </div>
 
@@ -453,46 +452,35 @@ const Login = () => {
                   </form>
                 )}
 
-                {activeTab === "phone" && phoneScreen === "enter-number" && (
+                {activeTab === "emailOtp" && otpScreen === "enter-email" && (
                   <div
                     className="flex flex-col gap-3 sm:gap-4"
-                    data-testid="phone-enter-number"
+                    data-testid="otp-enter-email"
                   >
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="phone-input"
+                        htmlFor="otp-email-input"
                         className="text-white/80 text-sm sm:text-base"
                       >
-                        Mobile number
+                        Email address
                       </label>
-                      <div className="flex items-stretch border border-white/50 bg-white/10 backdrop-blur-sm rounded-md overflow-hidden focus-within:border-white focus-within:bg-white/20 transition-all duration-200">
-                        <span className="px-3 flex items-center text-white/80 border-r border-white/30 text-sm sm:text-base select-none">
-                          +91
-                        </span>
-                        <input
-                          id="phone-input"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                          maxLength={10}
-                          value={phoneDigits}
-                          onChange={(e) =>
-                            setPhoneDigits(
-                              e.target.value.replace(/\D/g, "").slice(0, 10)
-                            )
-                          }
-                          data-testid="phone-number-input"
-                          className="flex-1 bg-transparent px-3 py-2.5 sm:py-3 text-white placeholder-white/50 focus:outline-none text-sm sm:text-base"
-                          placeholder="10-digit mobile number"
-                        />
-                      </div>
+                      <input
+                        id="otp-email-input"
+                        type="email"
+                        autoComplete="email"
+                        value={otpEmail}
+                        onChange={(e) => setOtpEmail(e.target.value.trim())}
+                        data-testid="otp-email-input"
+                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2.5 sm:py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
+                        placeholder="Enter your email"
+                      />
                     </div>
 
                     <div className="pt-2 sm:pt-3">
                       <Button
                         type="button"
                         onClick={handleSendOtp}
-                        disabled={!phoneIsValid || isSendingOtp}
+                        disabled={!otpEmailIsValid || isSendingOtp}
                         data-testid="send-otp-btn"
                         className="w-full rounded-full font-medium text-lg sm:text-xl bg-primary001 hover:bg-primary001/90 h-12 sm:h-14 flex items-center justify-center transition-all duration-300"
                       >
@@ -506,16 +494,16 @@ const Login = () => {
                   </div>
                 )}
 
-                {activeTab === "phone" && phoneScreen === "enter-otp" && (
+                {activeTab === "emailOtp" && otpScreen === "enter-otp" && (
                   <div
                     className="flex flex-col gap-3 sm:gap-4"
-                    data-testid="phone-enter-otp"
+                    data-testid="email-enter-otp"
                   >
                     <div className="flex flex-col gap-2">
                       <p className="text-white/80 text-sm sm:text-base">
                         We sent a 6-digit code to{" "}
                         <span className="text-white font-medium">
-                          {fullPhone}
+                          {otpEmail}
                         </span>
                       </p>
                       <div className="flex justify-center pt-2">
@@ -543,11 +531,11 @@ const Login = () => {
                     <div className="flex items-center justify-between text-white/80 text-sm sm:text-base">
                       <button
                         type="button"
-                        onClick={handleBackToNumber}
+                        onClick={handleBackToEmail}
                         data-testid="otp-back-btn"
                         className="underline hover:text-white transition-colors"
                       >
-                        Change number
+                        Change email
                       </button>
                       {resendCooldown > 0 ? (
                         <span

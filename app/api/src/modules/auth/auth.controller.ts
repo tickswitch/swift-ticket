@@ -11,6 +11,8 @@ import {
   resendOtpSchema,
   sendPhoneOtpSchema,
   verifyPhoneOtpSchema,
+  sendEmailOtpSchema,
+  verifyEmailOtpSchema,
 } from './auth.validation';
 
 const register = catchAsync(async (req: Request, res: Response) => {
@@ -174,6 +176,48 @@ const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const sendEmailOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = sendEmailOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  await authService.sendEmailOtp(parsed.data.email);
+
+  return res.status(200).json({
+    status: true,
+    message: 'OTP sent to your email.',
+    code: 200,
+  });
+});
+
+const verifyEmailOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = verifyEmailOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  const { user, token } = await authService.verifyEmailOtp(parsed.data.email, parsed.data.otp);
+
+  return res.status(200).json({
+    status: true,
+    message: 'Login successful.',
+    token,
+    userData: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      avatar: user.avatar
+        ? `${process.env.APP_URL}/uploads/${user.avatar}`
+        : null,
+    },
+    token_type: 'Bearer',
+    code: 200,
+  });
+});
+
 export const authController = {
   register,
   login,
@@ -184,4 +228,6 @@ export const authController = {
   resendOtp,
   sendPhoneOtp,
   verifyPhoneOtp,
+  sendEmailOtp,
+  verifyEmailOtp,
 };

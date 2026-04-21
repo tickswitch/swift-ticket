@@ -160,10 +160,52 @@ const sendPhoneOtp = async (phone: string) => {
     });
   }
 
-  // Phase 1: log OTP (Twilio SMS comes in Phase 2)
   console.log('OTP for', phone, ':', otp);
 
   return { phone };
+};
+
+const sendEmailOtp = async (email: string) => {
+  const user = await authRepository.findByEmail(email);
+  if (!user) {
+    throw new AppError('No account found with this email. Please register first.', 404);
+  }
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+
+  await authRepository.updateById(user.id, { otp, otp_expiration: otpExpiration });
+
+  const body = `Hello ${user.name},\n\nYour SwiftTickets login OTP is:\n\n${otp}\n\nThis code expires in 5 minutes. If you didn't request this, you can safely ignore this email.`;
+  await sendMail(email, 'Your SwiftTickets Login OTP', body);
+
+  return { email };
+};
+
+const verifyEmailOtp = async (email: string, otp: string) => {
+  const user = await authRepository.findByEmail(email);
+  if (!user) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (user.otp !== String(otp)) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (!user.otp_expiration || new Date() > user.otp_expiration) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  await authRepository.updateById(user.id, { otp: null, otp_expiration: null });
+
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+  });
+
+  return { user, token };
 };
 
 const verifyPhoneOtp = async (phone: string, otp: string) => {
@@ -205,4 +247,6 @@ export const authService = {
   resendOtp,
   sendPhoneOtp,
   verifyPhoneOtp,
+  sendEmailOtp,
+  verifyEmailOtp,
 };

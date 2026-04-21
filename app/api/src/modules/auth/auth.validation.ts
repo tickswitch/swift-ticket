@@ -47,5 +47,14 @@ export const verifyPhoneOtpSchema = z.object({
   otp: z.string().length(6, 'OTP must be 6 digits'),
 });
 
+export const sendEmailOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const verifyEmailOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
