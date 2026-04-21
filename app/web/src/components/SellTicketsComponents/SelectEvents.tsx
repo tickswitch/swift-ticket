@@ -86,7 +86,8 @@ const SelectEvents = () => {
     enabled: true,
   });
 
-  const data = sortByDistance(rawData ?? [], userCoords?.lat, userCoords?.lon) as EventItem[];
+  const rawEvents: EventItem[] = Array.isArray(rawData) ? rawData : (rawData as any)?.events ?? [];
+  const data = sortByDistance(rawEvents, userCoords?.lat, userCoords?.lon) as EventItem[];
 
   return (
     <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">
