@@ -73,12 +73,16 @@ const SelectEvents = () => {
 
   const userCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
 
-  // get search events — global, no lat/lng filter; sorted by distance on frontend
+  // No keyword → pass location for relevant suggestions; keyword typed → global search sorted by distance
+  const locationParams = !debouncedQuery && userCoords?.lat && userCoords?.lon
+    ? `&lat=${userCoords.lat}&lng=${userCoords.lon}`
+    : "";
+
   const { data: rawData, isLoading, error } = useQuery<EventItem[]>({
-    queryKey: ["search-events", debouncedQuery],
+    queryKey: ["search-events", debouncedQuery, locationParams],
     queryFn: () =>
       GetData(
-        `search-events?keyword=${encodeURIComponent(debouncedQuery || "")}`
+        `search-events?keyword=${encodeURIComponent(debouncedQuery || "")}${locationParams}`
       ),
     enabled: true,
   });
