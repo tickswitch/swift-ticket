@@ -33,6 +33,11 @@ export interface SellTicketData {
   phone_number?: string;
   bank_account_number?: string;
   originalFaceValue?: number;
+  has_specific_seats?: boolean;
+  entrance?: string;
+  row?: string;
+  seat?: string;
+  section?: string;
   // Store file metadata instead of actual files
   ticket_file_metadata?: FileMetadata[];
 }
