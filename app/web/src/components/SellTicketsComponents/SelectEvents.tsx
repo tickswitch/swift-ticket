@@ -72,16 +72,13 @@ const SelectEvents = () => {
   const debouncedQuery = useDebounce(query, 500);
 
   const userCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
-  const locationParams = userCoords?.lat && userCoords?.lon
-    ? `&lat=${userCoords.lat}&lng=${userCoords.lon}`
-    : "";
 
-  // get search events
+  // get search events — global, no lat/lng filter; sorted by distance on frontend
   const { data: rawData, isLoading, error } = useQuery<EventItem[]>({
-    queryKey: ["search-events", debouncedQuery, userCoords?.lat, userCoords?.lon],
+    queryKey: ["search-events", debouncedQuery],
     queryFn: () =>
       GetData(
-        `search-events?keyword=${encodeURIComponent(debouncedQuery || "")}${locationParams}`
+        `search-events?keyword=${encodeURIComponent(debouncedQuery || "")}`
       ),
     enabled: true,
   });
