@@ -49,7 +49,7 @@ const Banner = () => {
   }, []);
 
   return (
-    <div className="max-w-[1720px] mx-auto my-0 relative rounded-2xl">
+    <div className="max-w-[1720px] mx-auto my-0 relative rounded-2xl hero-orbs">
       <div className="flex gap-4 ">
         <button
           ref={prevRef}

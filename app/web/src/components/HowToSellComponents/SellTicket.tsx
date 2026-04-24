@@ -8,7 +8,7 @@ import {
 import Container from "@/components/Common/Container";
 const SellTicket = () => {
   return (
-    <div className="bg-[#F4F4F4] py-[50px]">
+    <div className="bg-[#F4F4F4] py-[50px] hero-orbs">
       <Container>
         {/* Title */}
         <div>

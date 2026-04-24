@@ -215,3 +215,123 @@ canvas {
   width: 100% !important;
   height: fit-content !important;
 }
+
+
+/* =====================================================
+   Phase 1 Glassmorphism — SwiftTickets
+   Blue primary: #2563EB (do not change)
+   ===================================================== */
+
+/* ---------- Glass Card (applied to all card-like surfaces) ---------- */
+.glass-card,
+[data-slot="card"] {
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.06);
+  border-radius: 20px;
+}
+
+/* Broad card-like surface targeting: bg-white paired with a rounded utility */
+.bg-white.rounded-xl,
+.bg-white.rounded-2xl,
+.bg-white.rounded-3xl,
+.bg-white.rounded-lg,
+div.bg-white[class*="rounded-"][class*="border"],
+div.bg-white[class*="rounded-"][class*="shadow"] {
+  background-color: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(37, 99, 235, 0.12);
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.06);
+  border-radius: 20px;
+}
+
+/* ---------- Glass Navbar ---------- */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.10);
+  z-index: 50;
+}
+/* Navbar sits on a light glass surface — flip previously-white text to dark for readability.
+   This preserves all existing Tailwind classes but overrides their colour only within the nav. */
+.glass-nav .text-white {
+  color: #181818;
+}
+.glass-nav .font-proximaBold.text-white {
+  color: #2563EB;
+}
+.glass-nav .bg-white\/10 {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+.glass-nav .bg-white\/10 svg,
+.glass-nav .bg-white\/10 .text-white {
+  color: #2563EB;
+}
+.glass-nav .border-primary001 {
+  border-color: #2563EB;
+}
+.glass-nav .hamburger-react div {
+  background-color: #181818 !important;
+}
+
+/* ---------- Glass Search bar ---------- */
+.glass-search {
+  background: rgba(255, 255, 255, 0.60) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 50px;
+}
+
+/* ---------- Pill-shaped buttons (all buttons — primary + secondary) ---------- */
+button,
+a[class*="bg-primary"],
+a[class*="bg-blue"] {
+  border-radius: 9999px;
+}
+button.rounded-none,
+button.rounded-sm,
+button.rounded,
+button.rounded-md,
+button.rounded-lg,
+button.rounded-xl,
+button.rounded-2xl,
+button.rounded-3xl,
+button.rounded-4xl {
+  border-radius: 9999px;
+}
+
+/* ---------- Hero decorative orbs ---------- */
+.hero-orbs {
+  position: relative;
+}
+.hero-orbs::before,
+.hero-orbs::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: #2563EB;
+  opacity: 0.07;
+  filter: blur(80px);
+  -webkit-filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-orbs::before {
+  top: -60px;
+  right: -60px;
+}
+.hero-orbs::after {
+  bottom: -60px;
+  left: -60px;
+}
+.hero-orbs > * {
+  position: relative;
+  z-index: 1;
+}

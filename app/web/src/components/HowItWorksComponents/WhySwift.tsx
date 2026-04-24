@@ -3,7 +3,7 @@ import Container from "../Common/Container";
 
 const WhySwift = () => {
   return (
-    <div className="bg-[#F4F4F4]">
+    <div className="bg-[#F4F4F4] hero-orbs">
       <Container>
         {/* Title */}
         <div className="mb-[20px] pt-[50px]">
