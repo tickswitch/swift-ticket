@@ -247,6 +247,7 @@ canvas {
   -webkit-filter: blur(80px);
   pointer-events: none;
   z-index: 0;
+  will-change: transform;
 }
 .app-orb-2 {
   position: fixed;
@@ -260,6 +261,16 @@ canvas {
   -webkit-filter: blur(80px);
   pointer-events: none;
   z-index: 0;
+  will-change: transform;
+}
+
+/* Remove parallax transforms when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .app-orb-1,
+  .app-orb-2 {
+    transform: none !important;
+    will-change: auto;
+  }
 }
 
 /* ---------- Glass Card (applied to all card-like surfaces) ---------- */
