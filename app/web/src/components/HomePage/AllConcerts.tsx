@@ -7,6 +7,7 @@ import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
 import { useDateFormat } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Container from "@/components/Common/Container";
@@ -60,6 +61,7 @@ const AllConcerts = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentData?.map((concert) => {
                 const formattedDate = formatDate(concert?.date, concert?.time);
+                const ticketCount = concert?.available_quantity;
                 return (
                   <Link
                     key={concert.id}
@@ -83,6 +85,14 @@ const AllConcerts = () => {
                           <TimerIcon size={20} />
                           {formattedDate}
                         </p>
+                        {typeof ticketCount === "number" && (
+                          <div className="mt-1">
+                            <TicketBadge
+                              count={ticketCount}
+                              data-testid={`all-concerts-card-ticket-count-${concert?.id}`}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Link>

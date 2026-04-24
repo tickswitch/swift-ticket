@@ -7,7 +7,7 @@ import Loader from "../Common/Loader";
 import { TimerIcon } from "lucide-react";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
-import { AvailableTicketIcon } from "@/components/PaymentMethod/Icons";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const Concerts = () => {
   const latlong = JSON.parse(
@@ -50,8 +50,6 @@ const Concerts = () => {
               const shortDate = formatShortDate(concert?.date, concert?.time);
               const longDate = formatDate(concert?.date, concert?.time);
               const ticketCount = concert?.available_quantity;
-              const lowStock =
-                typeof ticketCount === "number" && ticketCount <= 5;
               return (
                 <Link
                   to={`/event-details/${concert?.id}`}
@@ -102,17 +100,10 @@ const Concerts = () => {
                           </span>
                         )}
                         {typeof ticketCount === "number" && (
-                          <span
+                          <TicketBadge
+                            count={ticketCount}
                             data-testid="concert-card-ticket-count"
-                            className={
-                              "text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 " +
-                              (lowStock
-                                ? "bg-[#FEC100]/20 text-[#B88700]"
-                                : "bg-primary001/10 text-primary001")
-                            }
-                          >
-                            <AvailableTicketIcon /> {ticketCount} tickets left
-                          </span>
+                          />
                         )}
                       </div>
                     </div>

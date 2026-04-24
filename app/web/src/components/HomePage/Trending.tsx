@@ -22,6 +22,7 @@ import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const Trending: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -118,8 +119,6 @@ const Trending: React.FC = () => {
                   const formattedDate = formatDate(data?.date, data?.time);
                   const shortDate = formatShortDate(data?.date, data?.time);
                   const ticketCount = data?.available_quantity;
-                  const lowStock =
-                    typeof ticketCount === "number" && ticketCount <= 5;
                   return (
                     <SwiperSlide key={index}>
                       <Link
@@ -169,17 +168,10 @@ const Trending: React.FC = () => {
                                 </span>
                               )}
                               {typeof ticketCount === "number" && (
-                                <span
+                                <TicketBadge
+                                  count={ticketCount}
                                   data-testid="trending-card-ticket-count"
-                                  className={
-                                    "text-xs font-semibold px-2 py-0.5 rounded-full " +
-                                    (lowStock
-                                      ? "bg-[#FEC100]/90 text-[#181818]"
-                                      : "bg-white/80 text-[#181818]")
-                                  }
-                                >
-                                  {ticketCount} tickets left
-                                </span>
+                                />
                               )}
                             </div>
                           </div>

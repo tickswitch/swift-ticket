@@ -53,3 +53,45 @@ Frontend testing subagent verified 100% on 6 pages + mobile viewport. Computed s
 - Narrow `.bg-white[class*='rounded-']` card rule to explicit `.glass-card` classes for precision.
 - Phase 2: consider semantic CSS variables for dark/light theming beyond light-mode only.
 - Audit remaining ticket/checkout/profile sub-pages to confirm glass treatment is desirable everywhere.
+
+---
+
+## Iteration 4 — Ticket availability badge (Phase 2, continued)
+Date: 2026-01-24
+Branch: design/glassmorphism-phase2 (nishant branch untouched)
+
+### What was built
+- New shared component `TicketBadge` at `app/web/src/components/Common/TicketBadge.tsx`.
+- 4-tier availability logic (inline style, pill: 3px 10px padding, 50px radius, 12px / weight 500):
+    • 0        → grey   bg `rgba(100,116,139,0.12)`, text `#64748B`, border `rgba(100,116,139,0.20)` — copy: "0 tickets left"
+    • 1–3      → amber  bg `rgba(245,158,11,0.12)`, text `#D97706`, border `rgba(245,158,11,0.20)`  — copy: "Only X left"
+    • 4–10     → green  bg `rgba(16,185,129,0.12)`, text `#059669`, border `rgba(16,185,129,0.20)`  — copy: "X tickets left"
+    • 10+ (>10)→ blue   bg `rgba(37,99,235,0.10)`, text `#2563EB`, border `rgba(37,99,235,0.18)`    — copy: "Available"
+- Wired TicketBadge into every card type that exposes `available_quantity` (badge positioned below the event date row on each card type):
+    1. `components/HomePage/Concerts.tsx`              (existing badge — fixed from single 2-tier amber/primary to full 4-tier)
+    2. `components/HomePage/Trending.tsx`              (existing badge — fixed from single 2-tier amber/white to full 4-tier)
+    3. `components/HomePage/FestivalsForYou.tsx`       (existing broken local TicketBadge replaced with shared one)
+    4. `components/HomePage/AllConcerts.tsx`           (badge added — was missing)
+    5. `components/HomePage/AllSportsEvents.tsx`       (badge added — was missing; `h-[98px]` → `min-h-[98px]` so the extra line fits without clipping)
+    6. `components/HomePage/EventsListWithPagination.tsx` (replaced raw ticket-count row with TicketBadge)
+    7. `components/TicketAlerts/Events.tsx` — EntranceTickets (replaced raw ticket-count row with TicketBadge, also fixed stale `data?.available_quantity` → `event?.available_quantity`)
+
+Cards intentionally left unchanged because they do not surface ticket counts:
+- `components/HomePage/SportsEvents.tsx` (genre tiles, not individual events)
+- `components/HomePage/EventbriteNearby.tsx` (PredictHQ, no ticket counts)
+- `components/HomePage/ExploreEvents.tsx` (venue tiles, not events)
+- `components/HomePage/Event.tsx` (static hero CTAs)
+
+### Testing status
+- TypeScript compiles clean (`tsc --noEmit` → 0 errors).
+- Visual verification via Playwright with mocked API responses covering all four tiers across all seven card surfaces — every tier renders the correct colour + copy on each page.
+
+### Files modified this iteration
+- `app/web/src/components/Common/TicketBadge.tsx` (new)
+- `app/web/src/components/HomePage/Concerts.tsx`
+- `app/web/src/components/HomePage/Trending.tsx`
+- `app/web/src/components/HomePage/FestivalsForYou.tsx`
+- `app/web/src/components/HomePage/AllConcerts.tsx`
+- `app/web/src/components/HomePage/AllSportsEvents.tsx`
+- `app/web/src/components/HomePage/EventsListWithPagination.tsx`
+- `app/web/src/components/TicketAlerts/Events.tsx`

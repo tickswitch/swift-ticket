@@ -7,6 +7,7 @@ import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import Container from "../Common/Container";
 import { sortByDistance } from "@/lib/sortByDistance";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const AllSportsEvents = () => {
 
@@ -46,11 +47,13 @@ const AllSportsEvents = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-5">
                         {data &&
-                            sortByDistance(data as any[], latlong?.lat, latlong?.lon)?.map((data, idx) => (
+                            sortByDistance(data as any[], latlong?.lat, latlong?.lon)?.map((data, idx) => {
+                                const ticketCount = data?.available_quantity;
+                                return (
                                 <Link
                                     to={`/event-details/${data?.id}`}
                                     key={`index - ${idx}`}
-                                    className="h-[98px] w-full bg-primary001/10 px-2 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
+                                    className="min-h-[98px] w-full bg-primary001/10 px-2 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
                                 >
                                     <img
                                         src={data?.image}
@@ -69,13 +72,22 @@ const AllSportsEvents = () => {
                                             <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
                                                 <CheckIcon2 /> {data?.date} {data?.time}
                                             </p>
+                                            {typeof ticketCount === "number" && (
+                                                <div className="mt-0.5">
+                                                    <TicketBadge
+                                                        count={ticketCount}
+                                                        data-testid={`sports-card-ticket-count-${data?.id ?? idx}`}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         {/* <button>
                   <BookmarkIcon2 />
                 </button> */}
                                     </div>
                                 </Link>
-                            ))}
+                                );
+                            })}
                     </div>
                 )}
             </div></Container>

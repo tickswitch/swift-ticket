@@ -8,6 +8,7 @@ import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { TicketIcons } from "@/components/TicketAlerts/TickertAlertIcons";
 import { useDateFormat } from "@/lib/formatDate";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -223,27 +224,14 @@ const EntranceTickets = ({ data }) => {
                       {event?.venue}, {event?.location}
                     </p>
                     <p>{formattedDate}</p>
-                    <p className="flex items-center gap-2 text-primary001">
-                      <svg
-                        aria-label="TicketAlt"
-                        width="16"
-                        height="16"
-                        fill="currentcolor"
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        stroke-linejoin="round"
-                        stroke-miterlimit="1.414"
-                        xmlns="http://www.w3.org/2000/svg"
-                        role="presentation"
-                        focusable="false"
-                        viewBox="0 0 32 32"
-                        preserveAspectRatio="xMidYMid meet"
-                      >
-                        <path d="M6.305 5.783c0-2.271 1.841-4.112 4.112-4.112h12.792c2.271 0 4.112 1.841 4.112 4.112v12.322l-0.782 0.371c-0.621 0.295-1.045 0.925-1.045 1.652s0.424 1.357 1.045 1.652l0.782 0.372v4.829c0 2.271-1.841 4.112-4.112 4.112h-12.792c-2.271 0-4.112-1.841-4.112-4.112v-4.829l0.783-0.372c0.62-0.295 1.045-0.925 1.045-1.652s-0.425-1.357-1.045-1.652l-0.783-0.371zM10.416 4.413c-0.757 0-1.371 0.614-1.371 1.371v10.691c1.108 0.832 1.828 2.159 1.828 3.655s-0.72 2.822-1.828 3.655v3.198c0 0.757 0.614 1.371 1.371 1.371h12.792c0.757 0 1.371-0.614 1.371-1.371v-3.198c-1.108-0.833-1.827-2.159-1.827-3.655s0.719-2.823 1.827-3.655v-10.691c0-0.757-0.614-1.371-1.371-1.371z"></path>
-                        <path d="M15.762 20.06c0 0.87-0.706 1.576-1.576 1.576s-1.576-0.706-1.576-1.576 0.706-1.576 1.576-1.576 1.576 0.706 1.576 1.576m5.254 0c0 0.87-0.706 1.576-1.576 1.576s-1.576-0.706-1.576-1.576 0.706-1.576 1.576-1.576 1.576 0.706 1.576 1.576"></path>
-                      </svg>
-                      {data?.available_quantity || "0"}
-                    </p>
+                    {typeof event?.available_quantity === "number" && (
+                      <div className="mt-1">
+                        <TicketBadge
+                          count={event.available_quantity}
+                          data-testid={`ticket-alerts-event-card-ticket-count-${event?.id}`}
+                        />
+                      </div>
+                    )}
                   </div>
                   {/* <p className="bg-[#FEC100] px-2 py-1 rounded-md w-fit">
                   <span className="flex flex-col gap-1 text-white">

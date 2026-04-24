@@ -5,19 +5,7 @@ import Loader from "../Common/Loader";
 import { formatShortDate } from "@/lib/formatDate";
 import { TimerIcon } from "lucide-react";
 import { sortByDistance } from "@/lib/sortByDistance";
-
-const TicketBadge = ({ count }: { count: number }) => (
-  <span
-    className={
-      "text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 w-fit " +
-      (count <= 5
-        ? "bg-[#FEC100]/20 text-[#B88700]"
-        : "bg-primary001/10 text-primary001")
-    }
-  >
-    □ {count}
-  </span>
-);
+import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const FestivalsForYou = () => {
   const latlong = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
