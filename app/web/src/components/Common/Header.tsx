@@ -272,7 +272,7 @@ const Header = () => {
   const hasResults = activeTab === "events" ? eventResults.length > 0 : cityResults.length > 0;
   return (
     <div className="z-20 ">
-      <div className="max-w-[1720px] px-5 md:px-10 mx-auto my-0 rounded-2xl py-4 flex items-center justify-between gap-5 fixed top-0 left-1/2 -translate-x-1/2 w-[94%] md:w-[94%] lg:w-[95%] z-50 glass-nav">
+      <div className="max-w-[1720px] px-5 md:px-10 mx-auto my-0 rounded-2xl py-4 flex items-center justify-between gap-5 fixed top-0 left-1/2 -translate-x-1/2 w-[94%] md:w-[94%] lg:w-[95%] z-50 bg-[#000000]/50">
         {/* Logo */}
         <div className="flex items-center cursor-pointer" onClick={GoToHome}>
           <img
@@ -286,7 +286,7 @@ const Header = () => {
         </div>
 
         {/* Search */}
-        <div className="hidden md:flex items-center justify-between px-5 py-2 md:py-1 lg:py-2 2xl:w-1/3 xl:w-3/12 relative glass-search">
+        <div className="hidden bg-white rounded-4xl md:flex items-center justify-between px-5 py-2 md:py-1 lg:py-2 2xl:w-1/3 xl:w-3/12 relative">
           <input
             className="focus:outline-none font-proximaRegular text-sm w-full"
             type="search"
@@ -422,7 +422,7 @@ const Header = () => {
                   </div>
                   {/* Search Bar */}
 
-                  <div className="mt-5 flex items-center justify-between px-5 py-2 w-full glass-search">
+                  <div className=" mt-5 bg-white border border-primary001 rounded-4xl flex items-center justify-between px-5 py-2 w-full ">
                     <input
                       className="focus:outline-none font-proximaRegular text-sm w-full"
                       type="search"

@@ -242,7 +242,7 @@ canvas {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(37, 99, 235, 0.12);
   filter: blur(80px);
   -webkit-filter: blur(80px);
   pointer-events: none;

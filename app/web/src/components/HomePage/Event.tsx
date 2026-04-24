@@ -45,7 +45,8 @@ const Event = () => {
 
             <Link
               to={`/events?lat=${location?.lat}&lng=${location?.lon}&radius=50`}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-white rounded-2xl max-w-[274px] h-[80px] md:h-[135px]  p-8 bg-white/10 backdrop-blur-md flex items-center justify-center"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl max-w-[274px] h-[80px] md:h-[135px]  p-8 bg-white/10 backdrop-blur-md flex items-center justify-center"
+              style={{ border: "1px solid rgba(255, 255, 255, 0.15)" }}
             >
               <p className="font-semibold text-lg sm:text-2xl md:text-[28px] lg:text-[32px] xl:text-[36px] text-white text-center">
                 Find Events And Explore
