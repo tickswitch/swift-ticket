@@ -54,9 +54,15 @@ const Concerts = () => {
                 <Link
                   to={`/event-details/${concert?.id}`}
                   data-testid={`concert-card-${concert?.id}`}
-                  className="md:basis-1/2 lg:basis-1/3 hover:-translate-y-2 transition-all duration-300 bg-slate-200 px-4 py-2 rounded-xl"
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 hover:-translate-y-1 transition-all duration-200 shadow-sm"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(37, 99, 235, 0.12)',
+                  }}
                 >
-                  <div className="p-1 flex items-center gap-3 w-full h-full rounded-2xl overflow-hidden rounded-b-3xl">
+                  <div className="flex items-center gap-3 w-full h-full">
                     <img
                       src={concert?.image || ""}
                       className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
