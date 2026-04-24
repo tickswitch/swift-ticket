@@ -1,36 +1,28 @@
 # SwiftTickets - PRD
 
-## Original Problem Statement
-Design phase 3 — glassmorphism refinements across the SwiftTickets platform.
-
 ## Architecture
 - **Frontend**: Vite + React + TypeScript at `/app/app/web`
 - **Backend**: FastAPI at `/app/app/api`
-- **Styling**: Tailwind CSS v4 + inline styles for glass effects
 
-## What's Been Implemented
+## What's Been Implemented (design/phase3)
 
-### Icon Tile Redesign — Circular frosted glass containers, blue #2563EB icons
-### Thumbnail Standardization — All list cards: 64px square, 8px radius, object-cover
-### Concert Card Glassmorphism + Footer Cleanup — Matching glass style, real copy, 4-col layout
-### Font Styling Standardization — 16px/semibold titles, 14px/grey venue+date, 24px/bold headings
-### Parallax Scroll Animation — Blue orbs move at 35%/-25% scroll speed
+### Icon Tile Redesign — Circular frosted glass, blue #2563EB icons
+### Thumbnail Standardization — 64px square, 8px radius, object-cover
+### Concert Card Glassmorphism + Footer — Glass style, real copy, 4-col layout
+### Font Standardization — 16px/semibold titles, 14px/grey venue+date, 24px/bold headings
+### Parallax Orbs — 35%/-25% scroll speed, rAF, prefers-reduced-motion
+### Full-Width Hero Area — Nav, carousel, trust bar edge-to-edge
 
-**Implementation details (parallax):**
-- MainLayout.tsx: useRef + useEffect with requestAnimationFrame scroll listener
-- Ticking guard pattern prevents excessive rAF calls
-- Passive scroll listener for performance
-- Proper cleanup (removeEventListener + cancelAnimationFrame)
-- CSS: will-change: transform on both orbs for GPU compositing
-- Accessibility: JS matchMedia check + CSS @media (prefers-reduced-motion: reduce)
-- Orb properties (colour, size, blur, z-index) completely unchanged
+**Full-width details:**
+- Header.tsx: `w-full left-0` (removed rounded-2xl, max-w, width %, translate-x)
+- Banner.tsx: `w-full` (removed max-w-[1720px] mx-auto rounded-2xl from container, swiper, slides, all 4 slider images+overlays)
+- Carousel autoplay: `reverseDirection: true` for left-to-right advance
+- HomePage.tsx: Restructured — Banner+TrustBar in full-width wrapper, rest in w-[95%] mx-auto
+- MainLayout.tsx: Homepage gets no px-5 padding; non-homepage retains px-5 lg:px-0
 
 ## Testing Status
-- Iteration 4: Icon tiles — 100% pass
-- Iteration 5: Thumbnails — 100% pass
-- Iteration 6: Concert cards + Footer — 100% pass
-- Iteration 7: Font standardization — 100% pass
-- Iteration 8: Parallax orbs — 100% pass (transforms verified: 350px/−250px at 1000px scroll)
+- Iterations 4-9: All 100% pass (icons, thumbnails, concerts, footer, fonts, parallax, full-width)
+- Iteration 9: 15 tests — header/banner/trustbar all 1920px wide at x=0, all rounded-2xl removed, reverseDirection confirmed, orbs still animating, footer unaffected
 
 ## Backlog
 - P2: Backend API connectivity in preview environment
