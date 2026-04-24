@@ -11,6 +11,7 @@ import { useDateFormat } from "@/lib/formatDate";
 import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 const Events = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,7 +80,7 @@ const Events = () => {
               </div>
             ) : (
               <>
-                <EntranceTickets data={data?.data} />
+                <EntranceTickets data={filterParkingEvents(data?.data ?? [])} />
                 {/* You can also add pagination here in parent if needed */}
 
                 {data?.pagination?.totalPages > 1 && (

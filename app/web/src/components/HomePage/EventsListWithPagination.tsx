@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { useDateFormat } from '@/lib/formatDate';
 import Loader from '@/components/Common/Loader';
 import { TicketBadge } from '@/components/Common/TicketBadge';
+import { filterParkingEvents } from '@/utils/filterParkingEvents';
 
 // Types
 interface Event {
@@ -99,7 +100,7 @@ export function EventsListWithPagination({
       {/* Events Grid */}
       {!isLoading && !error && events && events?.length > 0 && (
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {events?.map((event: Event) => {
+          {filterParkingEvents(events)?.map((event: Event) => {
             const formattedDate = formatDate(event?.end_date, event?.time);
             return (
               <Link

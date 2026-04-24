@@ -22,6 +22,7 @@ import { updateData } from "@/features/SellTicketSlice";
 import { getLocalTime } from "@/lib/getLocalTime";
 import { formatEventDate } from "@/lib/formatEventDate";
 import { sortByDistance } from "@/lib/sortByDistance";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 // Proper EventItem type to match API response
 type EventItem = {
@@ -88,7 +89,7 @@ const SelectEvents = () => {
   });
 
   const rawEvents: EventItem[] = Array.isArray(rawData) ? rawData : (rawData as any)?.events ?? [];
-  const data = sortByDistance(rawEvents, userCoords?.lat, userCoords?.lon) as EventItem[];
+  const data = filterParkingEvents(sortByDistance(rawEvents, userCoords?.lat, userCoords?.lon) as EventItem[]);
 
   return (
     <div className="max-w-[872px] mx-auto pt-10 px-5 lg:px-0">

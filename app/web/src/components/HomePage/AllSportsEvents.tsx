@@ -7,6 +7,7 @@ import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import Container from "../Common/Container";
 import { sortByDistance } from "@/lib/sortByDistance";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const AllSportsEvents = () => {
@@ -47,7 +48,7 @@ const AllSportsEvents = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-5">
                         {data &&
-                            sortByDistance(data as any[], latlong?.lat, latlong?.lon)?.map((data, idx) => {
+                            filterParkingEvents(sortByDistance(data as any[], latlong?.lat, latlong?.lon))?.map((data, idx) => {
                                 const ticketCount = data?.available_quantity;
                                 return (
                                 <Link

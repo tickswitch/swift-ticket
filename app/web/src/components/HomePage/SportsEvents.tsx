@@ -17,6 +17,7 @@ import "swiper/css/scrollbar";
 import React from "react";
 import { NavigationIcon } from "lucide-react";
 import { useHomepageDedup } from "@/context/HomepageDedupContext";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371;
@@ -58,7 +59,7 @@ const SportsEvents = () => {
     return Object.entries(data as Record<string, any[]>)
       .filter(([, evts]) => Array.isArray(evts) && evts.length > 0)
       .map(([name, evts]) => {
-        const deduped = evts.filter((e) => {
+        const deduped = filterParkingEvents(evts).filter((e) => {
           if (!e.id || globalSeen.has(e.id)) return false;
           globalSeen.add(e.id);
           return true;

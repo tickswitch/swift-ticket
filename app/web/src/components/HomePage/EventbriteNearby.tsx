@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Loader from "../Common/Loader";
 import { formatShortDate } from "@/lib/formatDate";
 import { TimerIcon, MapPinIcon, CalendarDaysIcon } from "lucide-react";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 const categoryColor: Record<string, string> = {
   concerts: "bg-purple-100 text-purple-700",
@@ -26,7 +27,7 @@ const EventbriteNearby = () => {
   if (isLoading) return <Loader />;
   if (!data || (data as any[]).length === 0) return null;
 
-  const events = (data as any[]).slice(0, 8);
+  const events = filterParkingEvents(data as any[]).slice(0, 8);
 
   return (
     <div className="pt-12">

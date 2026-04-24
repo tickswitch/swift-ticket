@@ -8,6 +8,7 @@ import { sortByDistance } from "@/lib/sortByDistance";
 import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useMemo, useEffect } from "react";
 import { useHomepageDedup } from "@/context/HomepageDedupContext";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 const FestivalsForYou = () => {
   const latlong = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
@@ -24,7 +25,7 @@ const FestivalsForYou = () => {
   const festivals = useMemo(() => {
     if (!data || (data as any[]).length === 0) return [];
     const seen = new Set<string>();
-    return (sortByDistance(data as any[], latlong?.lat, latlong?.lon) as any[])
+    return filterParkingEvents(sortByDistance(data as any[], latlong?.lat, latlong?.lon) as any[])
       .filter((f) => { if (!f.id || seen.has(f.id)) return false; seen.add(f.id); return true; })
       .slice(0, 10);
   }, [data, latlong?.lat, latlong?.lon]);

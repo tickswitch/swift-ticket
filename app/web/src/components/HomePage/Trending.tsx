@@ -24,6 +24,7 @@ import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
 import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useHomepageDedup } from "@/context/HomepageDedupContext";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
 
 const Trending: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -58,7 +59,7 @@ const Trending: React.FC = () => {
 
   const sortedData = React.useMemo(() => {
     const seen = new Set<string>();
-    return (sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon) as TrendingEvent[])
+    return filterParkingEvents(sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon) as TrendingEvent[])
       .filter((e) => {
         if (!e.id || seen.has(e.id) || registeredIds.has(e.id)) return false;
         seen.add(e.id);
