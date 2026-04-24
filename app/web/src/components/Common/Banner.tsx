@@ -49,7 +49,7 @@ const Banner = () => {
   }, []);
 
   return (
-    <div className="max-w-[1720px] mx-auto my-0 relative rounded-2xl hero-orbs">
+    <div className="w-full relative hero-orbs">
       <div className="flex gap-4 ">
         <button
           ref={prevRef}
@@ -82,20 +82,21 @@ const Banner = () => {
         autoplay={{
           delay: 10000,
           disableOnInteraction: false,
+          reverseDirection: true,
         }}
         speed={2000}
-        className="!rounded-2xl overflow-hidden"
+        className="overflow-hidden"
       >
-        <SwiperSlide className="rounded-2xl overflow-hidden ">
+        <SwiperSlide className="overflow-hidden ">
           <Slider1 />
         </SwiperSlide>
-        <SwiperSlide className="rounded-2xl overflow-hidden">
+        <SwiperSlide className="overflow-hidden">
           <Slider2 />
         </SwiperSlide>
-        <SwiperSlide className="rounded-2xl overflow-hidden">
+        <SwiperSlide className="overflow-hidden">
           <Slider3 />
         </SwiperSlide>
-        <SwiperSlide className="rounded-2xl overflow-hidden">
+        <SwiperSlide className="overflow-hidden">
           <Slider4 />
         </SwiperSlide>
       </Swiper>
@@ -108,13 +109,13 @@ const Slider1 = () => {
     <div className="overflow-hidden relative">
       <div>
         <img
-          className="w-[1720px] h-[466px] object-cover rounded-2xl"
+          className="w-[1720px] h-[466px] object-cover"
           src={bannerBg5}
         />
       </div>
 
-      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] rounded-2xl bg-[#178AFF] mix-blend-hue overflow-hidden" />
-      <div className="absolute top-0 left-0 w-full h-full bg-black/50 rounded-2xl overflow-hidden" />
+      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] bg-[#178AFF] mix-blend-hue overflow-hidden" />
+      <div className="absolute top-0 left-0 w-full h-full bg-black/50 overflow-hidden" />
 
       <div className="mx-auto w-[80%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
         <div className="text-center">
@@ -153,13 +154,13 @@ const Slider2 = () => {
     <div className="overflow-hidden relative">
       <div>
         <img
-          className="w-[1720px] h-[466px] object-top object-cover rounded-2xl"
+          className="w-[1720px] h-[466px] object-top object-cover"
           src={bannerBg4}
         />
       </div>
 
-      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] rounded-2xl bg-[#178AFF] mix-blend-hue overflow-hidden" />
-      <div className="absolute top-0 left-0 w-full h-full bg-black/40 rounded-2xl overflow-hidden" />
+      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] bg-[#178AFF] mix-blend-hue overflow-hidden" />
+      <div className="absolute top-0 left-0 w-full h-full bg-black/40 overflow-hidden" />
 
       <div className="mx-auto w-[80%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
         <div className="text-center">
@@ -212,13 +213,13 @@ const Slider3 = () => {
     <div className="overflow-hidden relative">
       <div>
         <img
-          className="w-[1720px] h-[466px] object-cover rounded-2xl"
+          className="w-[1720px] h-[466px] object-cover"
           src={bannerBg3}
         />
       </div>
 
-      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] rounded-2xl bg-[#178AFF] mix-blend-hue overflow-hidden" />
-      <div className="absolute top-0 left-0 w-full h-full bg-black/40 rounded-2xl overflow-hidden" />
+      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] bg-[#178AFF] mix-blend-hue overflow-hidden" />
+      <div className="absolute top-0 left-0 w-full h-full bg-black/40 overflow-hidden" />
 
       <div className="mx-auto w-[80%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
         <div className="text-center">
@@ -259,13 +260,13 @@ const Slider4 = () => {
     <div className="overflow-hidden relative">
       <div>
         <img
-          className="w-[1720px] h-[466px] object-cover rounded-2xl"
+          className="w-[1720px] h-[466px] object-cover"
           src={bannerBg2}
         />
       </div>
 
-      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] rounded-2xl bg-[#178AFF] mix-blend-hue overflow-hidden" />
-      <div className="absolute top-0 left-0 w-full h-full bg-black/60 rounded-2xl" />
+      <div className=" absolute top-0 right-0 w-[1720px] h-[466px] bg-[#178AFF] mix-blend-hue overflow-hidden" />
+      <div className="absolute top-0 left-0 w-full h-full bg-black/60" />
 
       <div className="mx-auto w-[80%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4">
         <div className="text-center">

@@ -14,9 +14,14 @@ import { Link } from "react-router";
 const HomePage = () => {
   return (
     <>
-      <main className="3xl:pb-10 -mt-2 w-[95%] mx-auto 3xl:px-0">
+      {/* Full-width hero area — no side constraints */}
+      <div className="-mt-2">
         <Banner />
         <TrustBar />
+      </div>
+
+      {/* Constrained content area */}
+      <main className="3xl:pb-10 w-[95%] mx-auto 3xl:px-0">
         <Container>
           <Event />
           <Trending />

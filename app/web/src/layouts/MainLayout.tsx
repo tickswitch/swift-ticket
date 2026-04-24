@@ -49,7 +49,7 @@ const MainLayout = () => {
       <div className="app-orb-2" ref={orb2Ref} aria-hidden="true" />
 
       <Header />
-      <main className={cn("relative z-[1] flex-1 px-5 lg:px-0", pathname === "/" ? "pt-2" : "pt-10")}>
+      <main className={cn("relative z-[1] flex-1", pathname === "/" ? "pt-2" : "pt-10 px-5 lg:px-0")}>
         <Outlet />
       </main>
       <div className="relative z-[1]">

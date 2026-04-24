@@ -272,7 +272,7 @@ const Header = () => {
   const hasResults = activeTab === "events" ? eventResults.length > 0 : cityResults.length > 0;
   return (
     <div className="z-20 ">
-      <div className="max-w-[1720px] px-5 md:px-10 mx-auto my-0 rounded-2xl py-4 flex items-center justify-between gap-5 fixed top-0 left-1/2 -translate-x-1/2 w-[94%] md:w-[94%] lg:w-[95%] z-50 bg-[#000000]/50">
+      <div className="w-full px-5 md:px-10 py-4 flex items-center justify-between gap-5 fixed top-0 left-0 z-50 bg-[#000000]/50">
         {/* Logo */}
         <div className="flex items-center cursor-pointer" onClick={GoToHome}>
           <img
