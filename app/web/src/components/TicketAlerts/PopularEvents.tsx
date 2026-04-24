@@ -31,7 +31,7 @@ const PopularEvents = () => {
 
   return (
     <div>
-      <p className="text-2xl font-semibold py-4">Popular Events</p>
+      <p className="text-2xl font-bold py-4">Popular Events</p>
       {isLoading ? (
         <Loader />
       ) : error ? (
@@ -48,27 +48,20 @@ const PopularEvents = () => {
                 key={`index - ${event?.id}`}
                 className="h-[98px] w-full bg-primary001/10 px-5 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
               >
-                {/* <img
-                  src={event?.image}
-                  className="w-[78px] h-[80px] rounded-md"
-                /> */}
                 <div className="flex items-center justify-between w-full">
                   <div className="flex flex-col gap-1 w-full">
                     <div className="flex items-center justify-between w-full">
-                      <p className="font-semibold text-base md:text-lg line-clamp-1">
+                      <p className="font-semibold text-base leading-tight line-clamp-1">
                         {event?.title}
                       </p>
                     </div>
-                    <p className="text-secondaryText001 text-sm">
+                    <p className="text-gray-500 text-sm truncate">
                       {event?.venue}, {event?.location}
                     </p>
-                    <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
+                    <p className="text-primary001 flex items-center gap-2 text-sm">
                       <CheckIcon2 /> {formattedDate}
                     </p>
                   </div>
-                  {/* <button>
-                    <BookmarkIcon2 />
-                  </button> */}
                 </div>
               </Link>
             );

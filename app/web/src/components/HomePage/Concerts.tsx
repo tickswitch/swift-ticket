@@ -69,30 +69,30 @@ const Concerts = () => {
                       data-testid="concert-card-thumbnail"
                     />
 
-                    <div className="flex-col gap-1 md:gap-2 min-w-0">
+                    <div className="flex flex-col gap-1 min-w-0 flex-1">
                       <p
-                        className="flex items-center justify-between text-black text-xl md:text-2xl truncate"
+                        className="font-semibold text-base leading-tight line-clamp-1"
                         data-testid="concert-card-title"
                       >
                         {concert?.title}
                       </p>
-                      <p className="text-gray-500 truncate">
+                      <p className="text-gray-500 text-sm truncate">
                         {concert?.venue}
                         {concert?.location ? `, ${concert?.location}` : ""}
                       </p>
                       {concert?.city && (
                         <p
-                          className="text-gray-600 text-sm"
+                          className="text-gray-500 text-sm"
                           data-testid="concert-card-city"
                         >
                           {concert.city}
                         </p>
                       )}
                       <p
-                        className="text-red-500 text-sm flex items-center gap-2"
+                        className="text-red-500 text-sm flex items-center gap-1"
                         data-testid="concert-card-date"
                       >
-                        <TimerIcon size={20} />
+                        <TimerIcon size={14} />
                         {shortDate || longDate}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap mt-1">

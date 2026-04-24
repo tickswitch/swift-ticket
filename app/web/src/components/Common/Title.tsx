@@ -10,7 +10,7 @@ const Title = ({ className, children }: Props) => {
   return (
     <div
       className={cn(
-        "text-2xl lg:text-[30px] xl:lg-[36px] font-semibold",
+        "text-2xl font-bold",
         className
       )}
     >

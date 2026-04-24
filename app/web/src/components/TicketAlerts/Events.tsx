@@ -217,14 +217,14 @@ const EntranceTickets = ({ data }) => {
                     className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                     data-testid="event-list-card-thumbnail"
                   />
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xl md:text-2xl font-semibold">
+                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                    <p className="font-semibold text-base leading-tight line-clamp-1">
                       {event?.title || ""}
                     </p>
-                    <p className="text-secondaryText001">
+                    <p className="text-gray-500 text-sm truncate">
                       {event?.venue}, {event?.location}
                     </p>
-                    <p>{formattedDate}</p>
+                    <p className="text-sm text-gray-500">{formattedDate}</p>
                     <div className="mt-1">
                       <TicketBadge
                         count={event?.available_quantity}

@@ -28,7 +28,7 @@ const AllSportsEvents = () => {
                 <div className="flex items-center justify-between">
                     <div>
                         <Title>Sports events in the area</Title>
-                        <p className="text-secondaryText001">
+                        <p className="text-gray-500 text-sm">
                             Head to popular games or events.
                         </p>
                     </div>
@@ -63,14 +63,14 @@ const AllSportsEvents = () => {
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex flex-col gap-1 w-full">
                                             <div className="flex items-center justify-between w-full">
-                                                <p className="font-semibold text-base md:text-lg line-clamp-1">
+                                                <p className="font-semibold text-base leading-tight line-clamp-1">
                                                     {data?.title}
                                                 </p>
                                             </div>
-                                            <p className="text-secondaryText001 text-sm">
+                                            <p className="text-gray-500 text-sm">
                                                 {data?.location}
                                             </p>
-                                            <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
+                                            <p className="text-primary001 flex items-center gap-2 text-sm">
                                                 <CheckIcon2 /> {data?.date} {data?.time}
                                             </p>
                                             <div className="mt-0.5">

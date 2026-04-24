@@ -81,15 +81,15 @@ const AllConcerts = () => {
                         data-testid="all-concerts-card-thumbnail"
                       />
 
-                      <div className="flex-col gap-1 md:gap-2">
-                        <p className="flex items-center justify-between text-black text-xl md:text-2xl truncate">
+                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <p className="font-semibold text-base leading-tight line-clamp-1">
                           {concert?.title}
                         </p>
-                        <p className="text-gray-500">
+                        <p className="text-gray-500 text-sm truncate">
                           {concert?.venue}, {concert?.location}
                         </p>
-                        <p className="text-red-500 text-sm flex items-center gap-2">
-                          <TimerIcon size={20} />
+                        <p className="text-red-500 text-sm flex items-center gap-1">
+                          <TimerIcon size={14} />
                           {formattedDate}
                         </p>
                         <div className="mt-1">

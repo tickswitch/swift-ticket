@@ -58,14 +58,14 @@ const FestivalsForYou = () => {
 
               {/* Details */}
               <div className="flex flex-col gap-1 min-w-0 flex-1">
-                <p className="font-semibold text-black text-sm leading-tight line-clamp-2">
+                <p className="font-semibold text-base leading-tight line-clamp-2" data-testid="festival-card-title">
                   {festival?.title}
                 </p>
-                <p className="text-gray-500 text-xs truncate">
+                <p className="text-gray-500 text-sm truncate">
                   {festival?.venue}{festival?.location ? `, ${festival?.location}` : ""}
                 </p>
                 {shortDate && (
-                  <span className="text-red-500 text-xs flex items-center gap-1 mt-0.5">
+                  <span className="text-red-500 text-sm flex items-center gap-1 mt-0.5">
                     <TimerIcon size={12} />
                     {shortDate}
                   </span>

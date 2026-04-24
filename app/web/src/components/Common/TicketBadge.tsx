@@ -72,7 +72,7 @@ export function TicketBadge({ count, className, ...rest }: TicketBadgeProps) {
     alignItems: "center",
     gap: "4px",
     fontSize: "12px",
-    fontWeight: 500,
+    fontWeight: 400,
     padding: "3px 10px",
     borderRadius: "50px",
     background: theme.background,

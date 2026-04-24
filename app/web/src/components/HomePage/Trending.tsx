@@ -60,7 +60,7 @@ const Trending: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <Title>Trending near you</Title>
-          <p className="text-secondaryText001">
+          <p className="text-gray-500 text-sm">
             Find events right up your alley.
           </p>
         </div>
