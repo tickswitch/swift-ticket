@@ -1,10 +1,7 @@
 # SwiftTickets - PRD
 
 ## Original Problem Statement
-1. Redesign Safe/Easy/Fair icon tiles on /howitworks page (Phase 3 - completed)
-2. Standardize all event/artist thumbnail sizes across all list-style cards (completed)
-3. Fix concert card backgrounds + footer cleanup (completed)
-4. Standardise font styling across ALL list card components (completed)
+Design phase 3 — glassmorphism refinements across the SwiftTickets platform.
 
 ## Architecture
 - **Frontend**: Vite + React + TypeScript at `/app/app/web`
@@ -13,49 +10,27 @@
 
 ## What's Been Implemented
 
-### 2026-04-24 - Icon Tile Redesign (Phase 3)
-- Circular frosted glass containers, blue #2563EB icons
+### Icon Tile Redesign — Circular frosted glass containers, blue #2563EB icons
+### Thumbnail Standardization — All list cards: 64px square, 8px radius, object-cover
+### Concert Card Glassmorphism + Footer Cleanup — Matching glass style, real copy, 4-col layout
+### Font Styling Standardization — 16px/semibold titles, 14px/grey venue+date, 24px/bold headings
+### Parallax Scroll Animation — Blue orbs move at 35%/-25% scroll speed
 
-### 2026-04-24 - Thumbnail Standardization
-- ALL list-style card thumbnails: 64px x 64px, border-radius 8px, object-fit cover
-
-### 2026-04-24 - Concert Card Glassmorphism + Footer Cleanup
-- Concert cards match festival/sports glassmorphism styling
-- Footer: real copy, 4-column layout, proper spacing
-
-### 2026-04-24 - Font Styling Standardization
-**Standard applied to all list cards:**
-- Event name: 16px (text-base), font-weight 600 (font-semibold)
-- Venue/location: 14px (text-sm), font-weight 400, text-gray-500
-- Date: 14px (text-sm), font-weight 400
-- Badge: 12px, font-weight 400 (was 500)
-
-**Section headings standardized:**
-- Titles: 24px (text-2xl), font-weight 700 (font-bold) — removed responsive breakpoints
-- Subtitles: 14px (text-sm), text-gray-500
-
-**Files modified (10 components + 2 shared):**
-- Title.tsx — `text-2xl font-bold` (removed lg:text-[30px] xl breakpoints)
-- TicketBadge.tsx — fontWeight 400 (was 500)
-- FestivalsForYou.tsx — event name text-base (was text-sm), venue text-sm (was text-xs), date text-sm (was text-xs)
-- Concerts.tsx — event name text-base (was text-xl/2xl), venue added text-sm, TimerIcon 14px
-- AllConcerts.tsx — same as Concerts
-- AllSportsEvents.tsx — removed md:text-lg from title, removed font-semibold from date, standardized subtitle
-- EventsListWithPagination.tsx — section title text-2xl (was text-3xl), event name text-base (was text-xl/2xl), venue/date standardized
-- Events.tsx (EntranceTickets) — same as EventsListWithPagination
-- PopularEvents.tsx — title font-bold (was font-semibold), removed md:text-lg, removed date font-semibold
-- Trending.tsx — subtitle text-gray-500 text-sm (was text-secondaryText001)
-
-**NOT changed (as specified):**
-- Trending.tsx hero card content (text-xl md:text-2xl overlay text)
-- SportsEvents.tsx full-bleed cards
-- Navigation, footer, Safe/Easy/Fair icons, card backgrounds, thumbnails
+**Implementation details (parallax):**
+- MainLayout.tsx: useRef + useEffect with requestAnimationFrame scroll listener
+- Ticking guard pattern prevents excessive rAF calls
+- Passive scroll listener for performance
+- Proper cleanup (removeEventListener + cancelAnimationFrame)
+- CSS: will-change: transform on both orbs for GPU compositing
+- Accessibility: JS matchMedia check + CSS @media (prefers-reduced-motion: reduce)
+- Orb properties (colour, size, blur, z-index) completely unchanged
 
 ## Testing Status
-- Iteration 4: Icon tiles - 100% pass
-- Iteration 5: Thumbnails - 100% pass
-- Iteration 6: Concert cards + Footer - 100% pass
-- Iteration 7: Font standardization - 100% pass (all 12 files verified)
+- Iteration 4: Icon tiles — 100% pass
+- Iteration 5: Thumbnails — 100% pass
+- Iteration 6: Concert cards + Footer — 100% pass
+- Iteration 7: Font standardization — 100% pass
+- Iteration 8: Parallax orbs — 100% pass (transforms verified: 350px/−250px at 1000px scroll)
 
 ## Backlog
 - P2: Backend API connectivity in preview environment
