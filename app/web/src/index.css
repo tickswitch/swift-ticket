@@ -308,6 +308,7 @@ button.rounded-4xl {
 /* ---------- Hero decorative orbs ---------- */
 .hero-orbs {
   position: relative;
+  isolation: isolate;
 }
 .hero-orbs::before,
 .hero-orbs::after {
@@ -321,7 +322,7 @@ button.rounded-4xl {
   filter: blur(80px);
   -webkit-filter: blur(80px);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 .hero-orbs::before {
   top: -60px;
@@ -330,8 +331,4 @@ button.rounded-4xl {
 .hero-orbs::after {
   bottom: -60px;
   left: -60px;
-}
-.hero-orbs > * {
-  position: relative;
-  z-index: 1;
 }

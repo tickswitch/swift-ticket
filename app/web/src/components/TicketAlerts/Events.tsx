@@ -143,7 +143,7 @@ const Events = () => {
 
 const Banner = () => {
   return (
-    <div className="w-full h-[600px] relative z-10">
+    <div className="w-full h-[600px] relative z-10 hero-orbs">
       <img src={image2} alt="" className="w-full h-full object-cover" />
       <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm" />
       {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  h-full flex flex-col items-center justify-center">
