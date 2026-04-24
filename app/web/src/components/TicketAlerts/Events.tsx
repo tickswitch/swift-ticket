@@ -224,14 +224,12 @@ const EntranceTickets = ({ data }) => {
                       {event?.venue}, {event?.location}
                     </p>
                     <p>{formattedDate}</p>
-                    {typeof event?.available_quantity === "number" && (
-                      <div className="mt-1">
-                        <TicketBadge
-                          count={event.available_quantity}
-                          data-testid={`ticket-alerts-event-card-ticket-count-${event?.id}`}
-                        />
-                      </div>
-                    )}
+                    <div className="mt-1">
+                      <TicketBadge
+                        count={event?.available_quantity}
+                        data-testid={`ticket-alerts-event-card-ticket-count-${event?.id}`}
+                      />
+                    </div>
                   </div>
                   {/* <p className="bg-[#FEC100] px-2 py-1 rounded-md w-fit">
                   <span className="flex flex-col gap-1 text-white">

@@ -72,14 +72,12 @@ const AllSportsEvents = () => {
                                             <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
                                                 <CheckIcon2 /> {data?.date} {data?.time}
                                             </p>
-                                            {typeof ticketCount === "number" && (
-                                                <div className="mt-0.5">
-                                                    <TicketBadge
-                                                        count={ticketCount}
-                                                        data-testid={`sports-card-ticket-count-${data?.id ?? idx}`}
-                                                    />
-                                                </div>
-                                            )}
+                                            <div className="mt-0.5">
+                                                <TicketBadge
+                                                    count={ticketCount}
+                                                    data-testid={`sports-card-ticket-count-${data?.id ?? idx}`}
+                                                />
+                                            </div>
                                         </div>
                                         {/* <button>
                   <BookmarkIcon2 />

@@ -95,3 +95,27 @@ Cards intentionally left unchanged because they do not surface ticket counts:
 - `app/web/src/components/HomePage/AllSportsEvents.tsx`
 - `app/web/src/components/HomePage/EventsListWithPagination.tsx`
 - `app/web/src/components/TicketAlerts/Events.tsx`
+
+---
+
+## Iteration 5 — Ticket availability badge: always-render fix
+Date: 2026-01-24
+Branch: design/glassmorphism-phase2 (nishant branch untouched)
+
+### Bug reported
+Badges were not showing on `Trending near you` and `Festivals for you` cards when the API omitted `available_quantity`. The previous implementation only rendered the badge when `typeof count === "number"`, which silently hid it on data-missing events.
+
+### Fix
+- `components/Common/TicketBadge.tsx` — when `count` is missing / null / not a finite non-negative number, the component now falls back to the grey `0 tickets left` state instead of returning `null`. Valid counts continue to route through the 4-tier logic unchanged.
+- Removed the `typeof ticketCount === "number"` guards at every consumer so the badge is rendered unconditionally on every event card:
+    1. Concerts (home)
+    2. Trending near you (home)
+    3. Festivals for you (home) — also moved the badge to its own row below the date for visual consistency with the other card types
+    4. All Concerts (`/all-concerts`)
+    5. Sports events in the area (`/all-sports-events`)
+    6. Explore events (`/all-events`, `EventsListWithPagination`)
+    7. `/events` list (`TicketAlerts/Events` → EntranceTickets)
+
+### Testing status
+- `tsc --noEmit` → 0 errors.
+- Playwright visual verification with mixed mock data (missing field, null, 2, 7, 42) confirms grey default appears where data is absent and correct tier colour otherwise — on Trending, Festivals, and Concerts. All other card types previously verified at iteration 4 remain intact.

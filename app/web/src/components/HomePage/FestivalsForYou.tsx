@@ -63,16 +63,17 @@ const FestivalsForYou = () => {
                 <p className="text-gray-500 text-xs truncate">
                   {festival?.venue}{festival?.location ? `, ${festival?.location}` : ""}
                 </p>
-                <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                  {shortDate && (
-                    <span className="text-red-500 text-xs flex items-center gap-1">
-                      <TimerIcon size={12} />
-                      {shortDate}
-                    </span>
-                  )}
-                  {typeof ticketCount === "number" && (
-                    <TicketBadge count={ticketCount} />
-                  )}
+                {shortDate && (
+                  <span className="text-red-500 text-xs flex items-center gap-1 mt-0.5">
+                    <TimerIcon size={12} />
+                    {shortDate}
+                  </span>
+                )}
+                <div className="mt-0.5">
+                  <TicketBadge
+                    count={ticketCount}
+                    data-testid={`festival-card-ticket-count-${festival?.id}`}
+                  />
                 </div>
               </div>
             </Link>

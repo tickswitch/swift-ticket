@@ -58,11 +58,14 @@ const getBadgeTheme = (count: number): BadgeTheme => {
 };
 
 export function TicketBadge({ count, className, ...rest }: TicketBadgeProps) {
-  if (typeof count !== "number" || !Number.isFinite(count) || count < 0) {
-    return null;
-  }
+  // When count is not a valid non-negative number, fall back to the grey
+  // "0 tickets left" state so the badge is still visible on every card.
+  const safeCount =
+    typeof count === "number" && Number.isFinite(count) && count >= 0
+      ? count
+      : 0;
 
-  const theme = getBadgeTheme(count);
+  const theme = getBadgeTheme(safeCount);
 
   const style: CSSProperties = {
     display: "inline-flex",

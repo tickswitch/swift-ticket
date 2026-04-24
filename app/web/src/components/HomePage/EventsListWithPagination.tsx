@@ -120,14 +120,12 @@ export function EventsListWithPagination({
                     {event?.venue}, {event?.location}
                   </p>
                   <p>{formattedDate}</p>
-                  {typeof event?.available_quantity === "number" && (
-                    <div className="mt-1">
-                      <TicketBadge
-                        count={event.available_quantity}
-                        data-testid={`events-list-card-ticket-count-${event?.id}`}
-                      />
-                    </div>
-                  )}
+                  <div className="mt-1">
+                    <TicketBadge
+                      count={event?.available_quantity}
+                      data-testid={`events-list-card-ticket-count-${event?.id}`}
+                    />
+                  </div>
                 </div>
               </Link>
             );

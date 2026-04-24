@@ -99,12 +99,10 @@ const Concerts = () => {
                             )}
                           </span>
                         )}
-                        {typeof ticketCount === "number" && (
-                          <TicketBadge
-                            count={ticketCount}
-                            data-testid="concert-card-ticket-count"
-                          />
-                        )}
+                        <TicketBadge
+                          count={ticketCount}
+                          data-testid="concert-card-ticket-count"
+                        />
                       </div>
                     </div>
                   </div>

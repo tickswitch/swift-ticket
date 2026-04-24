@@ -85,14 +85,12 @@ const AllConcerts = () => {
                           <TimerIcon size={20} />
                           {formattedDate}
                         </p>
-                        {typeof ticketCount === "number" && (
-                          <div className="mt-1">
-                            <TicketBadge
-                              count={ticketCount}
-                              data-testid={`all-concerts-card-ticket-count-${concert?.id}`}
-                            />
-                          </div>
-                        )}
+                        <div className="mt-1">
+                          <TicketBadge
+                            count={ticketCount}
+                            data-testid={`all-concerts-card-ticket-count-${concert?.id}`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </Link>

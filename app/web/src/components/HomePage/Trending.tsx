@@ -167,12 +167,10 @@ const Trending: React.FC = () => {
                                   From \u20b9{data.price.toLocaleString("en-IN")}
                                 </span>
                               )}
-                              {typeof ticketCount === "number" && (
-                                <TicketBadge
-                                  count={ticketCount}
-                                  data-testid="trending-card-ticket-count"
-                                />
-                              )}
+                              <TicketBadge
+                                count={ticketCount}
+                                data-testid="trending-card-ticket-count"
+                              />
                             </div>
                           </div>
                         </div>
