@@ -8,6 +8,8 @@ import { TimerIcon } from "lucide-react";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
 import { TicketBadge } from "@/components/Common/TicketBadge";
+import { useMemo, useEffect } from "react";
+import { useHomepageDedup } from "@/context/HomepageDedupContext";
 
 const Concerts = () => {
   const latlong = JSON.parse(
@@ -21,6 +23,18 @@ const Concerts = () => {
   });
 
   const { formatDate } = useDateFormat();
+  const { registerIds } = useHomepageDedup();
+
+  const concerts = useMemo(() => {
+    const seen = new Set<string>();
+    return (sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon) as any[])
+      .filter((c) => { if (!c.id || seen.has(c.id)) return false; seen.add(c.id); return true; })
+      .slice(0, 10);
+  }, [data, latlong?.lat, latlong?.lon]);
+
+  useEffect(() => {
+    if (concerts.length > 0) registerIds(concerts.map((c: any) => c.id));
+  }, [concerts, registerIds]);
 
   return (
     <div className="pt-12">
@@ -46,7 +60,7 @@ const Concerts = () => {
       ) : (
         <div className="py-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {sortByDistance(data as any[] ?? [], latlong?.lat, latlong?.lon).slice(0, 10)?.map((concert) => {
+            {concerts.map((concert) => {
               const shortDate = formatShortDate(concert?.date, concert?.time);
               const longDate = formatDate(concert?.date, concert?.time);
               const ticketCount = concert?.available_quantity;

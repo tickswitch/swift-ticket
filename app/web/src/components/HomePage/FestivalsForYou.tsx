@@ -6,6 +6,8 @@ import { formatShortDate } from "@/lib/formatDate";
 import { TimerIcon } from "lucide-react";
 import { sortByDistance } from "@/lib/sortByDistance";
 import { TicketBadge } from "@/components/Common/TicketBadge";
+import { useMemo, useEffect } from "react";
+import { useHomepageDedup } from "@/context/HomepageDedupContext";
 
 const FestivalsForYou = () => {
   const latlong = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
@@ -17,10 +19,22 @@ const FestivalsForYou = () => {
     queryFn: () => GetData(`events/festivals${locationQuery}`),
   });
 
+  const { registerIds } = useHomepageDedup();
+
+  const festivals = useMemo(() => {
+    if (!data || (data as any[]).length === 0) return [];
+    const seen = new Set<string>();
+    return (sortByDistance(data as any[], latlong?.lat, latlong?.lon) as any[])
+      .filter((f) => { if (!f.id || seen.has(f.id)) return false; seen.add(f.id); return true; })
+      .slice(0, 10);
+  }, [data, latlong?.lat, latlong?.lon]);
+
+  useEffect(() => {
+    if (festivals.length > 0) registerIds(festivals.map((f: any) => f.id));
+  }, [festivals, registerIds]);
+
   if (isLoading) return <Loader />;
   if (!data || (data as any[]).length === 0) return null;
-
-  const festivals = sortByDistance(data as any[], latlong?.lat, latlong?.lon).slice(0, 10);
 
   return (
     <div className="pt-12">

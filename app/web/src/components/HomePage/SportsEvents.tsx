@@ -16,6 +16,7 @@ import "swiper/css/navigation";
 import "swiper/css/scrollbar";
 import React from "react";
 import { NavigationIcon } from "lucide-react";
+import { useHomepageDedup } from "@/context/HomepageDedupContext";
 
 const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371;
@@ -48,12 +49,23 @@ const SportsEvents = () => {
     queryFn: () => GetData(`events/by-groupe${locationQuery}`),
   });
 
-  // Build sorted genre list from API response dynamically
+  const { registerIds } = useHomepageDedup();
+
+  // Build sorted genre list from API response dynamically; dedup events within each genre
   const genres: { name: string; events: any[] }[] = React.useMemo(() => {
     if (!data || typeof data !== "object") return [];
+    const globalSeen = new Set<string>();
     return Object.entries(data as Record<string, any[]>)
       .filter(([, evts]) => Array.isArray(evts) && evts.length > 0)
-      .map(([name, evts]) => ({ name, events: evts }))
+      .map(([name, evts]) => {
+        const deduped = evts.filter((e) => {
+          if (!e.id || globalSeen.has(e.id)) return false;
+          globalSeen.add(e.id);
+          return true;
+        });
+        return { name, events: deduped };
+      })
+      .filter(({ events }) => events.length > 0)
       .sort((a, b) => {
         // Sort genres whose nearest event is closest first
         if (!locationCoords?.lat || !locationCoords?.lon) return 0;
@@ -66,6 +78,11 @@ const SportsEvents = () => {
         return nearestDist(a.events) - nearestDist(b.events);
       });
   }, [data, locationCoords?.lat, locationCoords?.lon]);
+
+  React.useEffect(() => {
+    const allIds = genres.flatMap((g) => g.events.map((e: any) => e.id)).filter(Boolean);
+    if (allIds.length > 0) registerIds(allIds);
+  }, [genres, registerIds]);
 
   const isEmpty = !isLoading && !error && genres.length === 0;
 

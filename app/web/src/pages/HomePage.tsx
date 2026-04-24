@@ -8,6 +8,7 @@ import SportsEvents from "@/components/HomePage/SportsEvents";
 import Trending from "@/components/HomePage/Trending";
 import FestivalsForYou from "@/components/HomePage/FestivalsForYou";
 import TrustBar from "@/components/HomePage/TrustBar";
+import { HomepageDedupProvider } from "@/context/HomepageDedupContext";
 import HowItWorksStrip from "@/components/HomePage/HowItWorksStrip";
 import { Link } from "react-router";
 
@@ -24,10 +25,12 @@ const HomePage = () => {
       <main className="3xl:pb-10 w-[95%] mx-auto 3xl:px-0">
         <Container>
           <Event />
-          <Trending />
-          <FestivalsForYou />
-          <SportsEvents />
-          <Concerts />
+          <HomepageDedupProvider>
+            <Trending />
+            <FestivalsForYou />
+            <SportsEvents />
+            <Concerts />
+          </HomepageDedupProvider>
           <div className="flex items-center justify-center py-10">
             <Link
               to={"/all-events"}
