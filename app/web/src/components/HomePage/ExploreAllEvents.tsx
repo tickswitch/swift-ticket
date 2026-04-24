@@ -1,23 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { GetSingleData } from '@/API/API';
+
+type EventItem = Record<string, any>;
+type PaginatedEventsResponse = {
+  data: EventItem[];
+  pagination: { totalPages: number; totalElements: number; number: number; size: number };
+};
 import { LocationDropdown } from './LocationDropdown';
 import { EventFiltersBar } from './EventFiltersBar';
 import { EventsListWithPagination } from './EventsListWithPagination';
 
-/**
- * ExploreAllEvents Component
- * 
- * Main page for exploring and filtering events.
- * Orchestrates:
- * - Location selection
- * - Event filters (time, type, category, genre)
- * - Events display with pagination
- * - API queries with all filter parameters
- */
 const ExploreAllEvents = () => {
-  // Location state — initialise coords from localStorage so first render uses saved location
   const [location, setLocation] = useState(() => {
     return localStorage.getItem("selectedLocation") || "Nearby";
   });
@@ -29,49 +24,51 @@ const ExploreAllEvents = () => {
     }
   });
 
-  // Filter states
   const [time, setTime] = useState('today');
   const [eventType, setEventType] = useState('All events');
   const [category, setCategory] = useState('Category');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [customDateRange, setCustomDateRange] = useState<{ from: string; to: string } | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(0);
+  const [page, setPage] = useState(0);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
 
-  // Handle time selection
+  // Reset accumulated events whenever filters change
+  const resetPages = () => {
+    setPage(0);
+    setAllEvents([]);
+  };
+
   const handleTimeChange = (value: string) => {
     setTime(value);
     setCustomDateRange(null);
-    setCurrentPage(0); // Reset to first page when filter changes
+    resetPages();
   };
 
   const handleCustomDateSave = (from: string, to: string) => {
     setCustomDateRange({ from, to });
     setTime('custom');
-    setCurrentPage(0); // Reset to first page
+    resetPages();
   };
 
-  // Handle other filter changes with page reset
   const handleEventTypeChange = (value: string) => {
     setEventType(value);
-    setCurrentPage(0);
+    resetPages();
   };
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
-    setCurrentPage(0);
+    resetPages();
   };
 
   const handleGenresChange = (genres: string[]) => {
     setSelectedGenres(genres);
-    setCurrentPage(0);
+    resetPages();
   };
 
   const handleLocationChange = (value: string) => {
     setLocation(value);
-    setCurrentPage(0);
-    // Re-read coords from localStorage each time location changes
+    resetPages();
     try {
       const coords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
       setLocationCoords(coords);
@@ -80,77 +77,78 @@ const ExploreAllEvents = () => {
     }
   };
 
-  // Build API query with all filters
   const buildApiQuery = () => {
     const params: string[] = [];
 
-    // Date/time filter
     if (customDateRange) {
       params.push(`period=custom&from=${customDateRange.from}&to=${customDateRange.to}`);
     } else if (time !== 'today') {
       params.push(`period=${time}`);
     }
 
-    // Genre filter
     if (selectedGenres.length > 0) {
       params.push(`genre=${selectedGenres.join(',')}`);
     }
 
-    // Location coordinates
     if (locationCoords && locationCoords.lat && locationCoords.lon) {
       params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
     }
 
-    // Event type filter (only if not 'All events')
     if (eventType && eventType !== 'All events') {
       params.push(`type=${eventType}`);
     }
 
-    // Category filter (only if not 'Category')
     if (category && category !== 'Category') {
       params.push(`category=${category}`);
     }
 
-    // Pagination
-    params.push(`page=${currentPage}&size=10`);
+    params.push(`page=${page}&size=10`);
 
     return `events${params.length > 0 ? '?' + params.join('&') : ''}`;
   };
 
-  // Fetch events data with React Query
-  const { data: responseData, isLoading, error } = useQuery({
-    queryKey: ['events', time, customDateRange, selectedGenres, currentPage, eventType, category, location, locationCoords],
-    queryFn: () => GetSingleData(buildApiQuery()),
+  const { data: responseData, isLoading, error } = useQuery<PaginatedEventsResponse>({
+    queryKey: ['events', time, customDateRange, selectedGenres, page, eventType, category, location, locationCoords],
+    queryFn: () => GetSingleData(buildApiQuery()) as unknown as Promise<PaginatedEventsResponse>,
   });
 
-  const data = responseData?.data;
+  const newPageData: any[] | undefined = responseData?.data;
   const pagination = responseData?.pagination;
 
-  // Horizontal scroll functionality for filters
+  // Accumulate events: replace on page 0, append on subsequent pages
+  useEffect(() => {
+    if (!newPageData) return;
+    if (page === 0) {
+      setAllEvents(newPageData);
+    } else {
+      setAllEvents((prev) => {
+        const seen = new Set(prev.map((e: any) => e.id));
+        return [...prev, ...newPageData.filter((e: any) => !seen.has(e.id))];
+      });
+    }
+  }, [newPageData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasMore = pagination ? page < pagination.totalPages - 1 : false;
+  const isInitialLoad = isLoading && allEvents.length === 0;
+  const isLoadingMore = isLoading && allEvents.length > 0;
+
+  const loadNextPage = () => {
+    if (!isLoading && hasMore) setPage((prev) => prev + 1);
+  };
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
-      });
-    }
+    scrollContainerRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      });
-    }
+    scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
   };
 
   return (
     <div className="text-black py-16 px-6 max-w-3xl mx-auto">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <header className="mb-12">
           <h1 className="text-5xl md:text-6xl font-bold text-black mb-4">
             Explore events
@@ -160,20 +158,16 @@ const ExploreAllEvents = () => {
           </p>
         </header>
 
-        {/* Filters Section */}
         <div className="relative mb-12">
           <div
             ref={scrollContainerRef}
             className="flex items-center gap-4 overflow-x-auto scrollbar-hide scroll-smooth text-nowrap"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {/* Location Dropdown */}
             <LocationDropdown
               defaultLocation="Nearby"
               onLocationChange={handleLocationChange}
             />
-
-            {/* Event Filters */}
             <EventFiltersBar
               time={time}
               onTimeChange={handleTimeChange}
@@ -188,7 +182,6 @@ const ExploreAllEvents = () => {
             />
           </div>
 
-          {/* Navigation Arrows for horizontal scroll */}
           <div className="absolute -right-32 top-0 flex items-center gap-2 to-transparent pl-8">
             <button
               onClick={scrollLeft}
@@ -207,14 +200,13 @@ const ExploreAllEvents = () => {
           </div>
         </div>
 
-        {/* Events List with Pagination */}
         <EventsListWithPagination
-          events={data}
-          pagination={pagination}
-          isLoading={isLoading}
+          events={allEvents}
+          isLoading={isInitialLoad}
           error={error}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadNextPage}
         />
       </div>
     </div>
