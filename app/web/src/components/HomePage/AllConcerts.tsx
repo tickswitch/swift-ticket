@@ -71,7 +71,8 @@ const AllConcerts = () => {
                     <div className="p-1 flex items-center gap-3 w-full h-full rounded-2xl overflow-hidden rounded-b-3xl">
                       <img
                         src={concert?.image || ""}
-                        className="rounded-xl w-20 h-20 object-cover"
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                        data-testid="all-concerts-card-thumbnail"
                       />
 
                       <div className="flex-col gap-1 md:gap-2">

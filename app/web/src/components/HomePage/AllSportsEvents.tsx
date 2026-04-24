@@ -57,7 +57,8 @@ const AllSportsEvents = () => {
                                 >
                                     <img
                                         src={data?.image}
-                                        className="w-[78px] h-[80px] rounded-md"
+                                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                        data-testid="sports-card-thumbnail"
                                     />
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex flex-col gap-1 w-full">

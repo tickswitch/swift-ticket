@@ -53,6 +53,7 @@ const FestivalsForYou = () => {
                 src={festival?.image || ""}
                 alt={festival?.title || ""}
                 className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                data-testid="festival-card-thumbnail"
               />
 
               {/* Details */}

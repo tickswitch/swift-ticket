@@ -214,7 +214,8 @@ const EntranceTickets = ({ data }) => {
                   <img
                     src={event?.image}
                     alt=""
-                    className="w-32 h-32 rounded-xl object-cover"
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                    data-testid="event-list-card-thumbnail"
                   />
                   <div className="flex flex-col gap-1">
                     <p className="text-xl md:text-2xl font-semibold">
