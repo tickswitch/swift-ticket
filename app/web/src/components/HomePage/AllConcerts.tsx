@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import Container from "@/components/Common/Container";
 
 const AllConcerts = () => {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [allConcerts, setAllConcerts] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
@@ -34,9 +34,9 @@ const AllConcerts = () => {
 
   useEffect(() => {
     const raw: any[] = (data as any)?.data ?? [];
-    if (!raw.length && page === 1) return;
+    if (!raw.length && page === 0) return;
     const sorted = filterParkingEvents(sortByDistance(raw, latlong?.lat, latlong?.lon));
-    if (page === 1) {
+    if (page === 0) {
       setAllConcerts(sorted);
     } else {
       setAllConcerts((prev) => {
@@ -45,7 +45,7 @@ const AllConcerts = () => {
       });
     }
     const totalPages: number = (data as any)?.pagination?.totalPages ?? 1;
-    setHasMore(page < totalPages);
+    setHasMore(page < totalPages - 1);
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMore = () => {

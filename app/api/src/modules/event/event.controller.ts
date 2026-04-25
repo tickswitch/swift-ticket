@@ -19,7 +19,7 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
     size = 20,
     lat,
     lng,
-    radius = 50,
+    radius = 150,
     genre,
   } = req.query as Record<string, string>;
 
@@ -31,13 +31,15 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
       start: startOf(addDays(now, 1), "day"),
       end: endOf(addDays(now, 1), "day"),
     },
-    "this-week": { start: startOf(now, "week"), end: endOf(now, "week") },
+    // Start from now so only upcoming events in the week are shown (not already-past days)
+    "this-week": { start: now, end: endOf(now, "week") },
     "next-week": {
       start: startOf(addDays(now, 7), "week"),
       end: endOf(addDays(now, 7), "week"),
     },
     "this-weekend": { start: nextWeekday(now, 5), end: nextWeekday(now, 0) },
-    "this-month": { start: startOf(now, "month"), end: endOf(now, "month") },
+    // Start from now so only upcoming events this month are shown
+    "this-month": { start: now, end: endOf(now, "month") },
   };
 
   let start: Date, end: Date;
@@ -69,7 +71,7 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
     else params.keyword = query;
   }
   if (location && location.toLowerCase() !== "anywhere") params.city = location;
-  if (lat && lng) {
+  if (lat && lng && lat !== "undefined" && lng !== "undefined") {
     params.latlong = `${lat},${lng}`;
     params.radius = radius;
     params.unit = "miles";

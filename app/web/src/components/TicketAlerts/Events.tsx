@@ -14,7 +14,7 @@ import { filterParkingEvents } from "@/utils/filterParkingEvents";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 const Events = () => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
@@ -27,16 +27,16 @@ const Events = () => {
 
   // Reset when search params change
   useEffect(() => {
-    setCurrentPage(1);
+    setCurrentPage(0);
     setAllEvents([]);
     setHasMore(true);
   }, [period, venue, genre, lat, lon]);
 
   const buildUrl = (page: number) => {
-    if (period) return `events?period=${period}&lat=${lat}&lng=${lon}&radius=50&page=${page}`;
-    if (venue) return `events?venue=${venue}&lat=${lat}&lng=${lon}&radius=50&page=${page}`;
+    if (period) return `events?period=${period}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
+    if (venue) return `events?venue=${venue}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
     if (genre) return `events/by-genre/${genre}?page=${page}`;
-    return `events?lat=${lat}&lng=${lon}&page=${page}`;
+    return `events?lat=${lat}&lng=${lon}&radius=150&page=${page}`;
   };
 
   const { data, isLoading, error } = useQuery({
@@ -46,9 +46,9 @@ const Events = () => {
 
   useEffect(() => {
     const raw: any[] = (data as any)?.data ?? [];
-    if (!raw.length && currentPage === 1) return;
+    if (!raw.length && currentPage === 0) return;
     const newFiltered = filterParkingEvents(raw);
-    if (currentPage === 1) {
+    if (currentPage === 0) {
       setAllEvents(newFiltered);
     } else {
       setAllEvents((prev) => {
@@ -57,7 +57,7 @@ const Events = () => {
       });
     }
     const totalPages: number = (data as any)?.pagination?.totalPages ?? 1;
-    setHasMore(currentPage < totalPages);
+    setHasMore(currentPage < totalPages - 1);
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadMore = () => {
