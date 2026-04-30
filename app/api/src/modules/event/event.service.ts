@@ -274,7 +274,6 @@ const festivalsNearby = async (lat: string, lng: string, radius: number) => {
     ...(hasLocation
       ? { latlong: `${lat},${lng}`, radius, sort: "distance,asc" }
       : { sort: "relevance,desc" }),
-    classificationName: "Music",
     keyword: "festival",
     size: 20,
   });
@@ -405,10 +404,11 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
 };
 
 const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string) => {
-  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0" && lat !== "undefined" && lng !== "undefined";
+  const isFestival = genre.toLowerCase() === "festival";
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
-    classificationName: genre,
+    ...(isFestival ? { keyword: "festival" } : { classificationName: genre }),
     size: 50,
     page,
     ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
