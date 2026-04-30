@@ -411,7 +411,7 @@ const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?:
     classificationName: genre,
     size: 50,
     page,
-    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
   });
   const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));

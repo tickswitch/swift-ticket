@@ -35,7 +35,7 @@ const Events = () => {
   const buildUrl = (page: number) => {
     if (period) return `events?period=${period}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
     if (venue) return `events?venue=${venue}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
-    if (genre) return `events/by-genre/${genre}?page=${page}`;
+    if (genre) return `events/by-genre/${genre}?page=${page}${lat && lon ? `&lat=${lat}&lng=${lon}` : ``}`;
     return `events?lat=${lat}&lng=${lon}&radius=150&page=${page}`;
   };
 
