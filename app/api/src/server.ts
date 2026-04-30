@@ -1,6 +1,8 @@
+// Must be first: loads .env before any other module reads process.env
+import './config/env';
+
 import express, { Express } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 
 // Routes
@@ -14,8 +16,6 @@ import publicRoutes from './modules/public/public.routes';
 
 // Middleware
 import globalErrorHandler from './middleware/errorHandler';
-
-dotenv.config();
 
 const app: Express = express();
 

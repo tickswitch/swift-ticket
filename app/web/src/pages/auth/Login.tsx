@@ -194,7 +194,8 @@ const Login = () => {
       setIsSendingOtp(true);
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/email/send-otp`,
-        { email: otpEmail }
+        { email: otpEmail },
+        { timeout: 30000 }
       );
       toast.success("OTP sent to your email");
       setOtpCode("");
@@ -220,7 +221,8 @@ const Login = () => {
       setIsVerifyingOtp(true);
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/auth/email/verify-otp`,
-        { email: otpEmail, otp: otpCode }
+        { email: otpEmail, otp: otpCode },
+        { timeout: 30000 }
       );
       const token = res?.data?.token;
       const userData = res?.data?.userData;
