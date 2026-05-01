@@ -59,7 +59,7 @@ export function EventsListWithPagination({
 
       {!isLoading && !error && filtered.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {filtered.map((event: Event) => {
               const formattedDate = formatDate(event?.end_date, event?.time);
               return (
