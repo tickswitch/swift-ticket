@@ -11,6 +11,7 @@ type PaginatedEventsResponse = {
 import { LocationDropdown } from './LocationDropdown';
 import { EventFiltersBar } from './EventFiltersBar';
 import { EventsListWithPagination } from './EventsListWithPagination';
+import { SortDropdown } from './GenreFiltersBar';
 
 const ExploreAllEvents = () => {
   const [location, setLocation] = useState(() => {
@@ -29,6 +30,7 @@ const ExploreAllEvents = () => {
   const [category, setCategory] = useState('Category');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [customDateRange, setCustomDateRange] = useState<{ from: string; to: string } | null>(null);
+  const [sort, setSort] = useState('date,asc');
 
   const [page, setPage] = useState(0);
   const [allEvents, setAllEvents] = useState<any[]>([]);
@@ -77,6 +79,11 @@ const ExploreAllEvents = () => {
     }
   };
 
+  const handleSortChange = (value: string) => {
+    setSort(value);
+    resetPages();
+  };
+
   const buildApiQuery = () => {
     const params: string[] = [];
 
@@ -102,13 +109,14 @@ const ExploreAllEvents = () => {
       params.push(`category=${category}`);
     }
 
+    params.push(`sort=${sort}`);
     params.push(`page=${page}&size=10`);
 
     return `events${params.length > 0 ? '?' + params.join('&') : ''}`;
   };
 
   const { data: responseData, isLoading, error } = useQuery<PaginatedEventsResponse>({
-    queryKey: ['events', time, customDateRange, selectedGenres, page, eventType, category, location, locationCoords],
+    queryKey: ['events', time, customDateRange, selectedGenres, page, eventType, category, location, locationCoords, sort],
     queryFn: () => GetSingleData(buildApiQuery()) as unknown as Promise<PaginatedEventsResponse>,
   });
 
@@ -180,6 +188,9 @@ const ExploreAllEvents = () => {
               selectedGenres={selectedGenres}
               onGenresChange={handleGenresChange}
             />
+            <div className="ml-auto flex-shrink-0">
+              <SortDropdown sort={sort} onSortChange={handleSortChange} />
+            </div>
           </div>
 
           <div className="absolute -right-32 top-0 flex items-center gap-2 to-transparent pl-8">

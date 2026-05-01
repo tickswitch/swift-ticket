@@ -12,35 +12,55 @@ import { TicketBadge } from "@/components/Common/TicketBadge";
 import { useState, useEffect } from "react";
 import { filterParkingEvents } from "@/utils/filterParkingEvents";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { GenreFiltersBar } from "@/components/HomePage/GenreFiltersBar";
 
 const Events = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
+  // Local filter state (only active on genre pages)
+  const [filterPeriod, setFilterPeriod] = useState("anytime");
+  const [filterSort, setFilterSort] = useState("date,asc");
+
   const [searchParams] = useSearchParams();
-  const period = searchParams.get("period");
+  const urlPeriod = searchParams.get("period");
   const venue = searchParams.get("venue");
   const genre = searchParams.get("genre");
   const lat = searchParams.get("lat");
   const lon = searchParams.get("lng");
 
-  // Reset when search params change
-  useEffect(() => {
+  const resetPages = () => {
     setCurrentPage(0);
     setAllEvents([]);
     setHasMore(true);
-  }, [period, venue, genre, lat, lon]);
+  };
+
+  // Reset when URL params change
+  useEffect(() => { resetPages(); }, [urlPeriod, venue, genre, lat, lon]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset when local filters change
+  useEffect(() => { resetPages(); }, [filterPeriod, filterSort]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const buildUrl = (page: number) => {
-    if (period) return `events?period=${period}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
-    if (venue) return `events?venue=${venue}&lat=${lat}&lng=${lon}&radius=150&page=${page}`;
-    if (genre) return `events/by-genre/${genre}?page=${page}${lat && lon ? `&lat=${lat}&lng=${lon}` : ``}`;
-    return `events?lat=${lat}&lng=${lon}&radius=150&page=${page}`;
+    const locParam = lat && lon ? `&lat=${lat}&lng=${lon}&radius=150` : "";
+    const sortParam = `&sort=${filterSort}`;
+
+    if (urlPeriod) return `events?period=${urlPeriod}${locParam}&page=${page}`;
+    if (venue) return `events?venue=${venue}${locParam}&page=${page}`;
+    if (genre) {
+      if (filterPeriod && filterPeriod !== "anytime") {
+        // Date-filtered: use filterEvents endpoint (handles period natively)
+        return `events?genre=${genre}&period=${filterPeriod}${locParam}${sortParam}&page=${page}&size=20`;
+      }
+      // No date filter: use getEventsByGenre (all upcoming, sorted by user choice)
+      return `events/by-genre/${genre}?page=${page}${lat && lon ? `&lat=${lat}&lng=${lon}` : ""}${sortParam}`;
+    }
+    return `events${locParam ? "?" + locParam.slice(1) : "?page=" + page}${locParam ? "&page=" + page : ""}`;
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events", currentPage, period, venue, genre, lat, lon],
+    queryKey: ["events", currentPage, urlPeriod, venue, genre, lat, lon, filterPeriod, filterSort],
     queryFn: () => GetSingleData(buildUrl(currentPage)),
   });
 
@@ -77,6 +97,15 @@ const Events = () => {
       <Banner />
       <Container>
         <div className="pt-5">
+          {/* Filter bar — only shown on genre "See all" pages */}
+          {genre && !urlPeriod && (
+            <GenreFiltersBar
+              period={filterPeriod}
+              onPeriodChange={setFilterPeriod}
+              sort={filterSort}
+              onSortChange={setFilterSort}
+            />
+          )}
           <div className="py-5 flex flex-col gap-2">
             {allEvents.length === 0 ? (
               <div className="pt-5">

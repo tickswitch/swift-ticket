@@ -128,14 +128,7 @@ const Routes = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="all-events"
-            element={
-              <ProtectedRoute>
-                <ExploreAllEvents />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="all-events" element={<ExploreAllEvents />} />
           <Route path="email" element={<Email />} />
           <Route path="phone" element={<Phone />} />
           <Route path="identy-verify" element={<IdentyVerify />} />
