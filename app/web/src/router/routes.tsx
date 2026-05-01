@@ -112,22 +112,8 @@ const Routes = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="all-sports-events"
-            element={
-              <ProtectedRoute>
-                <AllSportsEvents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="all-concerts"
-            element={
-              <ProtectedRoute>
-                <AllConcerts />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="all-sports-events" element={<AllSportsEvents />} />
+          <Route path="all-concerts" element={<AllConcerts />} />
           <Route path="all-events" element={<ExploreAllEvents />} />
           <Route path="email" element={<Email />} />
           <Route path="phone" element={<Phone />} />

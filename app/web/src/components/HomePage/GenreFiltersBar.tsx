@@ -1,4 +1,5 @@
 import { ChevronDown, MapPin } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,15 @@ const DATE_PILLS = [
   { label: 'Tomorrow', value: 'tomorrow' },
   { label: 'This week', value: 'this-week' },
   { label: 'This month', value: 'this-month' },
+];
+
+const CATEGORY_OPTIONS = [
+  { label: 'Music', value: 'Music' },
+  { label: 'Festival', value: 'festival' },
+  { label: 'Sports', value: 'Sports' },
+  { label: 'Arts & Theatre', value: 'Arts & Theatre' },
+  { label: 'Comedy', value: 'Comedy' },
+  { label: 'Family', value: 'Family' },
 ];
 
 /** Reusable sort dropdown — used on both genre and explore-all pages */
@@ -63,6 +73,57 @@ export const SortDropdown = ({
   );
 };
 
+const CategoryDropdown = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const currentGenre = searchParams.get('genre') ?? '';
+  const lat = searchParams.get('lat') ?? '';
+  const lng = searchParams.get('lng') ?? '';
+
+  const currentLabel =
+    CATEGORY_OPTIONS.find(o => o.value.toLowerCase() === currentGenre.toLowerCase())?.label
+    ?? currentGenre
+    ?? 'Category';
+
+  const handleSelect = (value: string) => {
+    const latParam = lat && lng ? `&lat=${lat}&lng=${lng}` : '';
+    navigate(`/events?genre=${encodeURIComponent(value)}${latParam}`);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm text-xs font-medium text-gray-700 hover:border-gray-400 transition-all duration-200"
+          data-testid="category-dropdown-trigger"
+        >
+          {currentLabel}
+          <ChevronDown size={12} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] p-1"
+      >
+        {CATEGORY_OPTIONS.map(option => (
+          <DropdownMenuItem
+            key={option.value}
+            onClick={() => handleSelect(option.value)}
+            className={`cursor-pointer rounded-lg px-3 py-2 text-sm ${
+              option.value.toLowerCase() === currentGenre.toLowerCase()
+                ? 'bg-gray-100 font-semibold text-black'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+            data-testid={`category-option-${option.value}`}
+          >
+            {option.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 interface GenreFiltersBarProps {
   period: string;
   onPeriodChange: (value: string) => void;
@@ -72,7 +133,7 @@ interface GenreFiltersBarProps {
 
 /**
  * Compact pill-style filter bar for genre "See all" pages.
- * Shows current location, date pills, and a sort dropdown.
+ * Shows current location, category switcher, date pills, and a sort dropdown.
  */
 export const GenreFiltersBar = ({
   period,
@@ -92,6 +153,9 @@ export const GenreFiltersBar = ({
           {locationLabel}
         </span>
       )}
+
+      {/* Category / genre switcher */}
+      <CategoryDropdown />
 
       {/* Date pills */}
       {DATE_PILLS.map(pill => (

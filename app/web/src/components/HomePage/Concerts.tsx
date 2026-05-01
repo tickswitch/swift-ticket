@@ -43,7 +43,7 @@ const Concerts = () => {
         <div className="flex items-center justify-between gap-2 w-full">
           <Title>Concerts</Title>
           <Link
-            to={"/all-concerts"}
+            to={`/events?genre=Music${latlong?.lat ? `&lat=${latlong.lat}&lng=${latlong.lon}` : ""}`}
             className="text-sm text-primary001 bg-primary001/20 px-3 py-1 rounded-full font-semibold"
           >
             See all
