@@ -46,7 +46,7 @@ const FestivalsForYou = () => {
           to={`/events?genre=festival${latlong?.lat ? `&lat=${latlong.lat}&lng=${latlong.lon}` : ""}`}
           className="text-sm text-primary001 bg-primary001/20 px-3 py-1 rounded-full font-semibold"
         >
-          Show all
+          See all
         </Link>
       </div>
       <p className="text-gray-500 text-sm mb-6">For a day or the entire weekend.</p>

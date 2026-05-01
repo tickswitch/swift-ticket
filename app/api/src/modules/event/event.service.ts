@@ -274,6 +274,7 @@ const festivalsNearby = async (lat: string, lng: string, radius: number) => {
     ...(hasLocation
       ? { latlong: `${lat},${lng}`, radius, sort: "distance,asc" }
       : { sort: "relevance,desc" }),
+    classificationName: "Music",
     keyword: "festival",
     size: 20,
   });
@@ -403,15 +404,16 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
   return grouped;
 };
 
-const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string) => {
-  const hasLocation = lat && lng && lat !== "0" && lng !== "0" && lat !== "undefined" && lng !== "undefined";
-  const isFestival = genre.toLowerCase() === "festival";
+const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string, sort?: string) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
+  const effectiveSort = sort || (hasLocation ? "distance,asc" : undefined);
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
-    ...(isFestival ? { keyword: "festival" } : { classificationName: genre }),
+    classificationName: genre,
     size: 50,
     page,
-    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150 } : {}),
+    ...(effectiveSort ? { sort: effectiveSort } : {}),
   });
   const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));

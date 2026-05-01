@@ -21,6 +21,7 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
     lng,
     radius = 150,
     genre,
+    sort: userSort,
   } = req.query as Record<string, string>;
 
   const now = new Date();
@@ -79,6 +80,7 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
   if (venue) params.keyword = venue;
   if (category) params.keyword = category;
   if (genre) params.classificationName = genre;
+  if (userSort) params.sort = userSort;
 
   const result = await eventService.filterEvents(params);
   return res.json({ status: true, ...result });
@@ -150,8 +152,9 @@ const eventsBygrouped = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getEventsByGenre = catchAsync(async (req: Request, res: Response) => {
-  const { page = "0", lat, lng } = req.query as Record<string, string>;
-  const result = await eventService.getEventsByGenre(req.params.genre, Number(page), lat, lng);
+  // Add sort support
+  const { page = "0", lat, lng, sort } = req.query as Record<string, string>;
+  const result = await eventService.getEventsByGenre(req.params.genre, Number(page), lat, lng, sort);
   return res.json({ status: true, ...result });
 });
 
