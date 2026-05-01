@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Grid, Tag, ChevronDown, LucideIcon, Music2 } from 'lucide-react';
+import { Calendar, Tag, ChevronDown, LucideIcon, Music2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -321,12 +321,6 @@ export function EventFiltersBar({
       value: customDateRange ? `${customDateRange.from} - ${customDateRange.to}` : time,
       options: filterOptions.times,
       onChange: handleTimeChange,
-    },
-    {
-      icon: Grid,
-      value: eventType,
-      options: filterOptions.eventTypes,
-      onChange: onEventTypeChange,
     },
     {
       icon: Tag,

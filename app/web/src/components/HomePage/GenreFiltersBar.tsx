@@ -97,84 +97,85 @@ export const GenreFiltersBar = ({
   const isCatActive  = category !== 'Category';
 
   return (
-    <div className="flex flex-wrap items-center gap-3 py-4" data-testid="genre-filters-bar">
-      {/* Location — read-only pill styled to match LocationDropdown trigger */}
-      {locationLabel && (
-        <span
-          className={PILL + ' cursor-default'}
-          data-testid="genre-location-pill"
-        >
-          <MapPin size={16} />
-          {locationLabel}
-        </span>
-      )}
-
-      {/* Date dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={isDateActive ? PILL_ACTIVE : PILL}
-            data-testid="genre-filter-date"
+    <div className="flex items-center justify-between py-4" data-testid="genre-filters-bar">
+      {/* Left group: location · date · category */}
+      <div className="flex items-center gap-3">
+        {/* Location — read-only pill styled to match LocationDropdown trigger */}
+        {locationLabel && (
+          <span
+            className={PILL + ' cursor-default'}
+            data-testid="genre-location-pill"
           >
-            <Calendar size={16} />
-            {dateLabel}
-            <ChevronDown size={14} />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] p-1"
-        >
-          {DATE_OPTIONS.map(opt => (
-            <DropdownMenuItem
-              key={opt.value}
-              onClick={() => onPeriodChange(opt.value)}
-              className={`cursor-pointer rounded-lg px-3 py-2 text-sm ${
-                period === opt.value ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'
-              }`}
-              data-testid={`genre-date-option-${opt.value}`}
-            >
-              {opt.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <MapPin size={16} />
+            {locationLabel}
+          </span>
+        )}
 
-      {/* Category dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={isCatActive ? PILL_ACTIVE : PILL}
-            data-testid="genre-filter-category"
+        {/* Date dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={isDateActive ? PILL_ACTIVE : PILL}
+              data-testid="genre-filter-date"
+            >
+              <Calendar size={16} />
+              {dateLabel}
+              <ChevronDown size={14} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] p-1"
           >
-            <Tag size={16} />
-            {category}
-            <ChevronDown size={14} />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] p-1"
-        >
-          {CATEGORY_OPTIONS.map(opt => (
-            <DropdownMenuItem
-              key={opt}
-              onClick={() => onCategoryChange(opt)}
-              className={`cursor-pointer rounded-lg px-3 py-2 text-sm ${
-                category === opt ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'
-              }`}
-              data-testid={`genre-category-option-${opt.toLowerCase()}`}
-            >
-              {opt}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {DATE_OPTIONS.map(opt => (
+              <DropdownMenuItem
+                key={opt.value}
+                onClick={() => onPeriodChange(opt.value)}
+                className={`cursor-pointer rounded-lg px-3 py-2 text-sm ${
+                  period === opt.value ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid={`genre-date-option-${opt.value}`}
+              >
+                {opt.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* Sort — right-aligned */}
-      <div className="ml-auto">
-        <SortDropdown sort={sort} onSortChange={onSortChange} />
+        {/* Category dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={isCatActive ? PILL_ACTIVE : PILL}
+              data-testid="genre-filter-category"
+            >
+              <Tag size={16} />
+              {category}
+              <ChevronDown size={14} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] p-1"
+          >
+            {CATEGORY_OPTIONS.map(opt => (
+              <DropdownMenuItem
+                key={opt}
+                onClick={() => onCategoryChange(opt)}
+                className={`cursor-pointer rounded-lg px-3 py-2 text-sm ${
+                  category === opt ? 'bg-gray-100 font-semibold text-black' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                data-testid={`genre-category-option-${opt.toLowerCase()}`}
+              >
+                {opt}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      {/* Sort — always on the far right */}
+      <SortDropdown sort={sort} onSortChange={onSortChange} />
     </div>
   );
 };

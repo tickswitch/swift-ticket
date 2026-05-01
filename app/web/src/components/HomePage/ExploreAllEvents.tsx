@@ -157,30 +157,31 @@ const ExploreAllEvents = () => {
         </header>
 
         <div className="mb-8">
-          <div
-            className="flex flex-wrap items-center gap-3"
-          >
-            <LocationDropdown
-              defaultLocation="Nearby"
-              onLocationChange={handleLocationChange}
-            />
-            <EventFiltersBar
-              time={time}
-              onTimeChange={handleTimeChange}
-              customDateRange={customDateRange}
-              onCustomDateSave={handleCustomDateSave}
-              eventType={eventType}
-              onEventTypeChange={handleEventTypeChange}
-              category={category}
-              onCategoryChange={handleCategoryChange}
-              selectedGenres={selectedGenres}
-              onGenresChange={handleGenresChange}
-            />
-            <div className="ml-auto flex-shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: location + filters */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <LocationDropdown
+                defaultLocation="Nearby"
+                onLocationChange={handleLocationChange}
+              />
+              <EventFiltersBar
+                time={time}
+                onTimeChange={handleTimeChange}
+                customDateRange={customDateRange}
+                onCustomDateSave={handleCustomDateSave}
+                eventType={eventType}
+                onEventTypeChange={handleEventTypeChange}
+                category={category}
+                onCategoryChange={handleCategoryChange}
+                selectedGenres={selectedGenres}
+                onGenresChange={handleGenresChange}
+              />
+            </div>
+            {/* Right: sort — always visible in same row */}
+            <div className="flex-shrink-0">
               <SortDropdown sort={sort} onSortChange={handleSortChange} />
             </div>
           </div>
-
         </div>
 
         <EventsListWithPagination
