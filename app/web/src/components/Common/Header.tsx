@@ -32,7 +32,7 @@ const AuthNavElement = [
   { path: "/listing", label: "Your Listing" },
 ];
 
-const NavItem = () => {
+const NavItem = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
   const token = localStorage.getItem("token");
 
   const logout = useMutation({
@@ -71,6 +71,16 @@ const NavItem = () => {
           </NavLink>
         </li>
       ))}
+      <li>
+        <button
+          onClick={onSearchOpen}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
+          aria-label="Search"
+          data-testid="search-icon-button"
+        >
+          <img src={headerSearchIcon} alt="Search" className="w-5 h-5" />
+        </button>
+      </li>
       {token ? (
         <button
           onClick={handleLogOut}
@@ -113,7 +123,7 @@ const NavItem1 = () => {
   );
 };
 
-const NavItem3 = () => {
+const NavItem3 = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
 
@@ -159,6 +169,16 @@ const NavItem3 = () => {
           </NavLink>
         </li>
       ))}
+      <li>
+        <button
+          onClick={onSearchOpen}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
+          aria-label="Search"
+          data-testid="search-icon-button"
+        >
+          <img src={headerSearchIcon} alt="Search" className="w-5 h-5" />
+        </button>
+      </li>
       <li>
         <NavLink
           to={"/cart"}
@@ -242,19 +262,9 @@ const Header = () => {
           </p>
         </div>
 
-        {/* Search icon — opens overlay */}
-        <button
-          onClick={() => setIsSearchOpen(true)}
-          className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
-          aria-label="Search"
-          data-testid="search-icon-button"
-        >
-          <img src={headerSearchIcon} alt="Search" className="w-5 h-5" />
-        </button>
-
         {/* Nav */}
         <div className=" hidden md:block">
-          {token ? <NavItem3 /> : <NavItem />}
+          {token ? <NavItem3 onSearchOpen={() => setIsSearchOpen(true)} /> : <NavItem onSearchOpen={() => setIsSearchOpen(true)} />}
         </div>
         <div className="bolck md:hidden">
           <Hamburger
