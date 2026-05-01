@@ -522,6 +522,7 @@ const getAllEvents = async (
   type?: string,
   from?: string,
   to?: string,
+  radius: number = 30,
 ) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
 
@@ -556,7 +557,7 @@ const getAllEvents = async (
     size: 200,
     page,
     sort: sort || "date,asc",
-    ...(hasLocation ? { latlong: `${lat},${lng}` } : {}),
+    ...(hasLocation ? { latlong: `${lat},${lng}`, radius, unit: "km" } : {}),
     ...(countryCode ? { countryCode } : {}),
     ...(classificationName ? { classificationName } : {}),
     ...dateParams,

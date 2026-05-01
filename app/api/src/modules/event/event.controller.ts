@@ -10,8 +10,9 @@ const getAllEvents = catchAsync(async (req: Request, res: Response) => {
     lat = "0", lng = "0", page = "0",
     genre, sort,
     period, category, type, from, to,
+    radius = "30",
   } = req.query as Record<string, string>;
-  const result = await eventService.getAllEvents(lat, lng, Number(page), genre, sort, period, category, type, from, to);
+  const result = await eventService.getAllEvents(lat, lng, Number(page), genre, sort, period, category, type, from, to, Number(radius));
   return res.json({ status: true, ...result });
 });
 
