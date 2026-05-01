@@ -68,15 +68,16 @@ const FilterDropdown = ({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-all duration-300 outline-none ${highlighted
-            ? 'border-cyan-300 bg-cblack'
-            : 'border-gray-300 bg-transparent text-gray-600 hover:border-gray-500'
-            }`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 outline-none whitespace-nowrap ${
+            highlighted
+              ? 'bg-[#2563EB] text-white border-[#2563EB]'
+              : 'border-white/30 bg-white/70 backdrop-blur-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-gray-700 hover:bg-white/90'
+          }`}
         >
-          <Icon size={20} />
+          <Icon size={16} />
           <span className="font-medium">{value}</span>
           <ChevronDown
-            size={16}
+            size={14}
             className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
@@ -220,7 +221,7 @@ const GenreModal = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <button
-          className="flex items-center gap-2 px-5 py-3 rounded-lg border border-gray-300 bg-transparent text-gray-600 hover:border-gray-500 transition-all duration-300 outline-none"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/30 bg-white/70 backdrop-blur-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-gray-700 text-sm font-medium hover:bg-white/90 transition-all duration-200 outline-none whitespace-nowrap"
         >
           <Music2 size={20} />
           <span className="font-medium">

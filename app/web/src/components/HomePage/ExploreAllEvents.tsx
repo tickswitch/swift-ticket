@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { GetSingleData } from '@/API/API';
 
@@ -144,15 +143,6 @@ const ExploreAllEvents = () => {
     if (!isLoading && hasMore) setPage((prev) => prev + 1);
   };
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
-  };
-
-  const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
-  };
 
   return (
     <div className="text-black py-16 px-6 max-w-3xl mx-auto">
@@ -166,11 +156,9 @@ const ExploreAllEvents = () => {
           </p>
         </header>
 
-        <div className="relative mb-12">
+        <div className="mb-8">
           <div
-            ref={scrollContainerRef}
-            className="flex items-center gap-4 overflow-x-auto scrollbar-hide scroll-smooth text-nowrap"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex flex-wrap items-center gap-3"
           >
             <LocationDropdown
               defaultLocation="Nearby"
@@ -193,22 +181,6 @@ const ExploreAllEvents = () => {
             </div>
           </div>
 
-          <div className="absolute -right-32 top-0 flex items-center gap-2 to-transparent pl-8">
-            <button
-              onClick={scrollLeft}
-              className="p-2 text-primary001 font-semibold hover:text-black rounded-full"
-              aria-label="Scroll Left"
-            >
-              <ChevronLeft size={28} />
-            </button>
-            <button
-              onClick={scrollRight}
-              className="p-2 text-primary001 font-semibold hover:text-black rounded-full"
-              aria-label="Scroll Right"
-            >
-              <ChevronRight size={28} />
-            </button>
-          </div>
         </div>
 
         <EventsListWithPagination

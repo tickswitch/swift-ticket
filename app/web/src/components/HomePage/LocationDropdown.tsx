@@ -248,7 +248,7 @@ export function LocationDropdown({
     <>
       {/* Location Dropdown */}
       <Select onValueChange={handleLocationSelect} value={selectedLocation}>
-        <SelectTrigger className="flex items-center gap-2 px-5 py-4 !h-13 !text-base rounded-lg border border-gray-300 bg-transparent text-gray-600 hover:border-gray-500 transition-all duration-300 outline-none w-fit">
+        <SelectTrigger className="flex items-center gap-2 px-4 py-2.5 !h-auto !text-sm rounded-full border border-white/30 bg-white/70 backdrop-blur-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-gray-700 hover:bg-white/90 transition-all duration-200 outline-none w-fit">
           {/* <MapPin size={20} /> */}
           <SelectValue placeholder={selectedLocation} />
         </SelectTrigger>
