@@ -5,6 +5,16 @@ import { eventService } from "./event.service";
 import { AuthRequest } from "../../middleware/auth";
 import { z } from "zod";
 
+const getAllEvents = catchAsync(async (req: Request, res: Response) => {
+  const {
+    lat = "0", lng = "0", page = "0",
+    genre, sort,
+    period, category, type, from, to,
+  } = req.query as Record<string, string>;
+  const result = await eventService.getAllEvents(lat, lng, Number(page), genre, sort, period, category, type, from, to);
+  return res.json({ status: true, ...result });
+});
+
 const filterEvents = catchAsync(async (req: Request, res: Response) => {
   const {
     period = "today",
@@ -238,6 +248,7 @@ function nextWeekday(date: Date, day: number): Date {
 }
 
 export const eventController = {
+  getAllEvents,
   filterEvents,
   search,
   getEventDetails,

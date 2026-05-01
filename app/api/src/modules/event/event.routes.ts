@@ -5,6 +5,7 @@ import { authenticate } from "../../middleware/auth";
 const router = Router();
 
 // Public routes
+router.get("/events/all", eventController.getAllEvents);
 router.get("/events", eventController.filterEvents);
 router.get("/search-events", eventController.search);
 router.get("/events-seats/:eventId", eventController.getEventDetails);

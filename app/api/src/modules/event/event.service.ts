@@ -404,6 +404,173 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
   return grouped;
 };
 
+// ---- getAllEvents helpers ----
+
+const COUNTRY_TZ: Record<string, string> = {
+  IN: "Asia/Kolkata",
+  NL: "Europe/Amsterdam",
+  GB: "Europe/London",
+  US: "America/New_York",
+  AU: "Australia/Sydney",
+  SG: "Asia/Singapore",
+  AE: "Asia/Dubai",
+};
+
+const CAT_SEGMENT: Record<string, string> = {
+  sports: "Sports",
+  theater: "Arts & Theatre",
+  concerts: "Music",
+};
+
+function tzOff(tz: string, d: Date): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "longOffset" }).formatToParts(d);
+    const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+00:00";
+    const off = raw.replace("GMT", "") || "+00:00";
+    return off.replace(/^([+-])(\d):/, "$10$2:"); // +5:30 → +05:30
+  } catch {
+    return "+05:30";
+  }
+}
+
+function tzDateStr(tz: string, d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: tz }); // "YYYY-MM-DD"
+}
+
+function tzDow(tz: string, d: Date): number {
+  const name = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d);
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
+}
+
+function tzDayStart(tz: string, d: Date): Date {
+  return new Date(`${tzDateStr(tz, d)}T00:00:00${tzOff(tz, d)}`);
+}
+
+function tzDayEnd(tz: string, d: Date): Date {
+  return new Date(`${tzDateStr(tz, d)}T23:59:59${tzOff(tz, d)}`);
+}
+
+function addDaysMs(d: Date, n: number): Date {
+  return new Date(d.getTime() + n * 86400000);
+}
+
+function toTmISO(d: Date): string {
+  return d.toISOString().split(".")[0] + "Z";
+}
+
+function periodToDates(
+  period: string,
+  tz: string,
+  from?: string,
+  to?: string,
+): Record<string, string> | null {
+  const now = new Date();
+
+  if (period === "custom") {
+    if (!from || !to) return null;
+    return {
+      startDateTime: toTmISO(new Date(`${from}T00:00:00${tzOff(tz, now)}`)),
+      endDateTime: toTmISO(new Date(`${to}T23:59:59${tzOff(tz, now)}`)),
+    };
+  }
+
+  switch (period) {
+    case "today":
+      return { startDateTime: toTmISO(tzDayStart(tz, now)), endDateTime: toTmISO(tzDayEnd(tz, now)) };
+    case "tomorrow": {
+      const tm = addDaysMs(now, 1);
+      return { startDateTime: toTmISO(tzDayStart(tz, tm)), endDateTime: toTmISO(tzDayEnd(tz, tm)) };
+    }
+    case "this-week": {
+      const dow = tzDow(tz, now);
+      const sunday = addDaysMs(now, dow === 0 ? 0 : 7 - dow);
+      return { startDateTime: toTmISO(now), endDateTime: toTmISO(tzDayEnd(tz, sunday)) };
+    }
+    case "this-weekend": {
+      const dow = tzDow(tz, now);
+      const daysToFri = ((5 - dow) + 7) % 7 || 7;
+      const fri = addDaysMs(now, daysToFri);
+      const sun = addDaysMs(fri, 2);
+      return { startDateTime: toTmISO(tzDayStart(tz, fri)), endDateTime: toTmISO(tzDayEnd(tz, sun)) };
+    }
+    case "next-week": {
+      const dow = tzDow(tz, now);
+      const daysToMon = ((1 - dow) + 7) % 7 || 7;
+      const mon = addDaysMs(now, daysToMon);
+      const sun = addDaysMs(mon, 6);
+      return { startDateTime: toTmISO(tzDayStart(tz, mon)), endDateTime: toTmISO(tzDayEnd(tz, sun)) };
+    }
+    case "this-month": {
+      const [year, month] = tzDateStr(tz, now).split("-").map(Number);
+      const lastDay = new Date(year, month, 0).getDate();
+      const eom = new Date(`${year}-${String(month).padStart(2, "0")}-${lastDay}T23:59:59${tzOff(tz, now)}`);
+      return { startDateTime: toTmISO(now), endDateTime: toTmISO(eom) };
+    }
+    default:
+      return null;
+  }
+}
+
+const getAllEvents = async (
+  lat: string,
+  lng: string,
+  page: number,
+  genre?: string,
+  sort?: string,
+  period?: string,
+  category?: string,
+  type?: string,
+  from?: string,
+  to?: string,
+) => {
+  const hasLocation = lat && lng && lat !== "0" && lng !== "0";
+
+  let countryCode: string | undefined;
+  if (hasLocation) {
+    try {
+      const { data: nominatimData } = await axios.get(
+        "https://nominatim.openstreetmap.org/reverse",
+        {
+          params: { lat, lon: lng, format: "json" },
+          headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
+          timeout: 5000,
+        },
+      );
+      countryCode = (nominatimData?.address?.country_code as string)?.toUpperCase();
+    } catch (err: any) {
+      console.error(`[Nominatim reverse] ${err?.message}`);
+    }
+  }
+
+  const timezone = (countryCode ? COUNTRY_TZ[countryCode] : undefined) ?? "Asia/Kolkata";
+  const dateParams = period ? (periodToDates(period, timezone, from, to) ?? {}) : {};
+
+  // genre (specific) takes precedence over category (segment); type maps to classificationName as subtype
+  const classificationName =
+    genre ||
+    (type && type !== "All events" ? type : undefined) ||
+    (category ? CAT_SEGMENT[category.toLowerCase()] : undefined);
+
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    size: 200,
+    page,
+    sort: sort || "date,asc",
+    ...(hasLocation ? { latlong: `${lat},${lng}` } : {}),
+    ...(countryCode ? { countryCode } : {}),
+    ...(classificationName ? { classificationName } : {}),
+    ...dateParams,
+  });
+
+  const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
+  const pageInfo = data?.page ?? {};
+  const totalPages: number = (pageInfo.totalPages as number) ?? 1;
+  const hasMore = page < totalPages - 1;
+  const mapped = await Promise.all(events.map((e) => mapEvent(e)));
+
+  return { data: mapped, hasMore, nextPage: page + 1, pagination: pageInfo };
+};
+
 const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string, sort?: string) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const effectiveSort = sort || (hasLocation ? "distance,asc" : undefined);
@@ -560,6 +727,7 @@ const ticketAlert = async (userId: number) => {
 };
 
 export const eventService = {
+  getAllEvents,
   filterEvents,
   searchEvents,
   getEventDetails,

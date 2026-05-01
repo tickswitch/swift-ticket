@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { GetSingleData } from '@/API/API';
 
 type EventItem = Record<string, any>;
-type PaginatedEventsResponse = {
+type AllEventsResponse = {
   data: EventItem[];
+  hasMore: boolean;
+  nextPage: number;
   pagination: { totalPages: number; totalElements: number; number: number; size: number };
 };
 import { LocationDropdown } from './LocationDropdown';
@@ -13,9 +15,6 @@ import { EventsListWithPagination } from './EventsListWithPagination';
 import { SortDropdown } from './GenreFiltersBar';
 
 const ExploreAllEvents = () => {
-  const [location, setLocation] = useState(() => {
-    return localStorage.getItem("selectedLocation") || "Nearby";
-  });
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lon: number } | null>(() => {
     try {
       return JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
@@ -24,7 +23,7 @@ const ExploreAllEvents = () => {
     }
   });
 
-  const [time, setTime] = useState('today');
+  const [time, setTime] = useState('anytime');
   const [eventType, setEventType] = useState('All events');
   const [category, setCategory] = useState('Category');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -33,11 +32,13 @@ const ExploreAllEvents = () => {
 
   const [page, setPage] = useState(0);
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
   // Reset accumulated events whenever filters change
   const resetPages = () => {
     setPage(0);
     setAllEvents([]);
+    setHasMore(true);
   };
 
   const handleTimeChange = (value: string) => {
@@ -67,8 +68,7 @@ const ExploreAllEvents = () => {
     resetPages();
   };
 
-  const handleLocationChange = (value: string) => {
-    setLocation(value);
+  const handleLocationChange = (_value: string) => {
     resetPages();
     try {
       const coords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
@@ -86,41 +86,40 @@ const ExploreAllEvents = () => {
   const buildApiQuery = () => {
     const params: string[] = [];
 
+    if (locationCoords?.lat && locationCoords?.lon) {
+      params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
+    }
+
     if (customDateRange) {
       params.push(`period=custom&from=${customDateRange.from}&to=${customDateRange.to}`);
-    } else if (time !== 'today') {
+    } else if (time && time !== 'anytime') {
       params.push(`period=${time}`);
     }
 
     if (selectedGenres.length > 0) {
-      params.push(`genre=${selectedGenres.join(',')}`);
-    }
-
-    if (locationCoords && locationCoords.lat && locationCoords.lon) {
-      params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
-    }
-
-    if (eventType && eventType !== 'All events') {
-      params.push(`type=${eventType}`);
+      params.push(`genre=${selectedGenres[0]}`);
     }
 
     if (category && category !== 'Category') {
       params.push(`category=${category}`);
     }
 
-    params.push(`sort=${sort}`);
-    params.push(`page=${page}&size=10`);
+    if (eventType && eventType !== 'All events') {
+      params.push(`type=${eventType}`);
+    }
 
-    return `events${params.length > 0 ? '?' + params.join('&') : ''}`;
+    params.push(`sort=${sort}`);
+    params.push(`page=${page}`);
+
+    return `events/all${params.length > 0 ? '?' + params.join('&') : ''}`;
   };
 
-  const { data: responseData, isLoading, error } = useQuery<PaginatedEventsResponse>({
-    queryKey: ['events', time, customDateRange, selectedGenres, page, eventType, category, location, locationCoords, sort],
-    queryFn: () => GetSingleData(buildApiQuery()) as unknown as Promise<PaginatedEventsResponse>,
+  const { data: responseData, isLoading, error } = useQuery<AllEventsResponse>({
+    queryKey: ['events/all', selectedGenres, page, locationCoords, sort, time, customDateRange, category, eventType],
+    queryFn: () => GetSingleData(buildApiQuery()) as unknown as Promise<AllEventsResponse>,
   });
 
   const newPageData: any[] | undefined = responseData?.data;
-  const pagination = responseData?.pagination;
 
   // Accumulate events: replace on page 0, append on subsequent pages
   useEffect(() => {
@@ -133,9 +132,9 @@ const ExploreAllEvents = () => {
         return [...prev, ...newPageData.filter((e: any) => !seen.has(e.id))];
       });
     }
+    setHasMore(responseData?.hasMore ?? false);
   }, [newPageData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasMore = pagination ? page < pagination.totalPages - 1 : false;
   const isInitialLoad = isLoading && allEvents.length === 0;
   const isLoadingMore = isLoading && allEvents.length > 0;
 

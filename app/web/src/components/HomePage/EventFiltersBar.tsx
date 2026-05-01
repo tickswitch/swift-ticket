@@ -295,7 +295,7 @@ export function EventFiltersBar({
   const [customDateModalOpen, setCustomDateModalOpen] = useState(false);
 
   const filterOptions = {
-    times: ['today', 'tomorrow', 'this-week', 'this-weekend', 'next-week', 'this-month', 'custom'],
+    times: ['anytime', 'today', 'tomorrow', 'this-week', 'this-weekend', 'next-week', 'this-month', 'custom'],
     eventTypes: ['All events',],
     categories: ['Category', 'sports', 'theater', "concerts"],
   };
