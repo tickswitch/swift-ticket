@@ -22,6 +22,7 @@ const Events = () => {
   // Local filter state (only active on genre pages)
   const [filterPeriod, setFilterPeriod] = useState("anytime");
   const [filterSort, setFilterSort] = useState("date,asc");
+  const [filterCategory, setFilterCategory] = useState("Category");
 
   const [searchParams] = useSearchParams();
   const urlPeriod = searchParams.get("period");
@@ -40,27 +41,41 @@ const Events = () => {
   useEffect(() => { resetPages(); }, [urlPeriod, venue, genre, lat, lon]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset when local filters change
-  useEffect(() => { resetPages(); }, [filterPeriod, filterSort]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { resetPages(); }, [filterPeriod, filterSort, filterCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const buildUrl = (page: number) => {
     const locParam = lat && lon ? `&lat=${lat}&lng=${lon}&radius=150` : "";
     const sortParam = `&sort=${filterSort}`;
 
     if (urlPeriod) return `events?period=${urlPeriod}${locParam}&page=${page}`;
-    if (venue) return `events?venue=${venue}${locParam}&page=${page}`;
+    if (venue)     return `events?venue=${venue}${locParam}&page=${page}`;
+
     if (genre) {
-      if (filterPeriod && filterPeriod !== "anytime") {
-        // Date-filtered: use filterEvents endpoint (handles period natively)
-        return `events?genre=${genre}&period=${filterPeriod}${locParam}${sortParam}&page=${page}&size=20`;
+      // Always route through filterEvents so period + category + sort all work consistently
+      // For "anytime", send a 2-year window so the backend doesn't restrict to today
+      let dateParam: string;
+      if (filterPeriod === 'anytime') {
+        const now = new Date();
+        const future = new Date(now);
+        future.setFullYear(future.getFullYear() + 2);
+        const from = now.toISOString().split('T')[0];
+        const to   = future.toISOString().split('T')[0];
+        dateParam = `period=custom&from=${from}&to=${to}`;
+      } else {
+        dateParam = `period=${filterPeriod}`;
       }
-      // No date filter: use getEventsByGenre (all upcoming, sorted by user choice)
-      return `events/by-genre/${genre}?page=${page}${lat && lon ? `&lat=${lat}&lng=${lon}` : ""}${sortParam}`;
+      // Category selection overrides the original genre (e.g. "Concerts" replaces "festival")
+      const classificationParam = filterCategory !== 'Category'
+        ? `genre=${encodeURIComponent(filterCategory)}`
+        : `genre=${genre}`;
+      return `events?${dateParam}&${classificationParam}${locParam}${sortParam}&page=${page}&size=20`;
     }
-    return `events${locParam ? "?" + locParam.slice(1) : "?page=" + page}${locParam ? "&page=" + page : ""}`;
+
+    return `events${locParam ? '?' + locParam.slice(1) : '?'}${locParam ? '&' : ''}page=${page}`;
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["events", currentPage, urlPeriod, venue, genre, lat, lon, filterPeriod, filterSort],
+    queryKey: ["events", currentPage, urlPeriod, venue, genre, lat, lon, filterPeriod, filterSort, filterCategory],
     queryFn: () => GetSingleData(buildUrl(currentPage)),
   });
 
@@ -102,6 +117,8 @@ const Events = () => {
             <GenreFiltersBar
               period={filterPeriod}
               onPeriodChange={setFilterPeriod}
+              category={filterCategory}
+              onCategoryChange={setFilterCategory}
               sort={filterSort}
               onSortChange={setFilterSort}
             />
