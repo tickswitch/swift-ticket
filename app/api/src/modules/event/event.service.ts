@@ -6,14 +6,32 @@ const TM_BASE = "https://app.ticketmaster.com/discovery/v2";
 const apikey = () => process.env.TICKETMASTER_API_KEY as string;
 
 // Safe Ticketmaster GET — returns null instead of throwing on API errors
-const tmGet = async (url: string, params: Record<string, unknown>) => {
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+let lastCallTime = 0;
+const RATE_LIMIT_GAP = 250;
+
+const tmGet = async (
+  url: string,
+  params: Record<string, unknown>,
+  retryCount = 0,
+): Promise<any> => {
   try {
-    const { data } = await axios.get(url, { params });
+    const now = Date.now();
+    const timeSinceLastCall = now - lastCallTime;
+
+    if (timeSinceLastCall < RATE_LIMIT_GAP) {
+      await delay(RATE_LIMIT_GAP - timeSinceLastCall);
+    }
+
+    lastCallTime = Date.now();
+    const { data } = await axios.get(url, { params, timeout: 5000 });
     return data;
   } catch (err: any) {
-    const status = err?.response?.status;
-    const msg = err?.response?.data?.fault?.faultstring || err?.message || "Ticketmaster error";
-    console.error(`[TM] ${status || "network"} error — ${msg}`);
+    if (err?.response?.status === 429 && retryCount < 1) {
+      console.error("Rate Limit Hit! Retrying after 1 second...");
+      await delay(1000);
+      return tmGet(url, params, retryCount + 1);
+    }
     return null;
   }
 };
@@ -55,7 +73,7 @@ const mapEvent = async (
     title: event.name,
     image: (event.images as { url: string }[])?.[0]?.url ?? null,
     start_date: dates?.start?.localDate ?? null,
-    date: dates?.start?.localDate ?? null,       // alias used by frontend components
+    date: dates?.start?.localDate ?? null, // alias used by frontend components
     end_date: dates?.end?.localDate ?? dates?.start?.localDate ?? null,
     time: dates?.start?.localTime ?? null,
     venue: (venue as { name?: string }).name ?? null,
@@ -96,7 +114,11 @@ const filterEvents = async (
   return { pagination: pageInfo, data: mapped };
 };
 
-const searchEvents = async (keyword: string | undefined, lat?: string, lng?: string) => {
+const searchEvents = async (
+  keyword: string | undefined,
+  lat?: string,
+  lng?: string,
+) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
 
   const [tmData, dbTickets] = await Promise.all([
@@ -104,7 +126,9 @@ const searchEvents = async (keyword: string | undefined, lat?: string, lng?: str
       apikey: apikey(),
       keyword,
       size: 30,
-      ...(hasLocation ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" } : {}),
+      ...(hasLocation
+        ? { latlong: `${lat},${lng}`, radius: 150, sort: "distance,asc" }
+        : {}),
     }),
     keyword
       ? prisma.resaleTicket.findMany({
@@ -115,9 +139,7 @@ const searchEvents = async (keyword: string | undefined, lat?: string, lng?: str
               { venue: { contains: keyword, mode: "insensitive" } },
               { artist: { contains: keyword, mode: "insensitive" } },
             ],
-            AND: [
-              { quantity: { gt: 0 } },
-            ],
+            AND: [{ quantity: { gt: 0 } }],
           },
           take: 10,
           select: {
@@ -139,7 +161,9 @@ const searchEvents = async (keyword: string | undefined, lat?: string, lng?: str
   ]);
 
   const tmEvents = await Promise.all(
-    ((tmData?._embedded?.events ?? []) as Record<string, unknown>[]).map((e) => mapEvent(e, false))
+    ((tmData?._embedded?.events ?? []) as Record<string, unknown>[]).map((e) =>
+      mapEvent(e, false),
+    ),
   );
 
   const resaleTickets = dbTickets.map((t) => ({
@@ -152,7 +176,10 @@ const searchEvents = async (keyword: string | undefined, lat?: string, lng?: str
     ticket_type: t.ticket_type,
     price: Number(t.price),
     event_id: t.event_id,
-    available_quantity: Math.max(0, t.quantity - t.reserved_quantity - t.sold_quantity),
+    available_quantity: Math.max(
+      0,
+      t.quantity - t.reserved_quantity - t.sold_quantity,
+    ),
     source: "resale" as const,
   }));
 
@@ -223,7 +250,12 @@ const trendingNearby = async (lat: string, lng: string, radius: number) => {
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
-const sportsinArea = async (lat: string, lng: string, radius: number, page: number) => {
+const sportsinArea = async (
+  lat: string,
+  lng: string,
+  radius: number,
+  page: number,
+) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
@@ -239,7 +271,12 @@ const sportsinArea = async (lat: string, lng: string, radius: number, page: numb
   return { pagination: data?.page ?? {}, data: mapped };
 };
 
-const concertsinArea = async (lat: string, lng: string, radius: number, page: number) => {
+const concertsinArea = async (
+  lat: string,
+  lng: string,
+  radius: number,
+  page: number,
+) => {
   const hasLocation = lat && lng && lat !== "undefined" && lng !== "undefined";
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
@@ -283,11 +320,18 @@ const festivalsNearby = async (lat: string, lng: string, radius: number) => {
 };
 
 const similarEvents = async (eventId: string) => {
-  const detailData = await tmGet(`${TM_BASE}/events/${eventId}.json`, { apikey: apikey() });
+  const detailData = await tmGet(`${TM_BASE}/events/${eventId}.json`, {
+    apikey: apikey(),
+  });
   const segment = detailData?.classifications?.[0]?.segment?.name;
-  const data = await tmGet(`${TM_BASE}/events.json`, { apikey: apikey(), classificationName: segment, size: 10 });
-  const events: Record<string, unknown>[] = (data?._embedded?.events ?? [])
-    .filter((e: Record<string, unknown>) => e.id !== eventId);
+  const data = await tmGet(`${TM_BASE}/events.json`, {
+    apikey: apikey(),
+    classificationName: segment,
+    size: 10,
+  });
+  const events: Record<string, unknown>[] = (
+    data?._embedded?.events ?? []
+  ).filter((e: Record<string, unknown>) => e.id !== eventId);
   return Promise.all(events.map((e) => mapEvent(e, false)));
 };
 
@@ -308,8 +352,10 @@ const bestVenues = async (lat?: string, lng?: string) => {
     country: (v as { country?: { name?: string } }).country?.name ?? null,
     address: (v as { address?: { line1?: string } }).address?.line1 ?? null,
     url: v.url ?? null,
-    latitude: (v as { location?: { latitude?: string } }).location?.latitude ?? null,
-    longitude: (v as { location?: { longitude?: string } }).location?.longitude ?? null,
+    latitude:
+      (v as { location?: { latitude?: string } }).location?.latitude ?? null,
+    longitude:
+      (v as { location?: { longitude?: string } }).location?.longitude ?? null,
     postalCode: (v as { postalCode?: string }).postalCode ?? null,
     timezone: (v as { timezone?: string }).timezone ?? null,
   }));
@@ -332,7 +378,7 @@ const citiesSearch = async (keyword: string) => {
         },
         headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
         timeout: 8000,
-      }
+      },
     );
     places = Array.isArray(data) ? data : [];
   } catch (err: any) {
@@ -354,7 +400,12 @@ const citiesSearch = async (keyword: string) => {
     const lon = parseFloat(place.lon);
 
     if (cityName && !uniqueCitiesMap.has(cityName)) {
-      uniqueCitiesMap.set(cityName, { city: cityName, country, latitude: lat, longitude: lon });
+      uniqueCitiesMap.set(cityName, {
+        city: cityName,
+        country,
+        latitude: lat,
+        longitude: lon,
+      });
     }
   });
 
@@ -373,15 +424,22 @@ const eventsBygrouped = async (lat?: string, lng?: string) => {
     const classifications =
       (e.classifications as Record<string, unknown>[]) ?? [];
     const venue =
-      ((e._embedded as Record<string, unknown[]>)?.venues?.[0] as Record<string, unknown>) ?? {};
+      ((e._embedded as Record<string, unknown[]>)?.venues?.[0] as Record<
+        string,
+        unknown
+      >) ?? {};
     return {
       id: e.id,
       title: e.name,
       image: (e.images as { url: string }[])?.[0]?.url ?? null,
       location: (venue as { city?: { name?: string } }).city?.name ?? null,
       country: (venue as { country?: { name?: string } }).country?.name ?? null,
-      latitude: (venue as { location?: { latitude?: string } }).location?.latitude ?? null,
-      longitude: (venue as { location?: { longitude?: string } }).location?.longitude ?? null,
+      latitude:
+        (venue as { location?: { latitude?: string } }).location?.latitude ??
+        null,
+      longitude:
+        (venue as { location?: { longitude?: string } }).location?.longitude ??
+        null,
       genres: classifications
         .map((c) => (c.genre as { name?: string })?.name)
         .filter(Boolean),
@@ -424,8 +482,12 @@ const CAT_SEGMENT: Record<string, string> = {
 
 function tzOff(tz: string, d: Date): string {
   try {
-    const parts = new Intl.DateTimeFormat("en", { timeZone: tz, timeZoneName: "longOffset" }).formatToParts(d);
-    const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+00:00";
+    const parts = new Intl.DateTimeFormat("en", {
+      timeZone: tz,
+      timeZoneName: "longOffset",
+    }).formatToParts(d);
+    const raw =
+      parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+00:00";
     const off = raw.replace("GMT", "") || "+00:00";
     return off.replace(/^([+-])(\d):/, "$10$2:"); // +5:30 → +05:30
   } catch {
@@ -438,7 +500,10 @@ function tzDateStr(tz: string, d: Date): string {
 }
 
 function tzDow(tz: string, d: Date): number {
-  const name = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(d);
+  const name = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    weekday: "short",
+  }).format(d);
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
 
@@ -476,34 +541,51 @@ function periodToDates(
 
   switch (period) {
     case "today":
-      return { startDateTime: toTmISO(tzDayStart(tz, now)), endDateTime: toTmISO(tzDayEnd(tz, now)) };
+      return {
+        startDateTime: toTmISO(tzDayStart(tz, now)),
+        endDateTime: toTmISO(tzDayEnd(tz, now)),
+      };
     case "tomorrow": {
       const tm = addDaysMs(now, 1);
-      return { startDateTime: toTmISO(tzDayStart(tz, tm)), endDateTime: toTmISO(tzDayEnd(tz, tm)) };
+      return {
+        startDateTime: toTmISO(tzDayStart(tz, tm)),
+        endDateTime: toTmISO(tzDayEnd(tz, tm)),
+      };
     }
     case "this-week": {
       const dow = tzDow(tz, now);
       const sunday = addDaysMs(now, dow === 0 ? 0 : 7 - dow);
-      return { startDateTime: toTmISO(now), endDateTime: toTmISO(tzDayEnd(tz, sunday)) };
+      return {
+        startDateTime: toTmISO(now),
+        endDateTime: toTmISO(tzDayEnd(tz, sunday)),
+      };
     }
     case "this-weekend": {
       const dow = tzDow(tz, now);
-      const daysToFri = ((5 - dow) + 7) % 7 || 7;
+      const daysToFri = (5 - dow + 7) % 7 || 7;
       const fri = addDaysMs(now, daysToFri);
       const sun = addDaysMs(fri, 2);
-      return { startDateTime: toTmISO(tzDayStart(tz, fri)), endDateTime: toTmISO(tzDayEnd(tz, sun)) };
+      return {
+        startDateTime: toTmISO(tzDayStart(tz, fri)),
+        endDateTime: toTmISO(tzDayEnd(tz, sun)),
+      };
     }
     case "next-week": {
       const dow = tzDow(tz, now);
-      const daysToMon = ((1 - dow) + 7) % 7 || 7;
+      const daysToMon = (1 - dow + 7) % 7 || 7;
       const mon = addDaysMs(now, daysToMon);
       const sun = addDaysMs(mon, 6);
-      return { startDateTime: toTmISO(tzDayStart(tz, mon)), endDateTime: toTmISO(tzDayEnd(tz, sun)) };
+      return {
+        startDateTime: toTmISO(tzDayStart(tz, mon)),
+        endDateTime: toTmISO(tzDayEnd(tz, sun)),
+      };
     }
     case "this-month": {
       const [year, month] = tzDateStr(tz, now).split("-").map(Number);
       const lastDay = new Date(year, month, 0).getDate();
-      const eom = new Date(`${year}-${String(month).padStart(2, "0")}-${lastDay}T23:59:59${tzOff(tz, now)}`);
+      const eom = new Date(
+        `${year}-${String(month).padStart(2, "0")}-${lastDay}T23:59:59${tzOff(tz, now)}`,
+      );
       return { startDateTime: toTmISO(now), endDateTime: toTmISO(eom) };
     }
     default:
@@ -533,18 +615,25 @@ const getAllEvents = async (
         "https://nominatim.openstreetmap.org/reverse",
         {
           params: { lat, lon: lng, format: "json" },
-          headers: { "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)" },
+          headers: {
+            "User-Agent": "SwiftTickets/1.0 (noreply@swifttickets.in)",
+          },
           timeout: 5000,
         },
       );
-      countryCode = (nominatimData?.address?.country_code as string)?.toUpperCase();
+      countryCode = (
+        nominatimData?.address?.country_code as string
+      )?.toUpperCase();
     } catch (err: any) {
       console.error(`[Nominatim reverse] ${err?.message}`);
     }
   }
 
-  const timezone = (countryCode ? COUNTRY_TZ[countryCode] : undefined) ?? "Asia/Kolkata";
-  const dateParams = period ? (periodToDates(period, timezone, from, to) ?? {}) : {};
+  const timezone =
+    (countryCode ? COUNTRY_TZ[countryCode] : undefined) ?? "Asia/Kolkata";
+  const dateParams = period
+    ? (periodToDates(period, timezone, from, to) ?? {})
+    : {};
 
   // genre (specific) takes precedence over category (segment); type maps to classificationName as subtype
   const classificationName =
@@ -572,7 +661,13 @@ const getAllEvents = async (
   return { data: mapped, hasMore, nextPage: page + 1, pagination: pageInfo };
 };
 
-const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string, sort?: string) => {
+const getEventsByGenre = async (
+  genre: string,
+  page: number,
+  lat?: string,
+  lng?: string,
+  sort?: string,
+) => {
   const hasLocation = lat && lng && lat !== "0" && lng !== "0";
   const effectiveSort = sort || (hasLocation ? "distance,asc" : undefined);
   const data = await tmGet(`${TM_BASE}/events.json`, {
