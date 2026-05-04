@@ -1,7 +1,7 @@
 import { bannerBg } from "@/assets";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useLocation } from "react-router";
-import { AppleIcon, EyeIcon, FacebookIcon, GoogleIcon } from "./AuthIcons";
+import { EyeIcon, GoogleIcon } from "./AuthIcons";
 import { useState, useEffect } from "react";
 import { BeatLoader } from "react-spinners";
 import { useAuth } from "@/context/AuthContext";
@@ -306,31 +306,21 @@ const Login = () => {
                 </p>
 
                 {/* Social Login Buttons */}
-                <div className="grid grid-cols-3 gap-2 mb-3 w-full">
-                  <Button
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
-                    data-testid="google-login-btn"
-                    className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
-                  >
-                    {isGoogleLoading ? (
-                      <BeatLoader color="#ffffff" size={6} />
-                    ) : (
-                      <>
-                        <GoogleIcon />
-                        <span>Google</span>
-                      </>
-                    )}
-                  </Button>
-                  <Button className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200">
-                    <FacebookIcon />
-                    <span>Facebook</span>
-                  </Button>
-                  <Button className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200">
-                    <AppleIcon />
-                    <span>Apple</span>
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
+                  data-testid="google-login-btn"
+                  className="w-full bg-white hover:bg-gray-100 transition-all duration-200 rounded-xl py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-gray-900 mb-3"
+                >
+                  {isGoogleLoading ? (
+                    <BeatLoader color="#000000" size={6} />
+                  ) : (
+                    <>
+                      <GoogleIcon />
+                      <span>Continue with Google</span>
+                    </>
+                  )}
+                </Button>
               </div>
 
               <div className="pt-3 sm:pt-4 flex flex-col gap-3">
