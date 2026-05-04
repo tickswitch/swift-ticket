@@ -10,6 +10,8 @@ import { formatEventDate } from "@/lib/formatEventDate";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import toast from "react-hot-toast";
+import { TicketIcon } from "lucide-react";
+import { sortByDistance } from "@/lib/sortByDistance";
 
 // Types
 interface CartItem {
@@ -434,12 +436,10 @@ const DiscountCart = () => {
     isLoading: SeachDataLoading,
     error: SeachDataError,
   } = useQuery({
-    queryKey: ["cities", debouncedQuery],
+    queryKey: ["cart-search-events", debouncedQuery],
     queryFn: () =>
-      GetSingleData(
-        `events?query=${debouncedQuery}&radius=50&lat=${location.lat}&lng=${location.lon}`
-      ),
-    enabled: !!debouncedQuery, // only fetch if query isn't empty
+      GetSingleData(`search-events?keyword=${encodeURIComponent(debouncedQuery)}`),
+    enabled: !!debouncedQuery,
   });
 
   const handleSelect = useCallback((city: string) => {
@@ -447,7 +447,41 @@ const DiscountCart = () => {
     setIsFocused(false);
   }, []);
 
-  const suggestions: SearchEvent[] = Array.isArray(SeachData?.data) ? SeachData.data : [];
+  const tmSuggestions: any[] = SeachData?.data?.events ?? (Array.isArray(SeachData?.data) ? SeachData.data : []);
+  const resaleSuggestions: any[] = SeachData?.data?.resaleTickets ?? [];
+  const formatShortDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
+  const merged: any[] = [
+    ...resaleSuggestions.map((t) => ({
+      title: t.title,
+      date: formatShortDate(t.start_date),
+      subtitle: `${t.venue ?? ""}${t.ticket_type ? ` · ${t.ticket_type}` : ""}`,
+      price: t.price,
+      image: null,
+      latitude: null,
+      longitude: null,
+      type: "resale" as const,
+      navigateTo: t.event_id ? `/event-details/${t.event_id}` : null,
+    })),
+    ...tmSuggestions.map((e) => ({
+      title: e.title,
+      date: formatShortDate(e.start_date ?? e.date),
+      subtitle: `${e.venue ?? ""}${e.location ? `, ${e.location}` : ""}`,
+      price: null,
+      image: e.image ?? null,
+      latitude: e.latitude ?? null,
+      longitude: e.longitude ?? null,
+      type: "tm" as const,
+      navigateTo: `/event-details/${e.id}`,
+    })),
+  ];
+
+  const suggestions: any[] = sortByDistance(merged, location.lat || null, location.lon || null);
 
   return (
     <div className="bg-[#F4F4F4] py-[50px]">
@@ -496,9 +530,9 @@ const DiscountCart = () => {
               </p>
               {/* Suggestions Dropdown */}
               {isFocused && debouncedQuery && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-72 overflow-y-auto">
                   {SeachDataLoading && (
-                    <div className="px-4 py-2 text-gray-500 text-sm">
+                    <div className="px-4 py-3 flex items-center justify-center">
                       <Loader parentClass="h-fit" size={30} />
                     </div>
                   )}
@@ -509,29 +543,63 @@ const DiscountCart = () => {
                     </div>
                   )}
 
-                  {!SeachDataLoading && suggestions.length === 0 && (
+                  {!SeachDataLoading && !SeachDataError && suggestions.length === 0 && (
                     <div className="px-4 py-2 text-gray-500 text-sm">
                       No results found
                     </div>
                   )}
 
-                  {suggestions &&
-                    suggestions?.map((item: any, idx: number) => (
-                      <div
-                        key={idx}
-                        onMouseDown={() => {
-                          if (item.title && item.latitude && item.longitude) {
-                            handleSelect(item.title);
-                            navigate(
-                              `/events?lat=${item.latitude}&lng=${item.longitude}`
-                            );
-                          }
-                        }} // onMouseDown avoids blur-before-click issue
-                        className="px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
-                      >
-                        {item?.title}, {item?.venue}, {item?.location}
+                  {suggestions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onMouseDown={() => {
+                        handleSelect(item.title ?? "");
+                        if (item.navigateTo) navigate(item.navigateTo);
+                      }}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      {/* Thumbnail */}
+                      <div className="flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt=""
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              (e.target as HTMLImageElement).parentElement!.classList.add("bg-primary001/10");
+                            }}
+                          />
+                        ) : (
+                          <TicketIcon size={18} className="text-primary001/60" />
+                        )}
                       </div>
-                    ))}
+
+                      {/* Text */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{item.title}</p>
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                          {item.date && <span>{item.date}</span>}
+                          {item.date && item.subtitle && <span className="mx-1">·</span>}
+                          {item.subtitle && <span>{item.subtitle}</span>}
+                        </p>
+                      </div>
+
+                      {/* Price or arrow */}
+                      <div className="flex-shrink-0">
+                        {item.price !== null ? (
+                          <span className="text-xs font-bold text-white bg-primary001 px-2 py-1 rounded-full">
+                            ₹{item.price}
+                          </span>
+                        ) : (
+                          <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

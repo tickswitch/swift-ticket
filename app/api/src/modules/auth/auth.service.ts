@@ -134,6 +134,117 @@ const resendOtp = async (email: string) => {
   return { otp, email: user.email };
 };
 
+const sendPhoneOtp = async (phone: string) => {
+  // Generate 6-digit OTP
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otpExpiration = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  let user = await authRepository.findByPhone(phone);
+  if (user) {
+    await authRepository.updateById(user.id, {
+      otp,
+      otp_expiration: otpExpiration,
+    });
+  } else {
+    // Pre-create a shell user keyed on phone so OTP can be stored
+    const placeholderEmail = `${phone.replace(/[^0-9]/g, '')}@phone.swifttickets.local`;
+    const placeholderPassword = await bcrypt.hash(`phone-${phone}-${Date.now()}`, 10);
+    user = await authRepository.create({
+      name: `User ${phone.slice(-4)}`,
+      email: placeholderEmail,
+      phone,
+      password: placeholderPassword,
+      avatar: null,
+      otp,
+      otp_expiration: otpExpiration,
+    });
+  }
+
+  console.log('OTP for', phone, ':', otp);
+
+  return { phone };
+};
+
+const sendEmailOtp = async (email: string) => {
+  let user = await authRepository.findByEmail(email);
+  if (!user) {
+    const placeholderPassword = await bcrypt.hash(`email-otp-${email}-${Date.now()}`, 10);
+    user = await authRepository.create({
+      name: email.split('@')[0],
+      email,
+      phone: null,
+      password: placeholderPassword,
+      avatar: null,
+    });
+  }
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+
+  await authRepository.updateById(user.id, { otp, otp_expiration: otpExpiration });
+
+  const body = `Hello ${user.name},\n\nYour SwiftTickets login OTP is:\n\n${otp}\n\nThis code expires in 5 minutes. If you didn't request this, you can safely ignore this email.`;
+  await sendMail(email, 'Your SwiftTickets Login OTP', body);
+
+  return { email };
+};
+
+const verifyEmailOtp = async (email: string, otp: string) => {
+  const user = await authRepository.findByEmail(email);
+  if (!user) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (user.otp !== String(otp)) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (!user.otp_expiration || new Date() > user.otp_expiration) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  await authRepository.updateById(user.id, { otp: null, otp_expiration: null });
+
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+  });
+
+  return { user, token };
+};
+
+const verifyPhoneOtp = async (phone: string, otp: string) => {
+  const user = await authRepository.findByPhone(phone);
+  if (!user) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (user.otp !== String(otp)) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  if (!user.otp_expiration || new Date() > user.otp_expiration) {
+    throw new AppError('Invalid OTP or OTP has expired.', 403);
+  }
+
+  // Clear OTP fields
+  await authRepository.updateById(user.id, {
+    otp: null,
+    otp_expiration: null,
+  });
+
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+  });
+
+  return { user, token };
+};
+
 export const authService = {
   register,
   login,
@@ -141,4 +252,8 @@ export const authService = {
   verifyOtp,
   resetPassword,
   resendOtp,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  sendEmailOtp,
+  verifyEmailOtp,
 };

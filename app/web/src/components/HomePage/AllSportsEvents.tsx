@@ -6,15 +6,19 @@ import { useQuery } from "@tanstack/react-query";
 import ErrorText from "../Common/ErrorText";
 import Loader from "../Common/Loader";
 import Container from "../Common/Container";
+import { sortByDistance } from "@/lib/sortByDistance";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
+import { TicketBadge } from "@/components/Common/TicketBadge";
 
 const AllSportsEvents = () => {
 
     const latlong = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
 
 
+    const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}&radius=100` : "";
     const { data, isLoading, error } = useQuery({
-        queryKey: ["sports-nearby"],
-        queryFn: () => GetData(`events/sports-in-area?lat=${latlong?.lat}&lng=${latlong.lon}&radius=100`),
+        queryKey: ["sports-nearby", latlong?.lat, latlong?.lon],
+        queryFn: () => GetData(`events/sports-in-area${locationQuery}`),
     });
 
 
@@ -25,7 +29,7 @@ const AllSportsEvents = () => {
                 <div className="flex items-center justify-between">
                     <div>
                         <Title>Sports events in the area</Title>
-                        <p className="text-secondaryText001">
+                        <p className="text-gray-500 text-sm">
                             Head to popular games or events.
                         </p>
                     </div>
@@ -44,36 +48,46 @@ const AllSportsEvents = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-5">
                         {data &&
-                            data?.map((data, idx) => (
+                            filterParkingEvents(sortByDistance(data as any[], latlong?.lat, latlong?.lon))?.map((data, idx) => {
+                                const ticketCount = data?.available_quantity;
+                                return (
                                 <Link
                                     to={`/event-details/${data?.id}`}
                                     key={`index - ${idx}`}
-                                    className="h-[98px] w-full bg-primary001/10 px-2 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
+                                    className="min-h-[98px] w-full bg-primary001/10 px-2 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
                                 >
                                     <img
                                         src={data?.image}
-                                        className="w-[78px] h-[80px] rounded-md"
+                                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                        data-testid="sports-card-thumbnail"
                                     />
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex flex-col gap-1 w-full">
                                             <div className="flex items-center justify-between w-full">
-                                                <p className="font-semibold text-base md:text-lg line-clamp-1">
+                                                <p className="font-semibold text-base leading-tight line-clamp-1">
                                                     {data?.title}
                                                 </p>
                                             </div>
-                                            <p className="text-secondaryText001 text-sm">
+                                            <p className="text-gray-500 text-sm">
                                                 {data?.location}
                                             </p>
-                                            <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
+                                            <p className="text-primary001 flex items-center gap-2 text-sm">
                                                 <CheckIcon2 /> {data?.date} {data?.time}
                                             </p>
+                                            <div className="mt-0.5">
+                                                <TicketBadge
+                                                    count={ticketCount}
+                                                    data-testid={`sports-card-ticket-count-${data?.id ?? idx}`}
+                                                />
+                                            </div>
                                         </div>
                                         {/* <button>
                   <BookmarkIcon2 />
                 </button> */}
                                     </div>
                                 </Link>
-                            ))}
+                                );
+                            })}
                     </div>
                 )}
             </div></Container>

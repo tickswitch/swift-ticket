@@ -38,5 +38,23 @@ export const resendOtpSchema = z.object({
   email: z.string().email(),
 });
 
+export const sendPhoneOtpSchema = z.object({
+  phone: z.string().regex(/^\+91[6-9]\d{9}$/, 'Invalid Indian mobile number'),
+});
+
+export const verifyPhoneOtpSchema = z.object({
+  phone: z.string().regex(/^\+91[6-9]\d{9}$/, 'Invalid Indian mobile number'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+export const sendEmailOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const verifyEmailOtpSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

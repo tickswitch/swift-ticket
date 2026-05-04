@@ -1,10 +1,12 @@
 import { Link } from "react-router";
-import { CheckIcon2 } from "../HomePage/EventsIcons";
 import { useQuery } from "@tanstack/react-query";
 import { GetData } from "@/API/API";
 import Loader from "../Common/Loader";
-import ErrorText from "../Common/ErrorText"; 
+import ErrorText from "../Common/ErrorText";
 import { useDateFormat } from "@/lib/formatDate";
+import { sortByDistance } from "@/lib/sortByDistance";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
+import { TimerIcon } from "lucide-react";
 
 interface PopularEventData {
   id: string;
@@ -30,7 +32,7 @@ const PopularEvents = () => {
 
   return (
     <div>
-      <p className="text-2xl font-semibold py-4">Popular Events</p>
+      <p className="text-2xl font-bold py-4">Popular Events</p>
       {isLoading ? (
         <Loader />
       ) : error ? (
@@ -39,39 +41,41 @@ const PopularEvents = () => {
         <ErrorText>No events found.</ErrorText>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {data && data.length > 0 && data.map((event) => {
-            const formattedDate = formatDate(event?.date, event?.time);
-            return (
-              <Link
-                to={`/event-details/${event?.id}`}
-                key={`index - ${event?.id}`}
-                className="h-[98px] w-full bg-primary001/10 px-5 py-2 rounded-2xl flex items-start gap-3 hover:-translate-y-2 transition-all duration-300"
-              >
-                {/* <img
-                  src={event?.image}
-                  className="w-[78px] h-[80px] rounded-md"
-                /> */}
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex flex-col gap-1 w-full">
-                    <div className="flex items-center justify-between w-full">
-                      <p className="font-semibold text-base md:text-lg line-clamp-1">
-                        {event?.title}
-                      </p>
-                    </div>
-                    <p className="text-secondaryText001 text-sm">
+          {data && data.length > 0 &&
+            filterParkingEvents(sortByDistance(data as any[], location?.lat, location?.lon)).map((event) => {
+              const formattedDate = formatDate(event?.date, event?.time);
+              return (
+                <Link
+                  to={`/event-details/${event?.id}`}
+                  key={event?.id}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 hover:-translate-y-1 transition-all duration-200 shadow-sm"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.7)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    border: "1px solid rgba(37, 99, 235, 0.12)",
+                  }}
+                >
+                  <img
+                    src={event?.image || ""}
+                    alt={event?.title || ""}
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                    <p className="font-semibold text-base leading-tight line-clamp-1">
+                      {event?.title}
+                    </p>
+                    <p className="text-gray-500 text-sm truncate">
                       {event?.venue}, {event?.location}
                     </p>
-                    <p className="text-primary001 flex items-center gap-2 font-semibold text-sm">
-                      <CheckIcon2 /> {formattedDate}
+                    <p className="text-red-500 text-sm flex items-center gap-1">
+                      <TimerIcon size={14} />
+                      {formattedDate}
                     </p>
                   </div>
-                  {/* <button>
-                    <BookmarkIcon2 />
-                  </button> */}
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
         </div>
       )}
     </div>

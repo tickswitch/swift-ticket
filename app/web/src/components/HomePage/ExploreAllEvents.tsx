@@ -1,145 +1,151 @@
-import { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { GetSingleData } from '@/API/API';
+
+type EventItem = Record<string, any>;
+type AllEventsResponse = {
+  data: EventItem[];
+  hasMore: boolean;
+  nextPage: number;
+  pagination: { totalPages: number; totalElements: number; number: number; size: number };
+};
 import { LocationDropdown } from './LocationDropdown';
 import { EventFiltersBar } from './EventFiltersBar';
 import { EventsListWithPagination } from './EventsListWithPagination';
+import { SortDropdown } from './GenreFiltersBar';
 
-/**
- * ExploreAllEvents Component
- * 
- * Main page for exploring and filtering events.
- * Orchestrates:
- * - Location selection
- * - Event filters (time, type, category, genre)
- * - Events display with pagination
- * - API queries with all filter parameters
- */
 const ExploreAllEvents = () => {
-  // Location state
-  const [location, setLocation] = useState('New York');
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lon: number } | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+    } catch {
+      return null;
+    }
+  });
 
-  // Filter states
-  const [time, setTime] = useState('today');
+  const [time, setTime] = useState('anytime');
   const [eventType, setEventType] = useState('All events');
   const [category, setCategory] = useState('Category');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [customDateRange, setCustomDateRange] = useState<{ from: string; to: string } | null>(null);
+  const [sort, setSort] = useState('date,asc');
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(0);
+  const [page, setPage] = useState(0);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Handle time selection
+  // Reset accumulated events whenever filters change
+  const resetPages = () => {
+    setPage(0);
+    setAllEvents([]);
+    setHasMore(true);
+  };
+
   const handleTimeChange = (value: string) => {
     setTime(value);
     setCustomDateRange(null);
-    setCurrentPage(0); // Reset to first page when filter changes
+    resetPages();
   };
 
   const handleCustomDateSave = (from: string, to: string) => {
     setCustomDateRange({ from, to });
     setTime('custom');
-    setCurrentPage(0); // Reset to first page
+    resetPages();
   };
 
-  // Handle other filter changes with page reset
   const handleEventTypeChange = (value: string) => {
     setEventType(value);
-    setCurrentPage(0);
+    resetPages();
   };
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
-    setCurrentPage(0);
+    resetPages();
   };
 
   const handleGenresChange = (genres: string[]) => {
     setSelectedGenres(genres);
-    setCurrentPage(0);
+    resetPages();
   };
 
-  const handleLocationChange = (value: string) => {
-    setLocation(value);
-    setCurrentPage(0);
+  const handleLocationChange = (_value: string) => {
+    resetPages();
+    try {
+      const coords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
+      setLocationCoords(coords);
+    } catch {
+      setLocationCoords(null);
+    }
   };
 
-  // Build API query with all filters
+  const handleSortChange = (value: string) => {
+    setSort(value);
+    resetPages();
+  };
+
   const buildApiQuery = () => {
     const params: string[] = [];
 
-    // Date/time filter
+    if (locationCoords?.lat && locationCoords?.lon) {
+      params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
+    }
+
     if (customDateRange) {
       params.push(`period=custom&from=${customDateRange.from}&to=${customDateRange.to}`);
-    } else if (time !== 'today') {
+    } else if (time && time !== 'anytime') {
       params.push(`period=${time}`);
     }
 
-    // Genre filter
     if (selectedGenres.length > 0) {
-      params.push(`genre=${selectedGenres.join(',')}`);
+      params.push(`genre=${selectedGenres[0]}`);
     }
 
-    // Location coordinates
-    try {
-      const locationCoords = JSON.parse(localStorage.getItem("selectedLocationCoords") || "null");
-      if (locationCoords && locationCoords.lat && locationCoords.lon) {
-        params.push(`lat=${locationCoords.lat}&lng=${locationCoords.lon}`);
-      }
-    } catch (e) {
-      console.error("Error parsing location coords:", e);
-    }
-
-    // Event type filter (only if not 'All events')
-    if (eventType && eventType !== 'All events') {
-      params.push(`type=${eventType}`);
-    }
-
-    // Category filter (only if not 'Category')
     if (category && category !== 'Category') {
       params.push(`category=${category}`);
     }
 
-    // Pagination
-    params.push(`page=${currentPage}&size=10`);
+    if (eventType && eventType !== 'All events') {
+      params.push(`type=${eventType}`);
+    }
 
-    return `events${params.length > 0 ? '?' + params.join('&') : ''}`;
+    params.push(`sort=${sort}`);
+    params.push(`page=${page}`);
+
+    return `events/all${params.length > 0 ? '?' + params.join('&') : ''}`;
   };
 
-  // Fetch events data with React Query
-  const { data: responseData, isLoading, error } = useQuery({
-    queryKey: ['events', time, customDateRange, selectedGenres, currentPage, eventType, category, location],
-    queryFn: () => GetSingleData(buildApiQuery()),
+  const { data: responseData, isLoading, error } = useQuery<AllEventsResponse>({
+    queryKey: ['events/all', selectedGenres, page, locationCoords, sort, time, customDateRange, category, eventType],
+    queryFn: () => GetSingleData(buildApiQuery()) as unknown as Promise<AllEventsResponse>,
   });
 
-  const data = responseData?.data;
-  const pagination = responseData?.pagination;
+  const newPageData: any[] | undefined = responseData?.data;
 
-  // Horizontal scroll functionality for filters
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
+  // Accumulate events: replace on page 0, append on subsequent pages
+  useEffect(() => {
+    if (!newPageData) return;
+    if (page === 0) {
+      setAllEvents(newPageData);
+    } else {
+      setAllEvents((prev) => {
+        const seen = new Set(prev.map((e: any) => e.id));
+        return [...prev, ...newPageData.filter((e: any) => !seen.has(e.id))];
       });
     }
+    setHasMore(responseData?.hasMore ?? false);
+  }, [newPageData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isInitialLoad = isLoading && allEvents.length === 0;
+  const isLoadingMore = isLoading && allEvents.length > 0;
+
+  const loadNextPage = () => {
+    if (!isLoading && hasMore) setPage((prev) => prev + 1);
   };
 
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   return (
     <div className="text-black py-16 px-6 max-w-3xl mx-auto">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <header className="mb-12">
           <h1 className="text-5xl md:text-6xl font-bold text-black mb-4">
             Explore events
@@ -149,61 +155,41 @@ const ExploreAllEvents = () => {
           </p>
         </header>
 
-        {/* Filters Section */}
-        <div className="relative mb-12">
-          <div
-            ref={scrollContainerRef}
-            className="flex items-center gap-4 overflow-x-auto scrollbar-hide scroll-smooth text-nowrap"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {/* Location Dropdown */}
-            <LocationDropdown
-              defaultLocation="Nearby"
-              onLocationChange={handleLocationChange}
-            />
-
-            {/* Event Filters */}
-            <EventFiltersBar
-              time={time}
-              onTimeChange={handleTimeChange}
-              customDateRange={customDateRange}
-              onCustomDateSave={handleCustomDateSave}
-              eventType={eventType}
-              onEventTypeChange={handleEventTypeChange}
-              category={category}
-              onCategoryChange={handleCategoryChange}
-              selectedGenres={selectedGenres}
-              onGenresChange={handleGenresChange}
-            />
-          </div>
-
-          {/* Navigation Arrows for horizontal scroll */}
-          <div className="absolute -right-32 top-0 flex items-center gap-2 to-transparent pl-8">
-            <button
-              onClick={scrollLeft}
-              className="p-2 text-primary001 font-semibold hover:text-black rounded-full"
-              aria-label="Scroll Left"
-            >
-              <ChevronLeft size={28} />
-            </button>
-            <button
-              onClick={scrollRight}
-              className="p-2 text-primary001 font-semibold hover:text-black rounded-full"
-              aria-label="Scroll Right"
-            >
-              <ChevronRight size={28} />
-            </button>
+        <div className="mb-8">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: location + filters */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <LocationDropdown
+                defaultLocation="Nearby"
+                onLocationChange={handleLocationChange}
+              />
+              <EventFiltersBar
+                time={time}
+                onTimeChange={handleTimeChange}
+                customDateRange={customDateRange}
+                onCustomDateSave={handleCustomDateSave}
+                eventType={eventType}
+                onEventTypeChange={handleEventTypeChange}
+                category={category}
+                onCategoryChange={handleCategoryChange}
+                selectedGenres={selectedGenres}
+                onGenresChange={handleGenresChange}
+              />
+            </div>
+            {/* Right: sort — always visible in same row */}
+            <div className="flex-shrink-0">
+              <SortDropdown sort={sort} onSortChange={handleSortChange} />
+            </div>
           </div>
         </div>
 
-        {/* Events List with Pagination */}
         <EventsListWithPagination
-          events={data}
-          pagination={pagination}
-          isLoading={isLoading}
+          events={allEvents}
+          isLoading={isInitialLoad}
           error={error}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadNextPage}
         />
       </div>
     </div>

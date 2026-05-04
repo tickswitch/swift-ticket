@@ -32,24 +32,37 @@ export interface SellTicketData {
   account_holder_name?: string;
   phone_number?: string;
   bank_account_number?: string;
+  originalFaceValue?: number;
+  has_specific_seats?: boolean;
+  entrance?: string;
+  row?: string;
+  seat?: string;
+  section?: string;
   // Store file metadata instead of actual files
   ticket_file_metadata?: FileMetadata[];
 }
 
 interface SellTicketState {
   data: SellTicketData;
+  uploadedFiles: File[];
 }
 
 const initialState: SellTicketState = {
   data: {},
+  uploadedFiles: [],
 };
 
 // Load from localStorage if exists
-const persistedState = (() => {
+const persistedState: SellTicketState = (() => {
   try {
     const saved = localStorage.getItem("sellTicket");
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return {
+        data: parsed.data ?? {},
+        // Files cannot be serialised; always start empty on load
+        uploadedFiles: [],
+      };
     }
     return initialState;
   } catch {
@@ -63,19 +76,22 @@ const sellTicketSlice = createSlice({
   reducers: {
     updateData: (state, action: PayloadAction<Partial<SellTicketData>>) => {
       state.data = { ...state.data, ...action.payload };
-      // Save to localStorage (now all data is serializable)
-      localStorage.setItem("sellTicket", JSON.stringify(state));
+      // Save to localStorage (only persist `data`, not uploadedFiles)
+      localStorage.setItem(
+        "sellTicket",
+        JSON.stringify({ data: state.data })
+      );
+    },
+    setUploadedFiles: (state, action: PayloadAction<File[]>) => {
+      state.uploadedFiles = action.payload;
     },
     resetData: (state) => {
       state.data = {};
+      state.uploadedFiles = [];
       localStorage.removeItem("sellTicket");
-      // Also clear the global file storage
-      if (typeof window !== 'undefined') {
-        delete window.uploadedTicketFiles;
-      }
     },
   },
 });
 
-export const { updateData, resetData } = sellTicketSlice.actions;
+export const { updateData, setUploadedFiles, resetData } = sellTicketSlice.actions;
 export default sellTicketSlice.reducer;

@@ -26,11 +26,6 @@ import Loader from "../Common/Loader";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 
-// Extend Window interface to include uploadedTicketFiles
-interface Window {
-  uploadedTicketFiles?: File[];
-}
-
 const ReviewAndFinish = () => {
   const [isOpen, setIsColse] = useState<boolean>(false);
   const [isOpen2, setIsColse2] = useState<boolean>(false);
@@ -38,6 +33,9 @@ const ReviewAndFinish = () => {
   const navigate: NavigateFunction = useNavigate();
   const dispatch = useDispatch();
   const data = useSelector((state: RootState) => state.sellTicket.data);
+  const uploadedFiles = useSelector(
+    (state: RootState) => state.sellTicket.uploadedFiles
+  );
   const token = localStorage.getItem("token");
   console.log("data in review and data", data);
 
@@ -144,10 +142,10 @@ const ReviewAndFinish = () => {
   const handleSubmit = () => {
     const formData = new FormData();
 
-    // Get files from global variable (where they are stored as actual File objects)
-    const ticketFiles = window.uploadedTicketFiles;
+    // Get files from Redux store (where they are stored as actual File objects)
+    const ticketFiles = uploadedFiles;
 
-    console.log("Global ticket files:", ticketFiles);
+    console.log("Redux ticket files:", ticketFiles);
 
     // Append ticket files
     if (ticketFiles && Array.isArray(ticketFiles) && ticketFiles.length > 0) {
@@ -166,7 +164,7 @@ const ReviewAndFinish = () => {
         }
       });
     } else {
-      console.error("No ticket files found in global storage");
+      console.error("No ticket files found in Redux store");
       toast.error("No ticket files found. Please upload files again.");
       return;
     }

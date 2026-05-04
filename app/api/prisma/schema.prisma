@@ -116,6 +116,12 @@ model ResaleTicket {
   sold_quantity        Int              @default(0)
   original_price       Decimal          @db.Decimal(10, 2)
   price                Decimal          @db.Decimal(10, 2)
+  originalFaceValue    Decimal          @map("original_face_value") @db.Decimal(10, 2)
+  maxAllowedPrice      Decimal          @map("max_allowed_price") @db.Decimal(10, 2)
+  buyerFee             Decimal?         @map("buyer_fee") @db.Decimal(10, 2)
+  sellerFee            Decimal?         @map("seller_fee") @db.Decimal(10, 2)
+  sellerReceives       Decimal?         @map("seller_receives") @db.Decimal(10, 2)
+  totalBuyerPays       Decimal?         @map("total_buyer_pays") @db.Decimal(10, 2)
   ticket_type          String           @default("Regular")
   seat_info            String?
   additional_info      String?

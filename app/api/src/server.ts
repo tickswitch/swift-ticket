@@ -1,6 +1,8 @@
+// Must be first: loads .env before any other module reads process.env
+import './config/env';
+
 import express, { Express } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 
 // Routes
@@ -15,9 +17,10 @@ import publicRoutes from './modules/public/public.routes';
 // Middleware
 import globalErrorHandler from './middleware/errorHandler';
 
-dotenv.config();
-
 const app: Express = express();
+
+// Trust the first proxy hop (Render/Heroku/etc.) so req.ip and rate-limit keys reflect the real client
+app.set('trust proxy', 1);
 
 // Middlewares
 app.use(cors());

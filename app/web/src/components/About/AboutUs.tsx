@@ -53,7 +53,7 @@ const AboutUs = () => {
     });
   }
   return (
-    <div className="bg-[#F4F4F4] py-[50px]">
+    <div className="bg-[#F4F4F4] py-[50px] hero-orbs">
       <Container>
         <div>
           <p className="text-black sm:text-4xl text-3xl font-proximaSemiBold">
