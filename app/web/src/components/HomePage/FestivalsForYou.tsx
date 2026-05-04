@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { GetData } from "@/API/API";
 import { useQuery } from "@tanstack/react-query";
-import Loader from "../Common/Loader";
+import { SkeletonEventCardRow } from "@/components/Common/SkeletonEventCard";
 import { formatShortDate } from "@/lib/formatDate";
 import { TimerIcon } from "lucide-react";
 import { sortByDistance } from "@/lib/sortByDistance";
@@ -34,7 +34,7 @@ const FestivalsForYou = () => {
     if (festivals.length > 0) registerIds(festivals.map((f: any) => f.id));
   }, [festivals, registerIds]);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <SkeletonEventCardRow />;
   if (!data || (data as any[]).length === 0) return null;
 
   return (

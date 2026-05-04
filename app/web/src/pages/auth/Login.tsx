@@ -56,6 +56,8 @@ const Login = () => {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -176,10 +178,11 @@ const Login = () => {
 
     try {
       setIsPending(true);
-      await login(data.email, data.password);
+      await login(data.email, data.password, { silent: true });
       navigate(redirectTo);
     } catch (error) {
       console.error("Login error:", error);
+      setLoginError("Incorrect password — please try again");
     } finally {
       setIsPending(false);
     }
@@ -197,7 +200,6 @@ const Login = () => {
         { email: otpEmail },
         { timeout: 30000 }
       );
-      toast.success("OTP sent to your email");
       setOtpCode("");
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setOtpScreen("enter-otp");
@@ -234,15 +236,11 @@ const Login = () => {
       if (userData) {
         localStorage.setItem("user", JSON.stringify(userData));
       }
-      toast.success(res?.data?.message || "Login successful");
       navigate(redirectTo);
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-      const msg =
-        axios.isAxiosError(error) && error.response?.data?.message
-          ? String(error.response.data.message)
-          : "Failed to verify OTP";
-      toast.error(msg);
+      console.error("OTP verify error:", error);
+      setOtpError("Incorrect code — please try again");
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -414,8 +412,19 @@ const Login = () => {
                         required
                         data-testid="password-input"
                         className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2.5 sm:py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
+                        style={loginError ? { border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)' } : undefined}
                         placeholder="Enter your password"
+                        onChange={() => setLoginError(null)}
                       />
+                      {loginError && (
+                        <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ef4444', margin: '-4px 0 10px' }}>
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="6.5" r="6" stroke="#ef4444"/>
+                            <path d="M6.5 4v3M6.5 9v.5" stroke="#ef4444" strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
+                          {loginError}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 text-white/80 text-sm sm:text-base">
@@ -502,6 +511,16 @@ const Login = () => {
                     data-testid="email-enter-otp"
                   >
                     <div className="flex flex-col gap-2">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '10px', marginBottom: '14px' }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke="#22c55e" strokeWidth="1.2"/>
+                          <path d="M5 8.5l2 2 4-4" stroke="#22c55e" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <div>
+                          <p style={{ fontSize: '12px', fontWeight: 500, color: '#22c55e', margin: 0 }}>OTP sent</p>
+                          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Check {otpEmail}</p>
+                        </div>
+                      </div>
                       <p className="text-white/80 text-sm sm:text-base">
                         We sent a 6-digit code to{" "}
                         <span className="text-white font-medium">
@@ -512,9 +531,10 @@ const Login = () => {
                         <InputOTP
                           maxLength={6}
                           value={otpCode}
-                          onChange={(val) =>
-                            setOtpCode(val.replace(/\D/g, "").slice(0, 6))
-                          }
+                          onChange={(val) => {
+                            setOtpCode(val.replace(/\D/g, "").slice(0, 6));
+                            if (otpError) setOtpError(null);
+                          }}
                           data-testid="otp-input"
                         >
                           <InputOTPGroup className="gap-2">
@@ -528,6 +548,15 @@ const Login = () => {
                           </InputOTPGroup>
                         </InputOTP>
                       </div>
+                      {otpError && (
+                        <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ef4444', margin: '-4px 0 10px' }}>
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="6.5" r="6" stroke="#ef4444"/>
+                            <path d="M6.5 4v3M6.5 9v.5" stroke="#ef4444" strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
+                          {otpError}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between text-white/80 text-sm sm:text-base">
