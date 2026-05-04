@@ -258,10 +258,10 @@ const Login = () => {
   };
 
   const tabButtonCls = (isActive: boolean) =>
-    `flex-1 py-2 sm:py-2.5 text-sm sm:text-base font-medium rounded-full transition-all duration-200 ${
+    `flex-1 py-1.5 text-sm sm:text-base font-medium rounded-lg transition-all duration-200 ${
       isActive
-        ? "bg-white text-black"
-        : "bg-transparent text-white/80 hover:text-white"
+        ? "bg-white/[0.12] text-white"
+        : "bg-transparent text-white/40"
     }`;
 
   return (
@@ -279,12 +279,21 @@ const Login = () => {
 
       {/* Scrollable Content */}
       <div className="relative z-10 min-h-screen">
-        <div className="flex items-center justify-center min-h-screen p-4 py-8">
-          <div className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl py-20 xl:py-0">
-            <div className="rounded-4xl border p-4 sm:p-6 lg:p-8 bg-black/20 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3 sm:gap-4">
+        <div className="flex items-start justify-center min-h-screen px-4 pt-10 pb-10">
+          <div className="w-full max-w-md">
+            <div className="rounded-2xl border border-white/10 p-7 bg-white/[0.06] backdrop-blur-sm w-full max-w-md">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect x="1" y="4" width="12" height="8" rx="2" stroke="white" strokeWidth="1.3"/>
+                      <path d="M4 4V3a3 3 0 016 0v1" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-slate-100">SwiftTickets</span>
+                </div>
                 <p className="text-2xl sm:text-3xl lg:text-[32px] font-semibold text-white text-center">
-                  Log in
+                  Welcome back
                 </p>
                 <p className="text-white pb-2 sm:pb-3 text-center text-sm sm:text-base">
                   Don't have an account?{" "}
@@ -297,43 +306,34 @@ const Login = () => {
                 </p>
 
                 {/* Social Login Buttons */}
-                <div className="w-full space-y-2 sm:space-y-3">
+                <div className="grid grid-cols-3 gap-2 mb-3 w-full">
                   <Button
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading}
                     data-testid="google-login-btn"
-                    className="w-full bg-white py-3 sm:py-4 h-10 sm:h-12 hover:bg-red-300 transition-all duration-300 hover:text-black rounded-full flex items-center justify-center gap-2 text-black text-base sm:text-lg font-medium"
+                    className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
                   >
                     {isGoogleLoading ? (
-                      <BeatLoader color="#000000" size={6} />
+                      <BeatLoader color="#ffffff" size={6} />
                     ) : (
                       <>
                         <GoogleIcon />
-                        <span className="hidden sm:inline">
-                          Continue with Google
-                        </span>
-                        <span className="sm:hidden">Google</span>
+                        <span>Google</span>
                       </>
                     )}
                   </Button>
-                  <Button className="w-full bg-white py-3 sm:py-4 h-10 sm:h-12 hover:bg-blue-300 transition-all duration-300 rounded-full flex items-center justify-center gap-2 text-black text-base sm:text-lg font-medium">
+                  <Button className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200">
                     <FacebookIcon />
-                    <span className="hidden sm:inline">
-                      Continue with Facebook
-                    </span>
-                    <span className="sm:hidden">Facebook</span>
+                    <span>Facebook</span>
                   </Button>
-                  <Button className="w-full bg-white py-3 sm:py-4 h-10 sm:h-12 hover:bg-gray-600 hover:text-white transition-all duration-300 rounded-full flex items-center justify-center gap-2 text-black text-base sm:text-lg font-medium">
+                  <Button className="bg-white/[0.07] border border-white/10 rounded-xl py-2.5 flex items-center justify-center gap-1.5 text-xs font-medium text-white/90 hover:bg-white/10 transition-all duration-200">
                     <AppleIcon />
-                    <span className="hidden sm:inline">
-                      Continue with Apple
-                    </span>
-                    <span className="sm:hidden">Apple</span>
+                    <span>Apple</span>
                   </Button>
                 </div>
               </div>
 
-              <div className="pt-3 sm:pt-4 flex flex-col gap-3 sm:gap-4">
+              <div className="pt-3 sm:pt-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <hr className="bg-gray-600 border-0 h-0.5 w-full" />
                   <p className="text-nowrap text-white text-sm sm:text-base lg:text-lg px-2">
@@ -346,7 +346,7 @@ const Login = () => {
                 <div
                   role="tablist"
                   aria-label="Login method"
-                  className="flex gap-2 p-1 rounded-full border border-white/30 bg-white/5"
+                  className="grid grid-cols-2 p-1 rounded-xl border border-white/10 bg-white/5 mb-3"
                 >
                   <button
                     type="button"
@@ -375,7 +375,7 @@ const Login = () => {
 
                 {activeTab === "email" && (
                   <form
-                    className="flex flex-col gap-3 sm:gap-4"
+                    className="flex flex-col gap-3"
                     onSubmit={handleLogin}
                     data-testid="email-login-form"
                   >
@@ -389,33 +389,43 @@ const Login = () => {
                         autoComplete="email"
                         required
                         data-testid="email-input"
-                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2.5 sm:py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
+                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
                         placeholder="Enter your email"
                       />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-white/80 text-sm sm:text-base flex items-center justify-between">
-                        Password{" "}
+                      <div className="flex justify-between items-center">
+                        <label className="text-white/80 text-sm sm:text-base">
+                          Password
+                        </label>
+                        <Link
+                          to={"/auth/forgot-password"}
+                          className="underline hover:text-white transition-colors text-white/80 text-sm sm:text-base"
+                        >
+                          Forgot Password?
+                        </Link>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPass ? "text" : "password"}
+                          name="password"
+                          autoComplete="current-password"
+                          required
+                          data-testid="password-input"
+                          className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base pr-14"
+                          style={loginError ? { border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)' } : undefined}
+                          placeholder="Enter your password"
+                          onChange={() => setLoginError(null)}
+                        />
                         <button
                           onClick={() => setShowPass(!showPass)}
                           type="button"
-                          className="flex items-center gap-1 bg-transparent hover:bg-transparent text-white/60 hover:text-white text-xs sm:text-sm transition-colors"
+                          className="flex items-center gap-1 bg-transparent hover:bg-transparent text-white/60 hover:text-white text-xs sm:text-sm transition-colors absolute right-3 top-1/2 -translate-y-1/2"
                         >
                           <EyeIcon /> {showPass ? "Hide" : "Show"}
                         </button>
-                      </label>
-                      <input
-                        type={showPass ? "text" : "password"}
-                        name="password"
-                        autoComplete="current-password"
-                        required
-                        data-testid="password-input"
-                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2.5 sm:py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
-                        style={loginError ? { border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)' } : undefined}
-                        placeholder="Enter your password"
-                        onChange={() => setLoginError(null)}
-                      />
+                      </div>
                       {loginError && (
                         <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ef4444', margin: '-4px 0 10px' }}>
                           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -425,23 +435,6 @@ const Login = () => {
                           {loginError}
                         </p>
                       )}
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 text-white/80 text-sm sm:text-base">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="remember_me"
-                          className="w-4 h-4 text-primary001 bg-white/10 border-white/50 rounded focus:ring-primary001"
-                        />
-                        <label htmlFor="remember_me">Remember Me</label>
-                      </div>
-                      <Link
-                        to={"/auth/forgot-password"}
-                        className="underline hover:text-white transition-colors"
-                      >
-                        Forgot Password?
-                      </Link>
                     </div>
 
                     <div className="pt-3 sm:pt-5">
@@ -465,7 +458,7 @@ const Login = () => {
 
                 {activeTab === "emailOtp" && otpScreen === "enter-email" && (
                   <div
-                    className="flex flex-col gap-3 sm:gap-4"
+                    className="flex flex-col gap-3"
                     data-testid="otp-enter-email"
                   >
                     <div className="flex flex-col gap-2">
@@ -482,7 +475,7 @@ const Login = () => {
                         value={otpEmail}
                         onChange={(e) => setOtpEmail(e.target.value.trim())}
                         data-testid="otp-email-input"
-                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2.5 sm:py-3 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
+                        className="border border-white/50 bg-white/10 backdrop-blur-sm rounded-md px-3 py-2 w-full text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all duration-200 text-sm sm:text-base"
                         placeholder="Enter your email"
                       />
                     </div>
@@ -507,7 +500,7 @@ const Login = () => {
 
                 {activeTab === "emailOtp" && otpScreen === "enter-otp" && (
                   <div
-                    className="flex flex-col gap-3 sm:gap-4"
+                    className="flex flex-col gap-3"
                     data-testid="email-enter-otp"
                   >
                     <div className="flex flex-col gap-2">
