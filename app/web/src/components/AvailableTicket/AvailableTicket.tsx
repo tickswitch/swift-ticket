@@ -9,7 +9,7 @@ import {
 } from "@/assets";
 import Container from "@/components/Common/Container";
 import { Switch } from "@/components/ui/switch";
-import { Link, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { TickertAlertIcons } from "../TicketAlerts/TickertAlertIcons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { GetSingleData, PostData } from "@/API/API";
@@ -17,6 +17,15 @@ import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import RazorpayCheckout from "@/components/PaymentMethod/RazorpayCheckout";
+import PaymentSuccessScreen from "@/components/PaymentMethod/PaymentSuccessScreen";
  
 
 const tickets = [
@@ -109,9 +118,24 @@ const tickets = [
 
 localStorage.setItem("availableTickets", JSON.stringify(tickets));
 
+type SelectedTicket = {
+  id: number | string;
+  price: number;
+  original_face_value?: number;
+  originalFaceValue?: number;
+  ticket_type?: string;
+};
+
 const AvailableTicket = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isNotificationOn, setIsNotificationOn] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+  const [paymentId, setPaymentId] = useState("");
+  const [selectedTicket, setSelectedTicket] = useState<SelectedTicket | null>(
+    null
+  );
+  const navigate = useNavigate();
   const { id, name } = useParams();
   const { data, isLoading, error } = useQuery({
     queryKey: ["tickets-by-types", id, name],
@@ -237,11 +261,28 @@ const AvailableTicket = () => {
         <div className="grid md:grid-cols-2 gap-2  px-5">
           {data?.tickets?.map((ticket) => {
             console.log("url", ticket?.user?.avatar_url);
+            const handleBuyNow = () => {
+              const token = localStorage.getItem("token");
+              if (!token) {
+                navigate(
+                  `/auth/login?returnUrl=${encodeURIComponent(
+                    window.location.pathname
+                  )}`
+                );
+                return;
+              }
+              setSelectedTicket(ticket);
+              setPaymentDone(false);
+              setPaymentId("");
+              setShowPayment(true);
+            };
             return (
-              <Link
+              <button
+                type="button"
                 key={ticket.id}
-                to={`/addtocart/${ticket?.id}`}
-                state={ticket}
+                onClick={handleBuyNow}
+                data-testid={`buy-now-btn-${ticket.id}`}
+                className="text-left"
               >
                 <div className="cursor-pointer mt-3 bg-white h-[98px] w-full rounded-xl px-3 py-2 flex items-center justify-between">
                   <div className=" flex items-center gap-3">
@@ -274,10 +315,70 @@ const AvailableTicket = () => {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </button>
             );
           })}
         </div>
+
+        {/* Razorpay payment sheet */}
+        <Sheet
+          open={showPayment}
+          onOpenChange={(open) => {
+            setShowPayment(open);
+            if (!open) {
+              setPaymentDone(false);
+              setPaymentId("");
+            }
+          }}
+        >
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-xl bg-[#F4F4F4] overflow-y-auto"
+            data-testid="payment-sheet"
+          >
+            <SheetHeader>
+              <SheetTitle className="sr-only">Complete your payment</SheetTitle>
+              <SheetDescription className="sr-only">
+                Order summary and secure Razorpay checkout
+              </SheetDescription>
+            </SheetHeader>
+            <div className="p-4 sm:p-6 flex items-start justify-center">
+              {selectedTicket && !paymentDone && (
+                <RazorpayCheckout
+                  ticketId={String(selectedTicket.id)}
+                  listingPrice={Number(selectedTicket.price) || 0}
+                  faceValue={
+                    Number(
+                      selectedTicket.original_face_value ??
+                        selectedTicket.originalFaceValue ??
+                        selectedTicket.price
+                    ) || 0
+                  }
+                  eventName={data?.event?.title ?? "Your ticket"}
+                  onSuccess={(pid) => {
+                    setPaymentId(pid);
+                    setPaymentDone(true);
+                  }}
+                  onError={(msg) => {
+                    toast.error(msg);
+                    setShowPayment(false);
+                  }}
+                  onCancel={() => setShowPayment(false)}
+                />
+              )}
+              {selectedTicket && paymentDone && (
+                <PaymentSuccessScreen
+                  paymentId={paymentId}
+                  eventName={data?.event?.title ?? "Your ticket"}
+                  onDone={() => {
+                    setShowPayment(false);
+                    navigate("/tickets");
+                  }}
+                />
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </Container>
     </div>
   );

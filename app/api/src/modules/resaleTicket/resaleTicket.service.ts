@@ -22,6 +22,25 @@ interface TicketStorePayload {
 }
 
 const store = async (userId: number, payload: TicketStorePayload, filePath: string) => {
+  // Enforce 120% price cap (SwiftTickets core business rule)
+  const MAX_MARKUP = 1.2;
+  const faceValue = Number(payload.original_price);
+  const listingPrice = Number(payload.price);
+  const maxAllowed = Math.floor(faceValue * MAX_MARKUP);
+
+  if (listingPrice > maxAllowed) {
+    throw new AppError(
+      `Listing price ₹${listingPrice} exceeds the maximum allowed resale price of ₹${maxAllowed} (120% of face value ₹${faceValue})`,
+      400
+    );
+  }
+
+  // Computed fee / payout fields
+  const buyerFee = Math.ceil(listingPrice * 0.05);
+  const sellerFee = Math.ceil(listingPrice * 0.05);
+  const totalBuyerPays = listingPrice + buyerFee;
+  const sellerReceives = listingPrice - sellerFee;
+
   return prisma.$transaction(async (tx) => {
     // 1. Store financial info
     let profile = await tx.financialProfile.findFirst({ where: { user_id: userId } });
@@ -88,6 +107,12 @@ const store = async (userId: number, payload: TicketStorePayload, filePath: stri
         quantity: 1, // hardcoded per Laravel
         original_price: payload.original_price,
         price: payload.price,
+        originalFaceValue: faceValue,
+        maxAllowedPrice: maxAllowed,
+        buyerFee,
+        sellerFee,
+        sellerReceives,
+        totalBuyerPays,
         start_date: payload.start_date,
         end_date: payload.end_date,
         time: payload.time,

@@ -9,6 +9,10 @@ import {
   verifyOtpSchema,
   resetPasswordSchema,
   resendOtpSchema,
+  sendPhoneOtpSchema,
+  verifyPhoneOtpSchema,
+  sendEmailOtpSchema,
+  verifyEmailOtpSchema,
 } from './auth.validation';
 
 const register = catchAsync(async (req: Request, res: Response) => {
@@ -130,6 +134,90 @@ const resendOtp = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const sendPhoneOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = sendPhoneOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  await authService.sendPhoneOtp(parsed.data.phone);
+
+  return res.status(200).json({
+    success: true,
+    message: 'OTP sent',
+  });
+});
+
+const verifyPhoneOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = verifyPhoneOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  const { user, token } = await authService.verifyPhoneOtp(parsed.data.phone, parsed.data.otp);
+
+  return res.status(200).json({
+    status: true,
+    message: 'Phone login successful.',
+    token,
+    userData: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      phone: user.phone,
+      avatar: user.avatar
+        ? `${process.env.APP_URL}/uploads/${user.avatar}`
+        : null,
+    },
+    token_type: 'Bearer',
+    code: 200,
+  });
+});
+
+const sendEmailOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = sendEmailOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  await authService.sendEmailOtp(parsed.data.email);
+
+  return res.status(200).json({
+    status: true,
+    message: 'OTP sent to your email.',
+    code: 200,
+  });
+});
+
+const verifyEmailOtp = catchAsync(async (req: Request, res: Response) => {
+  const parsed = verifyEmailOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return errorResponse(res, parsed.error.errors[0].message, 422);
+  }
+
+  const { user, token } = await authService.verifyEmailOtp(parsed.data.email, parsed.data.otp);
+
+  return res.status(200).json({
+    status: true,
+    message: 'Login successful.',
+    token,
+    userData: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      avatar: user.avatar
+        ? `${process.env.APP_URL}/uploads/${user.avatar}`
+        : null,
+    },
+    token_type: 'Bearer',
+    code: 200,
+  });
+});
+
 export const authController = {
   register,
   login,
@@ -138,4 +226,8 @@ export const authController = {
   verifyOtp,
   resetPassword,
   resendOtp,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  sendEmailOtp,
+  verifyEmailOtp,
 };

@@ -45,7 +45,6 @@ const BankDetail = () => {
         bank_account_number: data?.bank_account_number,
       })
     );
-    navigate("/review-finish");
     gotoEditWithNextPage();
   };
   console.log(watch("example"));

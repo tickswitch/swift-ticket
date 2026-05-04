@@ -8,37 +8,102 @@ import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { TicketIcons } from "@/components/TicketAlerts/TickertAlertIcons";
 import { useDateFormat } from "@/lib/formatDate";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { TicketBadge } from "@/components/Common/TicketBadge";
+import { useState, useEffect } from "react";
+import { filterParkingEvents } from "@/utils/filterParkingEvents";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { GenreFiltersBar } from "@/components/HomePage/GenreFiltersBar";
 
 const Events = () => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Local filter state (only active on genre pages)
+  const [filterPeriod, setFilterPeriod] = useState("anytime");
+  const [filterSort, setFilterSort] = useState("date,asc");
+  const [filterCategory, setFilterCategory] = useState("Category");
+
   const [searchParams] = useSearchParams();
-  const period = searchParams.get("period");
+  const urlPeriod = searchParams.get("period");
   const venue = searchParams.get("venue");
   const genre = searchParams.get("genre");
   const lat = searchParams.get("lat");
   const lon = searchParams.get("lng");
-  const { data, isLoading, error } = useQuery({
-    // queryKey: period ? ["events", { period }] : ["events"],
-    queryKey: ["events", currentPage, period, venue, genre, lat, lon],
-    // queryKey: ["ev"],
-    queryFn: () =>
-      GetSingleData(
-        period
-          ? `events?period=${period}&lat=${lat}&lng=${lon}&radius=50`
-          : venue
-          ? `events?venue=${venue}&lat=${lat}&lng=${lon}&radius=50`
-          : genre
-          ? `events/by-genre/${genre}`
-          : `events?lat=${lat}&lng=${lon}`
-      ),
-  });
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+
+  const resetPages = () => {
+    setCurrentPage(0);
+    setAllEvents([]);
+    setHasMore(true);
   };
-  console.log("log", data?.pagination?.totalPages);
-  return isLoading ? (
+
+  // Reset when URL params change
+  useEffect(() => { resetPages(); }, [urlPeriod, venue, genre, lat, lon]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset when local filters change
+  useEffect(() => { resetPages(); }, [filterPeriod, filterSort, filterCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const buildUrl = (page: number) => {
+    const locParam = lat && lon ? `&lat=${lat}&lng=${lon}&radius=150` : "";
+    const sortParam = `&sort=${filterSort}`;
+
+    if (urlPeriod) return `events?period=${urlPeriod}${locParam}&page=${page}`;
+    if (venue)     return `events?venue=${venue}${locParam}&page=${page}`;
+
+    if (genre) {
+      // Always route through filterEvents so period + category + sort all work consistently
+      // For "anytime", send a 2-year window so the backend doesn't restrict to today
+      let dateParam: string;
+      if (filterPeriod === 'anytime') {
+        const now = new Date();
+        const future = new Date(now);
+        future.setFullYear(future.getFullYear() + 2);
+        const from = now.toISOString().split('T')[0];
+        const to   = future.toISOString().split('T')[0];
+        dateParam = `period=custom&from=${from}&to=${to}`;
+      } else {
+        dateParam = `period=${filterPeriod}`;
+      }
+      // Category selection overrides the original genre (e.g. "Concerts" replaces "festival")
+      const classificationParam = filterCategory !== 'Category'
+        ? `genre=${encodeURIComponent(filterCategory)}`
+        : `genre=${genre}`;
+      return `events?${dateParam}&${classificationParam}${locParam}${sortParam}&page=${page}&size=20`;
+    }
+
+    return `events${locParam ? '?' + locParam.slice(1) : '?'}${locParam ? '&' : ''}page=${page}`;
+  };
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["events", currentPage, urlPeriod, venue, genre, lat, lon, filterPeriod, filterSort, filterCategory],
+    queryFn: () => GetSingleData(buildUrl(currentPage)),
+  });
+
+  useEffect(() => {
+    const raw: any[] = (data as any)?.data ?? [];
+    if (!raw.length && currentPage === 0) return;
+    const newFiltered = filterParkingEvents(raw);
+    if (currentPage === 0) {
+      setAllEvents(newFiltered);
+    } else {
+      setAllEvents((prev) => {
+        const seen = new Set(prev.map((e) => e.id));
+        return [...prev, ...newFiltered.filter((e) => !seen.has(e.id))];
+      });
+    }
+    const totalPages: number = (data as any)?.pagination?.totalPages ?? 1;
+    setHasMore(currentPage < totalPages - 1);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadMore = () => {
+    if (!isLoading && hasMore) setCurrentPage((prev) => prev + 1);
+  };
+
+  const isInitialLoad = isLoading && allEvents.length === 0;
+  const isLoadingMore = isLoading && allEvents.length > 0;
+  const sentinelRef = useInfiniteScroll(loadMore, hasMore && !isLoading);
+
+  return isInitialLoad ? (
     <Loader />
   ) : error ? (
     <ErrorText />
@@ -47,12 +112,19 @@ const Events = () => {
       <Banner />
       <Container>
         <div className="pt-5">
-          {/* <div className="flex flex-col gap-2 items-center justify-center">
-            <Title className="text-center">IND vs PAK T20 Match 2025</Title>
-            <p>902 available * 2931 sold * 2136 wanted</p>
-          </div> */}
+          {/* Filter bar — only shown on genre "See all" pages */}
+          {genre && !urlPeriod && (
+            <GenreFiltersBar
+              period={filterPeriod}
+              onPeriodChange={setFilterPeriod}
+              category={filterCategory}
+              onCategoryChange={setFilterCategory}
+              sort={filterSort}
+              onSortChange={setFilterSort}
+            />
+          )}
           <div className="py-5 flex flex-col gap-2">
-            {data?.data?.length < 1 ? (
+            {allEvents.length === 0 ? (
               <div className="pt-5">
                 <div className="max-w-3xl w-full mx-auto rounded-xl p-8 flex flex-col items-center gap-4 border border-gray-400">
                   <div className="bg-gray-300 rounded-full p-4">
@@ -67,7 +139,6 @@ const Events = () => {
                     Got tickets to sell? Set up a listing for one of the fans
                     looking for a ticket.
                   </p>
-
                   <Link
                     to="/sell-tickets"
                     className="mt-2 bg-primary001/20 text-primary001 font-semibold px-4 py-1.5 rounded-full text-sm"
@@ -78,61 +149,35 @@ const Events = () => {
               </div>
             ) : (
               <>
-                <EntranceTickets data={data?.data} />
-                {/* You can also add pagination here in parent if needed */}
+                <EntranceTickets data={allEvents} />
 
-                {data?.pagination?.totalPages > 1 && (
-                  <div className="flex justify-center items-center mt-8 space-x-2">
+                {/* Sentinel for IntersectionObserver */}
+                <div ref={sentinelRef} className="h-1" />
+
+                {isLoadingMore && (
+                  <div className="flex justify-center py-6">
+                    <Loader />
+                  </div>
+                )}
+
+                {!isLoadingMore && hasMore && (
+                  <div className="flex justify-center py-6">
                     <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={cn(
-                        "px-4 py-2 rounded-md border border-gray-300 text-sm font-medium",
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-gray-50"
-                      )}
+                      onClick={loadMore}
+                      className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                     >
-                      Previous
-                    </button>
-
-                    {Array.from(
-                      { length: data.pagination.totalPages },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={cn(
-                          "px-3 py-2 rounded-md text-sm font-medium",
-                          currentPage === page
-                            ? "bg-primary001 text-white border border-primary001"
-                            : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        )}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === data.pagination.totalPages}
-                      className={cn(
-                        "px-4 py-2 rounded-md border border-gray-300 text-sm font-medium",
-                        currentPage === data.pagination.totalPages
-                          ? "bg-gray-100 cursor-not-allowed"
-                          : "bg-white text-gray-700 hover:bg-gray-50"
-                      )}
-                    >
-                      Next
+                      Load more
                     </button>
                   </div>
                 )}
+
+                {!hasMore && (
+                  <p className="text-center text-gray-400 text-sm py-6">
+                    No more events
+                  </p>
+                )}
               </>
             )}
-            {/* <NoEntranceTickets /> */}
-            {/* <Location /> */}
-            {}
             <PopularEvents />
           </div>
         </div>
@@ -143,49 +188,9 @@ const Events = () => {
 
 const Banner = () => {
   return (
-    <div className="w-full h-[600px] relative z-10">
+    <div className="w-full h-[600px] relative z-10 hero-orbs">
       <img src={image2} alt="" className="w-full h-full object-cover" />
       <div className="absolute top-0 left-0 w-full h-full bg-black/60 backdrop-blur-sm" />
-      {/* <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  h-full flex flex-col items-center justify-center">
-        <p className="font-proximaSemiBold text-2xl sm:text-[32px] md:text-[40px] lg:text-[56px] text-white">
-          IND vs PAK T20 Match 2025
-        </p>
-        <p className="font-proximaRegular text-base sm:text-lg md:text-xl lg:text-2xl text-white">
-          From the Abu Dhabi Grand Prix to Pirelli Gran Premio D'Italia, and
-          beyond
-        </p>
-        <div className="flex flex-wrap items-center justify-center  pt-3 gap-3">
-          <button className="flex items-center gap-2 font-semibold text-base md:text-lg xl:text-xl text-white">
-            <DateIcon />
-            25, Apr 2025
-          </button>
-          <button className="flex items-center gap-2 font-semibold text-base md:text-lg xl:text-xl text-white">
-            <LocationIcon />
-            25, Apr 2025
-          </button>
-          <button className="flex items-center gap-2 font-semibold text-base md:text-lg xl:text-xl text-white">
-            <StatidumIcon />
-            Stadium, India
-          </button>
-        </div>
-        <div className="flex items-center justify-center  pt-3 gap-3">
-          <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-            <InterestIcon />
-            Interested
-          </button>
-          <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-            <GoingIcon />
-            Going
-          </button>
-          <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-            <ShareIcon />
-            Share
-          </button>
-          <button className="flex items-center gap-2 text-sm bg-white px-3 py-1 rounded-full">
-            <ActionIcon />
-          </button>
-        </div>
-      </div> */}
       <div className="text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  h-full flex flex-col items-center justify-center">
         <p className="text-2xl lg:text-4xl font-semibold">Events List</p>
       </div>
@@ -193,130 +198,46 @@ const Banner = () => {
   );
 };
 
-const EntranceTickets = ({ data }) => {
+const EntranceTickets = ({ data }: { data: any[] }) => {
   const { formatDate } = useDateFormat();
   return (
     <div>
-      <div>
-        {/* <p className="text-2xl font-semibold pt-10 pb-5">Entrance tickets</p> */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {data &&
-            data?.map((event) => {
-              const formattedDate = formatDate(event?.end_date, event?.time);
-              console.log("timesss", event?.start_date, event?.time);
-              return (
-                <Link
-                  key={event?.id}
-                  to={`/event-details/${event?.id}`}
-                  className="flex items-center justify-start gap-3 bg-white rounded-xl p-5"
-                >
-                  <img
-                    src={event?.image}
-                    alt=""
-                    className="w-32 h-32 rounded-xl object-cover"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {data.map((event) => {
+          const formattedDate = formatDate(event?.end_date, event?.time);
+          return (
+            <Link
+              key={event?.id}
+              to={`/event-details/${event?.id}`}
+              className="flex items-center justify-start gap-3 bg-white rounded-xl p-5"
+            >
+              <img
+                src={event?.image}
+                alt=""
+                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                data-testid="event-list-card-thumbnail"
+              />
+              <div className="flex flex-col gap-1 min-w-0 flex-1">
+                <p className="font-semibold text-base leading-tight line-clamp-1">
+                  {event?.title || ""}
+                </p>
+                <p className="text-gray-500 text-sm truncate">
+                  {event?.venue}, {event?.location}
+                </p>
+                <p className="text-sm text-gray-500">{formattedDate}</p>
+                <div className="mt-1">
+                  <TicketBadge
+                    count={event?.available_quantity}
+                    data-testid={`ticket-alerts-event-card-ticket-count-${event?.id}`}
                   />
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xl md:text-2xl font-semibold">
-                      {event?.title || ""}
-                    </p>
-                    <p className="text-secondaryText001">
-                      {event?.venue}, {event?.location}
-                    </p>
-                    <p>{formattedDate}</p>
-                    <p className="flex items-center gap-2 text-primary001">
-                      <svg
-                        aria-label="TicketAlt"
-                        width="16"
-                        height="16"
-                        fill="currentcolor"
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        stroke-linejoin="round"
-                        stroke-miterlimit="1.414"
-                        xmlns="http://www.w3.org/2000/svg"
-                        role="presentation"
-                        focusable="false"
-                        viewBox="0 0 32 32"
-                        preserveAspectRatio="xMidYMid meet"
-                      >
-                        <path d="M6.305 5.783c0-2.271 1.841-4.112 4.112-4.112h12.792c2.271 0 4.112 1.841 4.112 4.112v12.322l-0.782 0.371c-0.621 0.295-1.045 0.925-1.045 1.652s0.424 1.357 1.045 1.652l0.782 0.372v4.829c0 2.271-1.841 4.112-4.112 4.112h-12.792c-2.271 0-4.112-1.841-4.112-4.112v-4.829l0.783-0.372c0.62-0.295 1.045-0.925 1.045-1.652s-0.425-1.357-1.045-1.652l-0.783-0.371zM10.416 4.413c-0.757 0-1.371 0.614-1.371 1.371v10.691c1.108 0.832 1.828 2.159 1.828 3.655s-0.72 2.822-1.828 3.655v3.198c0 0.757 0.614 1.371 1.371 1.371h12.792c0.757 0 1.371-0.614 1.371-1.371v-3.198c-1.108-0.833-1.827-2.159-1.827-3.655s0.719-2.823 1.827-3.655v-10.691c0-0.757-0.614-1.371-1.371-1.371z"></path>
-                        <path d="M15.762 20.06c0 0.87-0.706 1.576-1.576 1.576s-1.576-0.706-1.576-1.576 0.706-1.576 1.576-1.576 1.576 0.706 1.576 1.576m5.254 0c0 0.87-0.706 1.576-1.576 1.576s-1.576-0.706-1.576-1.576 0.706-1.576 1.576-1.576 1.576 0.706 1.576 1.576"></path>
-                      </svg>
-                      {data?.available_quantity || "0"}
-                    </p>
-                  </div>
-                  {/* <p className="bg-[#FEC100] px-2 py-1 rounded-md w-fit">
-                  <span className="flex flex-col gap-1 text-white">
-                    <TicketIcons />
-                    03
-                  </span>
-                </p> */}
-                </Link>
-              );
-            })}
-        </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 };
-// const NoEntranceTickets = () => {
-//   return (
-//     <div className="">
-//       <div>
-//         <p className="text-2xl font-semibold pt-10 pb-5">
-//           Non-Entrance tickets
-//         </p>
-//         <p className="flex items-start gap-2 ">
-//           <span className="text-secondaryText001 font-medium text-xl pb-5">
-//             Available
-//           </span>{" "}
-//           <span className="text-xs flex items-center gap-1 bg-[#2FA75F] text-white w-fit p-1 rounded-md">
-//             <TicketIcons /> 06
-//           </span>
-//         </p>
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-//           <Link
-//             to={"/availabletickets"}
-//             className="flex items-center justify-between bg-white rounded-xl p-5"
-//           >
-//             <div className="flex flex-col gap-1">
-//               <p className="text-xl md:text-2xl font-semibold">
-//                 Mumbai Indians vs Sunrisers Hyderabad Fast Match
-//               </p>
-//               <p className="text-secondaryText001">
-//                 Thu, Apr 17. Wankhede Stadium, Mumbai
-//               </p>
-//             </div>
-//             <p className="bg-[#2FA75F] px-2 py-1 rounded-md w-fit">
-//               <span className="flex flex-col gap-1 text-white">
-//                 <TicketIcons />
-//                 03
-//               </span>
-//             </p>
-//           </Link>
-//           <Link
-//             to={"/availabletickets"}
-//             className="flex items-center justify-between bg-white rounded-xl p-5"
-//           >
-//             <div className="flex flex-col gap-1">
-//               <p className="text-xl md:text-2xl font-semibold">
-//                 Mumbai Indians vs Sunrisers Hyderabad Fast Match
-//               </p>
-//               <p className="text-secondaryText001">
-//                 Thu, Apr 17. Wankhede Stadium, Mumbai
-//               </p>
-//             </div>
-//             <p className="bg-[#2FA75F] px-2 py-1 rounded-md w-fit">
-//               <span className="flex flex-col gap-1 text-white">
-//                 <TicketIcons />
-//                 03
-//               </span>
-//             </p>
-//           </Link>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
 export default Events;

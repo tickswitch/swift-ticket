@@ -5,6 +5,17 @@ import { eventService } from "./event.service";
 import { AuthRequest } from "../../middleware/auth";
 import { z } from "zod";
 
+const getAllEvents = catchAsync(async (req: Request, res: Response) => {
+  const {
+    lat = "0", lng = "0", page = "0",
+    genre, sort,
+    period, category, type, from, to,
+    radius = "30",
+  } = req.query as Record<string, string>;
+  const result = await eventService.getAllEvents(lat, lng, Number(page), genre, sort, period, category, type, from, to, Number(radius));
+  return res.json({ status: true, ...result });
+});
+
 const filterEvents = catchAsync(async (req: Request, res: Response) => {
   const {
     period = "today",
@@ -19,8 +30,9 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
     size = 20,
     lat,
     lng,
-    radius = 50,
+    radius = 150,
     genre,
+    sort: userSort,
   } = req.query as Record<string, string>;
 
   const now = new Date();
@@ -31,13 +43,15 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
       start: startOf(addDays(now, 1), "day"),
       end: endOf(addDays(now, 1), "day"),
     },
-    "this-week": { start: startOf(now, "week"), end: endOf(now, "week") },
+    // Start from now so only upcoming events in the week are shown (not already-past days)
+    "this-week": { start: now, end: endOf(now, "week") },
     "next-week": {
       start: startOf(addDays(now, 7), "week"),
       end: endOf(addDays(now, 7), "week"),
     },
     "this-weekend": { start: nextWeekday(now, 5), end: nextWeekday(now, 0) },
-    "this-month": { start: startOf(now, "month"), end: endOf(now, "month") },
+    // Start from now so only upcoming events this month are shown
+    "this-month": { start: now, end: endOf(now, "month") },
   };
 
   let start: Date, end: Date;
@@ -69,7 +83,7 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
     else params.keyword = query;
   }
   if (location && location.toLowerCase() !== "anywhere") params.city = location;
-  if (lat && lng) {
+  if (lat && lng && lat !== "undefined" && lng !== "undefined") {
     params.latlong = `${lat},${lng}`;
     params.radius = radius;
     params.unit = "miles";
@@ -77,13 +91,15 @@ const filterEvents = catchAsync(async (req: Request, res: Response) => {
   if (venue) params.keyword = venue;
   if (category) params.keyword = category;
   if (genre) params.classificationName = genre;
+  if (userSort) params.sort = userSort;
 
   const result = await eventService.filterEvents(params);
   return res.json({ status: true, ...result });
 });
 
 const search = catchAsync(async (req: Request, res: Response) => {
-  const data = await eventService.searchEvents(req.query.keyword as string);
+  const { keyword, lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.searchEvents(keyword, lat, lng);
   return res.json({ status: true, data });
 });
 
@@ -94,55 +110,31 @@ const getEventDetails = catchAsync(async (req: Request, res: Response) => {
 
 const trendingNearby = catchAsync(async (req: Request, res: Response) => {
   const { lat, lng, radius = "100" } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const data = await eventService.trendingNearby(lat, lng, Number(radius));
+  const data = await eventService.trendingNearby(lat ?? "", lng ?? "", Number(radius));
+  return res.json({ status: true, data });
+});
+
+const festivalsNearby = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng, radius = "150" } = req.query as Record<string, string>;
+  const data = await eventService.festivalsNearby(lat ?? "", lng ?? "", Number(radius));
   return res.json({ status: true, data });
 });
 
 const sportsinArea = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat,
-    lng,
-    radius = "100",
-    page = "0",
-  } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const result = await eventService.sportsinArea(
-    lat,
-    lng,
-    Number(radius),
-    Number(page),
-  );
+  const { lat, lng, radius = "100", page = "0" } = req.query as Record<string, string>;
+  const result = await eventService.sportsinArea(lat ?? "", lng ?? "", Number(radius), Number(page));
   return res.json({ status: true, ...result });
 });
 
 const concertsinArea = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat,
-    lng,
-    radius = "100",
-    page = "0",
-  } = req.query as Record<string, string>;
-  if (!lat || !lng)
-    return errorResponse(res, "Latitude and longitude are required", 422);
-  const result = await eventService.concertsinArea(
-    lat,
-    lng,
-    Number(radius),
-    Number(page),
-  );
+  const { lat, lng, radius = "100", page = "0" } = req.query as Record<string, string>;
+  const result = await eventService.concertsinArea(lat ?? "", lng ?? "", Number(radius), Number(page));
   return res.json({ status: true, ...result });
 });
 
 const popularEvents = catchAsync(async (req: Request, res: Response) => {
-  const {
-    lat = "0",
-    lng = "0",
-    radius = "100",
-  } = req.query as Record<string, string>;
-  const data = await eventService.popularEvents(lat, lng, Number(radius));
+  const { lat, lng, radius = "100" } = req.query as Record<string, string>;
+  const data = await eventService.popularEvents(lat ?? "", lng ?? "", Number(radius));
   return res.json({ status: true, data });
 });
 
@@ -151,26 +143,29 @@ const similarEvents = catchAsync(async (req: Request, res: Response) => {
   return res.json({ status: true, data });
 });
 
-const bestVenues = catchAsync(async (_req: Request, res: Response) => {
-  const data = await eventService.bestVenues();
+const bestVenues = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.bestVenues(lat, lng);
   return res.json({ status: true, data });
 });
 
 const citiesSearch = catchAsync(async (req: Request, res: Response) => {
   const data = await eventService.citiesSearch(
-    (req.query.keyword as string) ?? "",
+    ((req.query.query ?? req.query.keyword) as string) ?? "",
   );
   return res.json({ status: true, cities: data });
 });
 
-const eventsBygrouped = catchAsync(async (_req: Request, res: Response) => {
-  const data = await eventService.eventsBygrouped();
+const eventsBygrouped = catchAsync(async (req: Request, res: Response) => {
+  const { lat, lng } = req.query as Record<string, string>;
+  const data = await eventService.eventsBygrouped(lat, lng);
   return res.json({ status: true, data });
 });
 
 const getEventsByGenre = catchAsync(async (req: Request, res: Response) => {
-  const page = Number(req.query.page ?? 0);
-  const result = await eventService.getEventsByGenre(req.params.genre, page);
+  // Add sort support
+  const { page = "0", lat, lng, sort } = req.query as Record<string, string>;
+  const result = await eventService.getEventsByGenre(req.params.genre, Number(page), lat, lng, sort);
   return res.json({ status: true, ...result });
 });
 
@@ -211,6 +206,7 @@ const ticketAlert = catchAsync(async (req: AuthRequest, res: Response) => {
   const data = await eventService.ticketAlert(req.user!.id);
   return res.json({ status: true, data });
 });
+
 
 // ---- Date helpers ----
 function addDays(date: Date, days: number): Date {
@@ -253,10 +249,12 @@ function nextWeekday(date: Date, day: number): Date {
 }
 
 export const eventController = {
+  getAllEvents,
   filterEvents,
   search,
   getEventDetails,
   trendingNearby,
+  festivalsNearby,
   sportsinArea,
   concertsinArea,
   popularEvents,
