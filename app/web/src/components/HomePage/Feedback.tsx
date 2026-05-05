@@ -13,7 +13,7 @@ import "swiper/css/scrollbar";
 import Title from "../Common/Title";
 import { useQuery } from "@tanstack/react-query";
 import { GetSingleData } from "@/API/API";
-import Loader from "../Common/Loader";
+import { SkeletonEventCardRow } from "../Common/SkeletonEventCard";
 
 const Feedback: React.FC = () => {
   // Create refs using React.useRef instead of the imported useRef
@@ -100,7 +100,7 @@ const Feedback: React.FC = () => {
           }
         `}</style>
           {isLoading ? (
-            <Loader />
+            <SkeletonEventCardRow />
           ) : error ? (
             <p className="h-96 flex items-center justify-center">
               Something went wrong.

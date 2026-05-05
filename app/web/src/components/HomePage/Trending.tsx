@@ -18,7 +18,7 @@ import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { GetData } from "@/API/API";
 import { ImageProvider } from "../Common/ImageProvider"; 
-import Loader from "../Common/Loader";
+import { SkeletonEventCardRow } from "@/components/Common/SkeletonEventCard";
 import ErrorText from "../Common/ErrorText";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
@@ -96,7 +96,7 @@ const Trending: React.FC = () => {
         </div>
       </div>
       {isLoading ? (
-        <Loader />
+        <SkeletonEventCardRow />
       ) : error ? (
         <ErrorText />
       ) : data && data.length < 1 ? (
