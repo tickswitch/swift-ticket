@@ -12,7 +12,7 @@ import { Link } from "react-router";
 import Title from "../Common/Title";
 import { useQuery } from "@tanstack/react-query";
 import { GetData } from "@/API/API";
-import Loader from "@/components/Common/Loader";
+import { SkeletonEventCardRow } from "@/components/Common/SkeletonEventCard";
 import ErrorText from "@/components/Common/ErrorText";
 import { MapPinIcon, NavigationIcon, ExternalLinkIcon, BuildingIcon } from "lucide-react";
 
@@ -187,7 +187,7 @@ const ExploreVenues = () => {
         </div>
       )}
 
-      {hasLocation && isLoading && <Loader />}
+      {hasLocation && isLoading && <SkeletonEventCardRow />}
       {hasLocation && error && <ErrorText />}
 
       {hasLocation && !isLoading && !error && venues.length === 0 && (

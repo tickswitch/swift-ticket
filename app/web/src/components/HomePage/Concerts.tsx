@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { GetData } from "@/API/API";
 import { useQuery } from "@tanstack/react-query";
 import ErrorText from "../Common/ErrorText";
-import Loader from "../Common/Loader";
+import { SkeletonEventCardRow } from "@/components/Common/SkeletonEventCard";
 import { TimerIcon } from "lucide-react";
 import { useDateFormat, formatShortDate } from "@/lib/formatDate";
 import { sortByDistance } from "@/lib/sortByDistance";
@@ -51,7 +51,7 @@ const Concerts = () => {
         </div>
       </div>
       {isLoading ? (
-        <Loader />
+        <SkeletonEventCardRow />
       ) : error ? (
         <ErrorText>
           {error?.response?.data?.message || "Something went wrong."}

@@ -21,7 +21,7 @@ export interface User {
 // Auth context interface
 interface AuthContextType {
   currentUser: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, options?: { silent?: boolean }) => Promise<void>;
   logout: () => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   loading: boolean;
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthState();
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string, options?: { silent?: boolean }): Promise<void> => {
     try {
       setLoading(true);
 
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success(res.data.message || "Login successful!");
     } catch (error: any) {
       const errMsg = error?.response?.data?.message || "Login failed";
-      toast.error(errMsg);
+      if (!options?.silent) toast.error(errMsg);
       throw error;
     } finally {
       setLoading(false);
