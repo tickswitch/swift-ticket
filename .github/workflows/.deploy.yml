@@ -19,6 +19,9 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
             cd /var/www/swift-ticket
             git pull origin main
 
@@ -28,8 +31,8 @@ jobs:
             npm run build
             # --- Backend Docker Deployment ---
             cd ../api
-            sudo docker-compose down
-            sudo docker-compose up --build -d
+            sudo docker compose down
+            sudo docker compose up --build -d
 
             sudo docker image prune -f
 
