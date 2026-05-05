@@ -6,14 +6,22 @@ const Banner = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    videoRef.current?.play().catch(() => {})
-  }, [])
+    const video = videoRef.current
+    if (!video) return
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mediaQuery.matches && videoRef.current) {
-      videoRef.current.pause()
-    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {})
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(video)
+    video.play().catch(() => {})
+
+    return () => observer.disconnect()
   }, [])
 
   return (
