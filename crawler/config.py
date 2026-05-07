@@ -6,5 +6,5 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 DATABASE_URL: str = os.environ["DATABASE_URL"]
 
-CITIES: list[str] = ["bengaluru", "mumbai", "delhi"]
-SOURCES: list[str] = ["townscript"]
+CITIES: list[str] = ["bengaluru", "mumbai", "delhi", "pune", "hyderabad", "kolkata", "chennai", "goa"]
+SOURCES: list[str] = ["townscript", "skillboxes"]

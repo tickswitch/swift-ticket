@@ -644,7 +644,8 @@ const getAllEvents = async (
       where: { status: "active" },
       include: { venue: true },
       orderBy: { start_dt: "asc" },
-      take: 20,
+      skip: page * 200,
+      take: 200,
     });
     return { data: localEvents.map(mapLocalEvent), hasMore: false, nextPage: 1, pagination: {} };
   }

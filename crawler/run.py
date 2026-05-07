@@ -33,6 +33,10 @@ def main() -> None:
             from spiders.townscript import crawl
             raw_events = crawl(args.city)
 
+        elif args.site == "skillboxes":
+            from spiders.skillboxes import crawl
+            raw_events = crawl(args.city)
+
         from normalizer import normalize
         from db import upsert_event
 
