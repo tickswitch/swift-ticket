@@ -1,0 +1,4 @@
+scrapling[playwright]
+psycopg2-binary
+python-dotenv
+schedule

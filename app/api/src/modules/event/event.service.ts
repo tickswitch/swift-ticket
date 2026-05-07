@@ -81,17 +81,79 @@ const mapEvent = async (
   return base;
 };
 
+// Shape returned by prisma.event.findMany({ include: { venue: true } })
+type LocalEventRow = {
+  id: number;
+  title: string;
+  category: string | null;
+  start_dt: Date;
+  end_dt: Date | null;
+  image_url: string | null;
+  source_url: string | null;
+  price_min: number | null;
+  price_max: number | null;
+  currency: string;
+  venue: { name: string; city: string; lat: number | null; lng: number | null };
+};
+
+// Maps a crawled local Event row to the same response shape mapEvent() produces
+const mapLocalEvent = (event: LocalEventRow) => {
+  const { lat, lng } = event.venue;
+  const dateStr = event.start_dt.toISOString().split("T")[0];
+  const timeStr = event.start_dt.toISOString().split("T")[1]?.substring(0, 8) ?? null;
+  return {
+    id: String(event.id),
+    title: event.title,
+    image: event.image_url ?? null,
+    start_date: dateStr,
+    date: dateStr,
+    end_date: event.end_dt ? event.end_dt.toISOString().split("T")[0] : dateStr,
+    time: timeStr,
+    venue: event.venue.name,
+    location: event.venue.city,
+    latitude: lat,
+    longitude: lng,
+    mapUrl: lat && lng ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : null,
+    ticket_url: event.source_url ?? null,
+    genres: event.category ? [event.category] : [],
+    segment: [],
+    available_quantity: 0,
+    priceRanges: event.price_min != null
+      ? [{ min: event.price_min, max: event.price_max ?? event.price_min, currency: event.currency }]
+      : null,
+    source: "local" as const,
+  };
+};
+
 const filterEvents = async (
   params: Record<string, string | number | undefined>,
 ) => {
   const hasLocation = params.latlong !== undefined && params.latlong !== "";
   const data = await tmGet(`${TM_BASE}/events.json`, {
     apikey: apikey(),
+    countryCode: "IN",
     ...(hasLocation ? { sort: "distance,asc" } : {}),
     ...params,
   });
   const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const pageInfo = data?.page ?? {};
+
+  if (events.length === 0) {
+    const localEvents = await prisma.event.findMany({
+      where: {
+        status: "active",
+        ...(params.city ? { venue: { city: { contains: String(params.city), mode: "insensitive" } } } : {}),
+        ...(params.classificationName || params.category
+          ? { category: { contains: String(params.classificationName ?? params.category), mode: "insensitive" } }
+          : {}),
+      },
+      include: { venue: true },
+      orderBy: { start_dt: "asc" },
+      take: 20,
+    });
+    return { pagination: {}, data: localEvents.map(mapLocalEvent) };
+  }
+
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
   return { pagination: pageInfo, data: mapped };
 };
@@ -565,11 +627,42 @@ const getAllEvents = async (
 
   const events: Record<string, unknown>[] = data?._embedded?.events ?? [];
   const pageInfo = data?.page ?? {};
+
+  // For India requests, also fall back when TM returns results but none are in India —
+  // this happens when Ticketmaster has no India inventory and bleeds in global results.
+  const allOutsideIndia =
+    events.length > 0 &&
+    events.every((e) => {
+      const venue =
+        ((e._embedded as Record<string, unknown[]>)?.venues?.[0] as Record<string, unknown>) ?? {};
+      const cc = (venue as { country?: { countryCode?: string } }).country?.countryCode;
+      return cc !== "IN";
+    });
+
+  if (countryCode === "IN" && (events.length === 0 || allOutsideIndia)) {
+    const localEvents = await prisma.event.findMany({
+      where: { status: "active" },
+      include: { venue: true },
+      orderBy: { start_dt: "asc" },
+      take: 20,
+    });
+    return { data: localEvents.map(mapLocalEvent), hasMore: false, nextPage: 1, pagination: {} };
+  }
+
   const totalPages: number = (pageInfo.totalPages as number) ?? 1;
   const hasMore = page < totalPages - 1;
   const mapped = await Promise.all(events.map((e) => mapEvent(e)));
 
   return { data: mapped, hasMore, nextPage: page + 1, pagination: pageInfo };
+};
+
+const getLocalEventDetails = async (id: number) => {
+  const event = await prisma.event.findUnique({
+    where: { id },
+    include: { venue: true },
+  });
+  if (!event) throw new AppError("Event not found", 404);
+  return mapLocalEvent(event);
 };
 
 const getEventsByGenre = async (genre: string, page: number, lat?: string, lng?: string, sort?: string) => {
@@ -730,6 +823,7 @@ const ticketAlert = async (userId: number) => {
 export const eventService = {
   getAllEvents,
   filterEvents,
+  getLocalEventDetails,
   searchEvents,
   getEventDetails,
   trendingNearby,

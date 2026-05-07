@@ -411,3 +411,54 @@ model EventNotification {
   @@unique([user_id, event_id])
   @@map("notifications")
 }
+
+model Venue {
+  id         Int      @id @default(autoincrement())
+  name       String
+  city       String
+  address    String?
+  lat        Float?
+  lng        Float?
+  created_at DateTime @default(now())
+  events     Event[]
+
+  @@unique([name, city])
+  @@map("venues")
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  category    String?
+  start_dt    DateTime
+  end_dt      DateTime?
+  image_url   String?
+  source_url  String?   @unique
+  external_id String?
+  source      String
+  status      String    @default("active")
+  verified    Boolean   @default(false)
+  price_min   Float?
+  price_max   Float?
+  currency    String    @default("INR")
+  view_count  Int       @default(0)
+  venue_id    Int
+  venue       Venue     @relation(fields: [venue_id], references: [id])
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("events")
+}
+
+model ScrapeLog {
+  id          Int      @id @default(autoincrement())
+  source_name String
+  city        String
+  found       Int      @default(0)
+  upserted    Int      @default(0)
+  error       String?
+  ran_at      DateTime @default(now())
+
+  @@map("scrape_logs")
+}
