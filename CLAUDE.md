@@ -384,3 +384,18 @@ Do not invent interim solutions for these — they are committed and have define
 6. **New protected page?** Wrap with `<ProtectedRoute>` in `routes.tsx`
 7. **User feedback?** `react-hot-toast` for both success and error states
 8. **Before shipping**: `npm run build` in both `app/api` and `app/web` must pass clean
+
+---
+
+## 17. Quality Gate — Nothing is "Done" Until Proven
+- Never mark a task complete without running it end-to-end
+- For payment/escrow flows: test the full Razorpay webhook cycle, not just the happy path
+- Ask: "Would a senior payments engineer approve this?"
+- Before merging any branch → nishant, diff your branch against nishant and self-review
+
+---
+
+## 18. Self-Improvement Loop
+- After ANY correction: update `docs/tasks/lessons.md` with the pattern
+- Review `docs/tasks/lessons.md` at the start of every new session
+- Update after any bug that took >30 min, any env gotcha, any mid-task correction
