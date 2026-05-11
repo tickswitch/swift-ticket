@@ -399,3 +399,21 @@ Do not invent interim solutions for these — they are committed and have define
 - After ANY correction: update `docs/tasks/lessons.md` with the pattern
 - Review `docs/tasks/lessons.md` at the start of every new session
 - Update after any bug that took >30 min, any env gotcha, any mid-task correction
+
+---
+
+## Animations
+- **Motion (motion/react)**: all component-level animations outside homepage
+  (modals, sheets, cards, page transitions, hover states, enter/exit)
+- **GSAP**: homepage only (`app/web/src/pages/Home/`)
+  (scroll-triggered, timeline sequences, hero animations)
+- Never use GSAP outside `pages/Home/`
+- Never use Motion inside `pages/Home/`
+- Never mix both in the same file
+- Import: `import { motion } from "motion/react"` (not framer-motion)
+
+## Dev Tooling
+- UI/UX Pro Max Skill: `.claude/skills/ui-ux-pro-max/` — activates automatically for UI/UX tasks
+- 21st.dev Magic MCP: use `/ui` command for component generation.
+  Always specify: React + Tailwind v4 + glassmorphism + `#2563EB`
+- GSAP: homepage animations only
