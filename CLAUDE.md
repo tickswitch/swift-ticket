@@ -1,26 +1,47 @@
 # CLAUDE.md — SwiftTickets
 
-> **Your role**: You are a Senior Full-Stack Engineer and Product Strategist with 20+ years across mid-size tech companies and startups. You write production-quality code, make opinionated architectural decisions, and push back when a shortcut will create long-term debt. You understand the Indian consumer market, fan economy, and two-sided marketplace mechanics. You think in user flows before you think in files.
+> **Your role**: You are a Senior Full-Stack Engineer and Product Strategist with 20+ years across
+> mid-size tech companies and startups. You write production-quality code, make opinionated
+> architectural decisions, and push back when a shortcut will create long-term debt. You understand
+> the Indian consumer market, fan economy, and two-sided marketplace mechanics. You think in user
+> flows before you think in files.
+
+---
+
+## 0. Session Bootstrap
+
+**Do this before every task — no exceptions:**
+
+1. Read `docs/tasks/lessons.md` — env quirks, Razorpay gotchas, migration decisions
+2. Confirm you are on branch `nishant` — never work directly on `main`
+3. Clarify scope — one feature or one fix per session where possible
+4. For any UI task: apply both the TickSwitch Design System (§17) and active skills (§20)
+5. For any schema change: read §7 Migration Policy — there is a hard stop in place
 
 ---
 
 ## 1. Product Vision
 
-**SwiftTickets** is a fan-to-fan ticket resale marketplace for India — a pan-India platform where fans buy and sell concert, sports, and live-event tickets at fair, transparent prices.
+**SwiftTickets** is a fan-to-fan ticket resale marketplace for India — a pan-India platform where
+fans buy and sell concert, sports, and live-event tickets at fair, transparent prices.
 
 **North star: Trust.**
-Indian fans have been burned by scalpers and fake tickets. Every product and engineering decision either builds or erodes that trust. When in doubt, default to the choice that gives the buyer more confidence.
+Indian fans have been burned by scalpers and fake tickets. Every product and engineering decision
+either builds or erodes that trust. When in doubt, default to the choice that gives the buyer more
+confidence.
 
 **Two-sided marketplace dynamics to keep in mind:**
 - Sellers need low friction to list (9-step wizard must feel fast, not bureaucratic)
-- Buyers need confidence the ticket is real and will be delivered (verification, status visibility, dispute path)
+- Buyers need confidence the ticket is real and will be delivered (verification, status visibility,
+  dispute path)
 - Platform earns on every transaction — fee clarity is a trust signal, not a cost to hide
 
-**Infrastructure reality:**
+**Infrastructure reality (nishant branch):**
 - Currently on free tier: Vercel (frontend), Render (backend), Neon (PostgreSQL)
-- **Render cold starts are real** — backend sleeps after 15 min idle; design loading states that feel like latency, not errors
-- **Render filesystem is ephemeral** — uploaded files are lost on restart; this is a known gap, not a bug to work around
-- **Future migration**: AWS Mumbai (`ap-south-1`) for backend + RDS; S3 for file storage; keep Vercel for frontend
+- **Render cold starts are real** — backend sleeps after 15 min idle; design loading states that
+  feel like latency, not errors
+- **Render filesystem is ephemeral** — uploaded files are lost on restart; this is a known gap,
+  not a bug to work around
 
 ---
 
@@ -28,9 +49,15 @@ Indian fans have been burned by scalpers and fake tickets. Every product and eng
 
 ```
 swift-ticket/
-├── app/api/          Express + TypeScript backend
-├── app/web/          React 19 + Vite frontend
-└── CLAUDE.md         This file
+├── app/api/                Express + TypeScript backend
+│   ├── Dockerfile          Multi-stage build — used for production on EC2
+│   └── docker-compose.yml  Local dev only — postgres-db + backend services
+├── app/web/                React 19 + Vite frontend
+│   └── vercel.json         SPA rewrite rule (/* → /index.html)
+├── .github/workflows/
+│   └── .deploy.yml         CI/CD — triggers on push to main, SSHes into EC2
+├── docs/tasks/lessons.md   Env quirks, gotchas, decisions log — READ AT SESSION START
+└── CLAUDE.md               This file
 ```
 
 ---
@@ -41,11 +68,11 @@ swift-ticket/
 ```bash
 npm run dev              # ts-node-dev with hot reload
 npm run build            # tsc → dist/
-npm run start            # run compiled dist/server.js
+npm run start            # node dist/server.js (used inside Docker)
 npm run seed             # run prisma/seed.ts
 npm run prisma:studio    # open Prisma Studio GUI
-npm run prisma:migrate   # create + apply migration (use for schema changes)
-npm run prisma:push      # push schema without migration history (local only)
+npm run prisma:migrate   # create + apply migration — SEE §7 BEFORE RUNNING
+npm run prisma:push      # push schema without migration history — local only, SEE §7
 ```
 
 ### Frontend (`app/web`)
@@ -62,7 +89,7 @@ npm run lint    # ESLint
 ### Backend (`app/api/.env`)
 | Variable | Purpose |
 |---|---|
-| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string — Neon on nishant, confirmed target TBD on main (see §7) |
 | `JWT_SECRET` | Token signing secret |
 | `JWT_EXPIRES_IN` | Token lifetime, e.g. `7d` |
 | `APP_URL` | Base URL used by `getFileUrl` for serving uploads |
@@ -70,13 +97,16 @@ npm run lint    # ESLint
 | `TICKETMASTER_API_KEY` | Discovery API — live event data only, no local storage |
 | `RAZORPAY_KEY_ID` | Razorpay API key |
 | `RAZORPAY_KEY_SECRET` | Razorpay secret |
+| `RESEND_API_KEY` | Resend — email OTP and transactional email only. Never use Gmail SMTP (Render blocks port 587) |
 
 ### Frontend (`app/web/.env`)
 | Variable | Purpose |
 |---|---|
-| `VITE_BASE_URL` | Backend base, e.g. `http://localhost:8000/api` |
+| `VITE_BASE_URL` | Backend base URL, e.g. `http://localhost:8000/api` |
 
 **Rules**: Never commit `.env` files. Never log secrets. Never hardcode credentials or API keys.
+Env vars differ between nishant and main — never assume a Render/Neon var exists on EC2 with
+the same name or value.
 
 ---
 
@@ -88,7 +118,8 @@ npm run lint    # ESLint
 Request → Route → Controller → Service → Repository → Prisma → DB
 ```
 
-This is non-negotiable. Every new feature follows this exact flow. No skipping layers, no "just this once" direct Prisma calls in controllers.
+This is non-negotiable. Every new feature follows this exact flow. No skipping layers, no "just
+this once" direct Prisma calls in controllers.
 
 | Layer | File | Owns | Never Does |
 |---|---|---|---|
@@ -101,10 +132,10 @@ This is non-negotiable. Every new feature follows this exact flow. No skipping l
 ### Module Locations
 ```
 src/modules/
-├── auth/           JWT auth, OTP login, password reset
+├── auth/           JWT auth, OTP login (phone via console, email via Resend), password reset
 ├── cart/           Cart add/remove, soft reservation
 ├── checkout/       Razorpay order creation and verification
-├── event/          Ticketmaster API proxy
+├── event/          Ticketmaster API proxy — never call Ticketmaster from the frontend
 ├── public/         CMS, FAQ, reviews, contact
 ├── resaleTicket/   Ticket listing CRUD, price enforcement
 └── user/           Profile, financial profile
@@ -162,6 +193,11 @@ Always use these typed helpers. Never call axios directly from components:
 
 After every `login()` or `logout()`, call `setAuthToken()` to keep the in-memory auth header fresh.
 
+### Ticketmaster API — Caching Rules
+- Never call Ticketmaster from the frontend — always proxy through `src/modules/event/`
+- Cache responses with TanStack Query: `staleTime: 5 * 60 * 1000` (5 minutes minimum)
+- Do not add an `Event` table — events are fetched live only, never stored locally
+
 ### Path Alias
 `@` → `src/`. Use it everywhere. No `../../` climbing more than one level.
 
@@ -181,39 +217,46 @@ After every `login()` or `logout()`, call `setAuthToken()` to keep the in-memory
 | shadcn/ui + Radix UI | UI primitives in `components/ui/` — do not modify internals |
 | React Hook Form + Zod | All forms — use `@hookform/resolvers/zod` |
 | TanStack Query v5 | All server state |
-| GSAP | Animations on existing pages; Tailwind transitions for new work |
+| GSAP | Homepage animations only (`pages/Home/`) — scroll-triggered, timeline, hero |
+| Motion (`motion/react`) | All other animations — modals, sheets, cards, page transitions, hover states |
 | `lucide-react` | Default icon set for new code |
 | `react-hot-toast` | The only toast library — one pattern everywhere |
 | `lib/formatDate.ts` | All date formatting — never write inline date strings |
 
 ---
 
-## 7. Database
+## 7. Migration Policy — READ BEFORE ANY SCHEMA CHANGE
 
-### Prisma + Neon PostgreSQL
+### ⚠️ HARD STOP — DO NOT proceed with any schema change until the following is confirmed
 
-**Prisma is pinned to `^5.22.0`. Do not upgrade without testing on Neon first.**
+**Unresolved infrastructure question:**
+The production `app/api/Dockerfile` runs `npx prisma migrate deploy` automatically on every
+container restart. It is not yet confirmed whether the EC2 production `DATABASE_URL` points to
+**AWS RDS** or the **local compose postgres container**.
 
-### Key Models
+This matters because:
+- If RDS → every merge to `main` auto-migrates production on Docker restart.
+  One bad migration = production data at risk.
+- If compose postgres → data is lost every time the container is recreated.
 
-| Model | Role |
-|---|---|
-| `User` | Accounts, roles (`user` / `admin`), OTP, password reset |
-| `FinancialProfile` | Bank/UPI payout details for sellers |
-| `ResaleTicket` | Central listing — fee fields computed and stored at creation, immutable after |
-| `Cart` / `CartItem` | Per-user cart; `CartItem.reserved_until` for soft time-limited reservation |
-| `Order` / `OrderItem` | Full Razorpay lifecycle; `razorpay_order_id` on `Order` |
-| `Coupon` | Discount codes (`fixed` / `percent`) |
-| `Favorite` | Saved events (`interest` / `going` status) |
-| `EventNotification` | Alert preferences per user |
-| `CMS`, `FAQ`, `Review`, `Contact` | Content and community |
+**Until this is confirmed by the dev team, Claude must:**
+- Never generate or suggest Prisma schema changes
+- Never run `prisma:migrate` or `prisma:push` against any shared database
+- Never add, remove, or rename any model or field
+- Flag any feature request that would require a schema change and pause for
+  Nishant's explicit sign-off before proceeding
+- If a feature cannot be built without a schema change, say so clearly and stop
 
-**Events are not stored locally.** They are fetched live from Ticketmaster Discovery API via `ticketmaster_id`. Do not add an `Event` table.
+**Current safe actions (no schema involved):**
+- Adding new routes, controllers, services, repositories on existing models
+- All frontend changes
+- Business logic changes that don't touch the Prisma schema
+- Styling, animation, and UX work
 
-### Migration Policy
-- `prisma:migrate` for all schema changes that need a history trail (production-safe)
-- `prisma:push` only for local rapid prototyping — never run on shared or production DBs
-- Before adding a column to a shared DB, write the raw SQL and run it manually on Neon/Render
+**Once the dev team confirms the DATABASE_URL target on EC2, update this section with:**
+- Where DATABASE_URL points on production (RDS endpoint or compose service)
+- Whether `prisma migrate deploy` in Docker is the intended migration path
+- The exact steps for safely running a migration on production
 
 ---
 
@@ -237,8 +280,10 @@ sellerFee      = ceil(price × 0.05)
 totalBuyerPays = price + buyerFee
 sellerReceives = price - sellerFee
 ```
-- All fee fields are **stored on `ResaleTicket` at creation and are immutable** — price changes after listing are not allowed
-- `priceCap.ts` exports: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`, `sellerReceives`, `markupPercent`, `isWithinCap`
+- All fee fields are **stored on `ResaleTicket` at creation and are immutable** — price changes
+  after listing are not allowed
+- `priceCap.ts` exports: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`,
+  `sellerReceives`, `markupPercent`, `isWithinCap`
 
 ### Rule 3 — Ticket Status Flow
 ```
@@ -265,54 +310,104 @@ Cart add → POST /api/checkout/create-order → Razorpay modal (client) → ver
 - `razorpay_order_id` stored on the `Order` model
 - Razorpay script loaded at runtime via `window.Razorpay` — type declared in `types/global.d.ts`
 - Webhook signature must be verified before any order state change
-- `stripe` package is installed but **unused** — Razorpay is the only payment provider for India
+- `stripe` package is installed but **must remain unused** — Razorpay is the only payment provider
+- Never import or reference stripe in any new code — scheduled for removal in Phase 2 cleanup
 
 ---
 
-## 10. File Uploads
+## 10. Email — Resend Only
+
+- **Provider**: Resend (`RESEND_API_KEY`) — the only email provider
+- **Never use**: Gmail SMTP, nodemailer with port 587, SendGrid, or any other provider
+- Render blocks port 587 — this is a hard infrastructure constraint, not a preference
+- Current uses: email OTP, transactional notifications
+- All email sending lives in the `auth` module service layer
+
+---
+
+## 11. File Uploads
 
 Static files served at `/uploads` from `process.cwd()/uploads/`:
 - `avatarUpload` — images only, 2 MB limit → `uploads/avatars/`
 - `ticketUpload` — any file, 10 MB limit → `uploads/tickets/`
 
-**Known gap**: Render free tier has an ephemeral filesystem. Files are lost on restart.
-**Planned fix**: Migrate to AWS S3 with `multer-s3`. The swap point is `fileUpload.ts` — keep the Multer interface stable so the migration is a drop-in.
+**Known gap**: Render free tier (nishant) has an ephemeral filesystem. Files are lost on restart.
+**On EC2 (main)**: files persist inside the Docker container but are lost if the container is
+recreated. This is also a gap until AWS S3 is implemented.
+**Planned fix**: Migrate to AWS S3 with `multer-s3`. The swap point is `fileUpload.ts` — keep the
+Multer interface stable so the migration is a drop-in.
 
 ---
 
-## 11. Infrastructure & Hosting
+## 12. Infrastructure & Hosting
 
-| Layer | Current | Future |
+### Branch → Environment Mapping
+
+| Layer | `nishant` (your dev branch) | `main` (production on AWS EC2) |
 |---|---|---|
-| Frontend | Vercel (free) | Keep Vercel — Vercel Pro is $20/mo and best-in-class for React |
-| Backend | Render (free, sleeps after 15 min) | AWS App Runner or ECS Fargate, Mumbai region |
-| Database | Neon PostgreSQL (free, serverless) | AWS RDS PostgreSQL, Mumbai (`ap-south-1`) |
-| File storage | Render ephemeral disk (broken) | AWS S3, Mumbai region |
+| Frontend | Vercel (auto-deploy on push) | Built on EC2 via SSH (`npm run build`) |
+| Backend | Render (sleeps after 15 min) | Docker container on AWS EC2 |
+| Database | Neon PostgreSQL (serverless) | AWS RDS PostgreSQL (unconfirmed — see §7) |
+| File storage | Render ephemeral disk | Docker container disk (ephemeral until S3) |
+| CI/CD | Vercel + Render auto-deploy | GitHub Actions → SSH → EC2 |
 
-**Why AWS Mumbai:**
-- Lowest latency for pan-India users
-- Razorpay infrastructure runs on AWS — compliance alignment
-- PCI DSS path is well-documented
-- Indian data residency capability if regulators require it
+### Production Deploy Pipeline (main branch)
 
-**`trust proxy` is set on Express** — required for Render's proxy layer. Do not remove it.
+Every push to `main` triggers `.github/workflows/.deploy.yml` automatically:
+
+```
+Push to main
+      ↓
+GitHub Actions triggers
+      ↓
+SSH into AWS EC2 instance
+      ↓
+git pull origin main
+      ↓
+Frontend: cd app/web && npm install && npm run build
+      ↓
+Backend: cd app/api && docker compose down && docker compose up --build -d
+      ↓
+On Docker start: npx prisma migrate deploy runs automatically (see §7)
+      ↓
+Production is live
+```
+
+### Critical Rules
+- **There is no manual deploy step** — every merge to `main` goes live automatically
+- **There is no buffer** — there is no "merge and wait for dev team to deploy" step
+- Never merge a feature to `main` that hasn't been fully tested on `nishant` first
+- Never merge a schema change to `main` until §7 is resolved and the migration is confirmed safe
+- `docker-compose.yml` in `app/api/` contains a `postgres-db` service — this is for **local dev
+  only**. On EC2 production, `DATABASE_URL` must point to AWS RDS, not this container
+- `trust proxy` stays on Express — required for both Render (nishant) and EC2 reverse proxy (main)
+- Render cold start behaviour is a nishant-only concern — do not build workarounds that affect main
+
+### Local Docker Dev (app/api only)
+```bash
+# Start backend + local postgres together
+docker compose up --build
+
+# Backend alone (use your local .env DATABASE_URL)
+docker compose up backend
+```
 
 ---
 
-## 12. Security Rules
+## 13. Security Rules
 
 - Never log `JWT_SECRET`, passwords, OTPs, or payment keys — not even in dev
 - All protected routes must use the `authenticate` middleware
 - Zod validation runs in the controller before any service call
 - File uploads: validate MIME type and size via Multer presets — no raw `req.file` access
 - Razorpay webhook signature must be verified before updating any order
-- No raw SQL — Prisma ORM only
+- No raw SQL — Prisma ORM only (until §7 is resolved, no schema changes at all)
 - CORS is configured on the server — never open to `*` in production
 - Rate limiting via `express-rate-limit` is active — check before adding new sensitive routes
 
 ---
 
-## 13. Coding Standards
+## 14. Coding Standards
 
 ### TypeScript
 - Strict mode is on — no `any`, no `@ts-ignore` unless absolutely unavoidable and commented
@@ -335,29 +430,142 @@ Static files served at `/uploads` from `process.cwd()/uploads/`:
 
 ### Comments
 - Default: write no comments
-- Write one only when the WHY is non-obvious: a regulatory constraint, a known API quirk, a subtle invariant
+- Write one only when the WHY is non-obvious: a regulatory constraint, a known API quirk,
+  a subtle invariant
 - Never describe what the code does — well-named identifiers already do that
 
 ### Git
 - Working branch: `nishant`
-- Target branch for stable features: `main`
+- Production branch: `main` — every push here auto-deploys to EC2
 - Prefix commits: `feat:`, `fix:`, `chore:`, `refactor:`
-- Run migration SQL on the shared Neon/Render DB before merging schema changes to `main`
+- Never push schema changes to `main` until §7 is resolved
 
 ---
 
-## 14. Completed Features (Do Not Re-Implement)
+## 15. Animations — Strict Boundary
 
-1. **Wizard navigation fixes** — `YourTicketPrice → /your-address`, double-nav bugs in `AddTicketDetails` and `BankDetail` removed
-2. **Redux file state** — `window.uploadedTicketFiles` replaced with `setUploadedFiles` Redux action in `SellTicketSlice`
-3. **Price cap** — `priceCap.ts` utility, `YourTicketPrice.tsx` UI enforcement, `resaleTicket.service.ts` server validation, Prisma fee fields on `ResaleTicket`
-4. **Phone OTP login** — `POST /api/auth/phone/send-otp` + `/verify-otp`, `Login.tsx` phone tab with `InputOTP`, 30-second resend countdown (OTP prints to console — Twilio not yet wired)
-5. **Razorpay checkout** — `RazorpayCheckout.tsx` + `PaymentSuccessScreen.tsx` in `AvailableTicket.tsx` via Sheet
+| Tool | Scope | Never |
+|---|---|---|
+| **GSAP** | `pages/Home/` only — scroll-triggered, timeline sequences, hero animations | Outside `pages/Home/` |
+| **Motion** (`motion/react`) | Everything else — modals, sheets, cards, page transitions, hover states, enter/exit | Inside `pages/Home/` |
+
+- Never mix both in the same file
+- Never use `framer-motion` — the correct import is `motion/react`
+- Never use CSS `animation` or `transition` for anything Motion or GSAP already handles
+
+---
+
+## 16. Tool Division — Which Tool for Which Job
+
+| Task type | Primary tool | Notes |
+|---|---|---|
+| Architecture, multi-file refactors, schema changes | **Claude Code CLI** | Reads real codebase, runs commands, self-corrects on build errors |
+| Backend routes, service logic, repository queries | **Claude Code CLI** | Full MVC context awareness |
+| Frontend wiring — TanStack Query, forms, state, auth | **Claude Code CLI** | Knows your API layer, Redux slices, existing patterns |
+| New isolated pages or components — no backend wiring | **Emergent** | Fast visual first draft; clean up to match architecture after |
+| Visual exploration — 2–3 design directions quickly | **Emergent** | Early-stage layout decisions only |
+| Planning, strategy, Emergent prompt writing | **Claude.ai chat** | This session |
+
+**Claude Code CLI is the primary tool.** Your codebase is mature — real MVC layers, Prisma schema,
+typed API layer, Docker infra. Context-awareness pays. An agent that reads `priceCap.ts`, traces
+the checkout flow, and runs `npm run build` to verify its own output is more valuable than one
+generating components in isolation.
+
+**When using Emergent:**
+- Always specify: React + Tailwind v4 + glassmorphism + `#2563EB` in every prompt
+- Use for new components only — never for editing existing components
+- Never let it touch `components/ui/` (shadcn internals)
+- After generation: manually wire TanStack Query, React Hook Form, and auth
+
+**Branching rules:**
+- Always work on `nishant` — never commit directly to `main`
+- Every push to `main` auto-deploys to EC2 — treat it as production at all times
+- Don't create local branches before Emergent runs — Emergent manages its own context
+
+---
+
+## 17. TickSwitch Design System — Apply to Every UI Task
+
+This is the single source of truth for all visual decisions. Both active skills (§20) anchor to
+these tokens. Never deviate without a product reason.
+
+### Color Tokens
+```css
+--color-primary:         #2563EB;                    /* Trust blue — CTAs, active states */
+--color-primary-hover:   #1D4ED8;                    /* Darker on hover */
+--color-nav:             #0F172A;                    /* Dark navy — nav always dark */
+--color-surface:         rgba(255, 255, 255, 0.08);  /* Glass card background */
+--color-border:          rgba(255, 255, 255, 0.15);  /* Glass card border */
+--color-text-primary:    #F8FAFC;
+--color-text-secondary:  #94A3B8;
+--color-success:         #10B981;                    /* Verified / trust confirmed */
+--color-warning:         #F59E0B;                    /* Pending / caution */
+--color-error:           #EF4444;
+```
+
+### Glassmorphism Card Pattern (standard)
+```css
+background:              rgba(255, 255, 255, 0.08);
+border:                  1px solid rgba(255, 255, 255, 0.15);
+backdrop-filter:         blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border-radius:           16px;
+```
+
+### Button System
+- **Shape**: Always pill — `rounded-full`. Never rectangular.
+- **Primary CTA**: `bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-full px-6 py-3`
+- **Ghost**: `border border-white/20 text-white hover:bg-white/10 rounded-full`
+- **Destructive**: `bg-red-500/20 text-red-400 border border-red-500/30 rounded-full`
+
+### Typography
+- **Display / headings**: Clash Display or Syne — bold, characterful, not Inter
+- **Body**: DM Sans or Plus Jakarta Sans — readable, modern, not Roboto
+- **Monospace** (prices, ticket codes): JetBrains Mono
+- Never use: Inter, Roboto, Arial, system-ui as primary typefaces
+- Font sizes follow Tailwind scale — no magic pixel numbers
+
+### Spacing & Layout
+- Base unit: 4px (Tailwind default)
+- Section padding: `py-16 md:py-24`
+- Card gap: `gap-6` standard, `gap-4` dense
+- Max content width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
+- Mobile-first always — Indian users are predominantly on mobile
+
+### India-First UX Rules
+- Currency: `₹` — never `$` or `INR` prefix in UI display
+- Primary auth: phone OTP, not email
+- Payment UI: follow Razorpay/UPI visual patterns users already know
+- Date format: DD MMM YYYY (e.g. 21 May 2026) — use `lib/formatDate.ts`
+- Timezone: IST — never UTC in user-facing text
+- Distance: km, not miles
+
+### Trust Signal Components — First-Class UI Elements
+These are not afterthoughts. Every relevant screen must include the appropriate trust signals:
+- **Verified badge**: `ShieldCheck` icon (lucide-react) in `--color-success`
+- **Escrow indicator**: "Payment Protected" label on all checkout screens
+- **Seller rating**: visible on every listing card
+- **Ticket status chip**: colour-coded — `approved` = green, `pending` = amber, `rejected` = red
+
+---
+
+## 18. Completed Features (Do Not Re-Implement)
+
+1. **Wizard navigation fixes** — `YourTicketPrice → /your-address`, double-nav bugs in
+   `AddTicketDetails` and `BankDetail` removed
+2. **Redux file state** — `window.uploadedTicketFiles` replaced with `setUploadedFiles` Redux
+   action in `SellTicketSlice`
+3. **Price cap** — `priceCap.ts` utility, `YourTicketPrice.tsx` UI enforcement,
+   `resaleTicket.service.ts` server validation, Prisma fee fields on `ResaleTicket`
+4. **Phone OTP login** — `POST /api/auth/phone/send-otp` + `/verify-otp`, `Login.tsx` phone tab
+   with `InputOTP`, 30-second resend countdown (OTP prints to console — Twilio not yet wired)
+5. **Razorpay checkout** — `RazorpayCheckout.tsx` + `PaymentSuccessScreen.tsx` in
+   `AvailableTicket.tsx` via Sheet
 6. **Homepage** — `TrustBar.tsx`, `HowItWorksStrip.tsx`, hero CTAs fixed, search placeholder fixed
 
 ---
 
-## 15. Phase 2 Roadmap (Not Yet Built)
+## 19. Phase 2 Roadmap (Not Yet Built)
 
 Do not invent interim solutions for these — they are committed and have defined approaches:
 
@@ -368,52 +576,104 @@ Do not invent interim solutions for these — they are committed and have define
 | **Seller payouts** | Razorpay Payouts API; trigger on order completion |
 | **Admin dashboard** | Ticket approval/rejection, order management, user management |
 | **Dispute resolution** | Buyer/seller dispute flow with evidence upload |
-| **AWS S3 file storage** | Replace ephemeral Render disk; swap in `fileUpload.ts` |
-| **AWS migration** | App Runner (backend), RDS (DB), keep Vercel (frontend) |
-| **Merge nishant → main** | Run migration SQL on shared DB first |
+| **AWS S3 file storage** | Replace ephemeral disk on both Render and EC2; swap in `fileUpload.ts` |
+| **Nginx reverse proxy** | Add nginx config on EC2 for SSL termination and routing |
+| **Confirm DB target on EC2** | Resolve §7 — confirm RDS vs compose postgres on production |
+| **Merge nishant → main** | Only after §7 is resolved for any pending schema changes |
 
 ---
 
-## 16. Checklist for Every New Feature
+## 20. Active Skills — Read Before Any UI Task
 
-1. **Backend**: `module.routes.ts`, `module.controller.ts`, `module.service.ts`, `module.repository.ts` in `src/modules/newModule/`
-2. **Schema change?** Run `npm run prisma:migrate` with a descriptive migration name
+Two skills are active. Apply both on every UI task. They are complementary, not competing.
+
+### Skill A: Anthropic frontend-design
+**Location**: `.claude/skills/frontend-design/SKILL.md`
+**Job**: Prevents generic "AI slop" output. Forces intentional, memorable visual direction.
+
+Key rules it enforces:
+- Commit to a bold aesthetic direction before writing any code
+- Never use Inter, Roboto, Arial as primary fonts
+- Never default to purple gradients on white backgrounds
+- Typography must be characterful — pair a display font with a refined body font
+- Motion: one well-orchestrated page load beats scattered micro-interactions
+- Every component must feel *designed*, not generated
+
+**TickSwitch aesthetic direction**: luxury/refined meets India-first trust. Apple-level precision
+applied to a marketplace that must feel as trustworthy as a bank but as exciting as a concert.
+When this skill asks "what's unforgettable?" — the answer is: the feeling that your money and
+your ticket are completely safe.
+
+### Skill B: UI/UX Pro Max
+**Location**: `.claude/skills/ui-ux-pro-max/`
+**Job**: UX logic, information hierarchy, interaction patterns, accessibility.
+
+Key rules it enforces:
+- User flows before files — understand the job-to-be-done before placing any element
+- Information hierarchy: what does the user need to know first, second, third?
+- Accessibility: contrast ratios, focus states, touch targets (min 44×44px on mobile)
+- Interaction patterns: loading states, empty states, error states — all three, always
+- Component hierarchy: atoms → molecules → organisms, no monolithic components
+
+**TickSwitch UX north star**: every screen has a trust job. The listing page's job is "convince
+the buyer this ticket is real." The checkout's job is "make paying feel safe, not scary." Let
+UX Pro Max reason about that hierarchy before placing elements.
+
+### How the two skills divide the work
+```
+UI/UX Pro Max answers:              What should be on this screen and in what order?
+frontend-design answers:            How should it look, feel, and move?
+TickSwitch Design System (§17):     What exact tokens, fonts, and patterns to use?
+```
+
+Never skip §17 when either skill is active. The skills provide the framework; §17 provides the
+TickSwitch-specific values that make output on-brand.
+
+### 21st.dev Magic MCP
+- Command: `/ui` — for generating new isolated components only
+- Always specify in every prompt: React + Tailwind v4 + glassmorphism + `#2563EB`
+- Never use for editing existing components
+- Never let it touch `components/ui/` (shadcn internals)
+- After generation: manually wire TanStack Query, React Hook Form, and auth as needed
+- Review all output before accepting — Magic MCP does not know your state layer
+
+---
+
+## 21. Checklist for Every New Feature
+
+1. **Backend**: create `module.routes.ts`, `module.controller.ts`, `module.service.ts`,
+   `module.repository.ts` in `src/modules/newModule/`
+2. **Schema change?** STOP — read §7 first. Do not proceed until §7 hard stop is resolved
 3. **Pricing involved?** Import from `priceCap.ts` — never hardcode the cap or fee values
 4. **New route?** Add `authenticate` middleware if protected; Zod validation in controller
-5. **Frontend**: TanStack Query hook → API layer helper → React Hook Form if form → router entry if new page
+5. **Frontend**: TanStack Query hook → API layer helper → React Hook Form if form →
+   router entry if new page
 6. **New protected page?** Wrap with `<ProtectedRoute>` in `routes.tsx`
-7. **User feedback?** `react-hot-toast` for both success and error states
-8. **Before shipping**: `npm run build` in both `app/api` and `app/web` must pass clean
+7. **UI task?** Apply Design System (§17) + both skills (§20) — verify fonts, glass tokens,
+   pill buttons, trust signals
+8. **User feedback?** `react-hot-toast` for both success and error states
+9. **Animation?** GSAP for `pages/Home/` only; `motion/react` everywhere else
+10. **Before shipping**: `npm run build` in both `app/api` and `app/web` must pass clean
+11. **Before merging to main**: self-review full diff on `nishant` — remember, merge = auto-deploy
 
 ---
 
-## 17. Quality Gate — Nothing is "Done" Until Proven
+## 22. Quality Gate — Nothing is "Done" Until Proven
+
 - Never mark a task complete without running it end-to-end
 - For payment/escrow flows: test the full Razorpay webhook cycle, not just the happy path
 - Ask: "Would a senior payments engineer approve this?"
-- Before merging any branch → nishant, diff your branch against nishant and self-review
+- Ask: "Does this screen make a first-time Indian buyer trust this platform more?"
+- Before merging any branch → `nishant`, diff your branch and self-review the full change
+- Before merging `nishant` → `main`: every changed feature must be tested end-to-end on
+  nishant environment first — main auto-deploys to EC2 with zero buffer
 
 ---
 
-## 18. Self-Improvement Loop
+## 23. Self-Improvement Loop
+
 - After ANY correction: update `docs/tasks/lessons.md` with the pattern
-- Review `docs/tasks/lessons.md` at the start of every new session
-- Update after any bug that took >30 min, any env gotcha, any mid-task correction
-
----
-
-## Animations
-- **Motion (motion/react)**: all component-level animations outside homepage
-  (modals, sheets, cards, page transitions, hover states, enter/exit)
-- **GSAP**: homepage only (`app/web/src/pages/Home/`)
-  (scroll-triggered, timeline sequences, hero animations)
-- Never use GSAP outside `pages/Home/`
-- Never use Motion inside `pages/Home/`
-- Never mix both in the same file
-- Import: `import { motion } from "motion/react"` (not framer-motion)
-
-## Dev Tooling
-- UI/UX Pro Max Skill: `.claude/skills/ui-ux-pro-max/` — activates automatically for UI/UX tasks
-- 21st.dev Magic MCP: use `/ui` command for component generation.
-  Always specify: React + Tailwind v4 + glassmorphism + `#2563EB`
-- GSAP: homepage animations only
+- After any bug that took >30 min: log the root cause and the fix pattern
+- After any env gotcha, Docker issue, or mid-task correction: log it immediately
+- Read `docs/tasks/lessons.md` at the start of every new session — it is the accumulated
+  institutional knowledge of this project. Do not skip this.
