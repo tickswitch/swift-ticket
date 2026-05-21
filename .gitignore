@@ -327,3 +327,4 @@ credentials.json
 .claude/settings.local.json
 __pycache__/
 *.pyc
+.claude/settings.local.json
