@@ -49,7 +49,7 @@ const TicketAlert = () => {
               {data?.total_reserved_quantity || "0"} wanted
             </p>
           </div>
-          <div className="py-5 w-fit max-w-6xl mx-auto flex flex-col gap-2">
+          <div className="py-5 w-full max-w-3xl mx-auto flex flex-col gap-2">
             <Alert />
             {error ? (
               <ErrorText />
@@ -296,7 +296,7 @@ const Alert = () => {
   // Don't render switch until we've loaded the initial state
   if (!isInitialized) {
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl gap-5 lg:gap-[300px] bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4 mx-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-5 bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4">
         <div className="flex items-center gap-2 w-full">
           <p className="bg-[#FF7E35] p-4 rounded-md">
             <TickertAlertIcons />
@@ -316,7 +316,7 @@ const Alert = () => {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl gap-5 lg:gap-[300px] bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4 mx-auto">
+    <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-5 bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4">
       <div className="flex items-center gap-2 w-full">
         <p className="bg-[#FF7E35] p-4 rounded-md">
           <TickertAlertIcons />
