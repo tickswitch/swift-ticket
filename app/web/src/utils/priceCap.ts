@@ -1,32 +1,26 @@
 export const MAX_MARKUP = 1.2;
-export const SELLER_FEE = 0.05;
-export const BUYER_SERVICE_FEE = 0.06;
-export const BUYER_TRANSACTION_FEE = 0.03;
+export const SELLER_FEE_RATE = 0.06;
+export const BUYER_FEE_RATE = 0.06;
+export const MIN_FEE = 25;
+
+const applyFee = (price: number, rate: number): number =>
+  Math.max(MIN_FEE, Math.ceil(price * rate));
 
 export const priceCap = {
   maxListingPrice: (faceValue: number): number =>
     Math.floor(faceValue * MAX_MARKUP),
 
   sellerFee: (listingPrice: number): number =>
-    Math.ceil(listingPrice * SELLER_FEE),
+    applyFee(listingPrice, SELLER_FEE_RATE),
 
   sellerReceives: (listingPrice: number): number =>
-    listingPrice - Math.ceil(listingPrice * SELLER_FEE),
+    listingPrice - applyFee(listingPrice, SELLER_FEE_RATE),
 
-  buyerServiceFee: (listingPrice: number): number =>
-    Math.ceil(listingPrice * BUYER_SERVICE_FEE),
-
-  buyerTransactionFee: (listingPrice: number): number =>
-    Math.ceil(listingPrice * BUYER_TRANSACTION_FEE),
+  buyerFee: (listingPrice: number): number =>
+    applyFee(listingPrice, BUYER_FEE_RATE),
 
   totalBuyerPays: (listingPrice: number): number =>
-    listingPrice +
-    Math.ceil(listingPrice * BUYER_SERVICE_FEE) +
-    Math.ceil(listingPrice * BUYER_TRANSACTION_FEE),
-
-  // kept for backward compatibility
-  buyerFee: (listingPrice: number): number =>
-    Math.ceil(listingPrice * BUYER_SERVICE_FEE),
+    listingPrice + applyFee(listingPrice, BUYER_FEE_RATE),
 
   markupPercent: (faceValue: number, listingPrice: number): number =>
     Math.round(((listingPrice - faceValue) / faceValue) * 100),

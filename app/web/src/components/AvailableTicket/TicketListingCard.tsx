@@ -45,9 +45,8 @@ export default function TicketListingCard({
     0,
     ticket.quantity - ticket.reserved_quantity - ticket.sold_quantity
   );
-  const serviceFee = priceCap.buyerServiceFee(listingPrice);
-  const txFee = priceCap.buyerTransactionFee(listingPrice);
-  const totalToPay = priceCap.totalBuyerPays(listingPrice);
+  const buyerFee = priceCap.buyerFee(listingPrice);
+  const totalBuyerPays = priceCap.totalBuyerPays(listingPrice);
   const markupPct = priceCap.markupPercent(faceValue, listingPrice);
 
   const initials = ticket.user?.name
@@ -74,7 +73,7 @@ export default function TicketListingCard({
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onBuyNow(ticket)}
-      aria-label={`Buy ${ticket.ticket_type} ticket for ₹${totalToPay.toLocaleString("en-IN")}`}
+      aria-label={`Buy ${ticket.ticket_type} ticket for ₹${totalBuyerPays.toLocaleString("en-IN")}`}
     >
       {/* Gradient blobs — backdrop-blur on the glass layer blurs these */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/[0.12] via-[#93C5FD]/[0.08] to-[#2563EB]/[0.04] rounded-2xl" />
@@ -174,10 +173,10 @@ export default function TicketListingCard({
                 ₹{listingPrice.toLocaleString("en-IN")}
               </p>
               <p className="text-[#475569] text-xs font-proximaRegular mt-1">
-                +₹{(serviceFee + txFee).toLocaleString("en-IN")} fees
+                Platform fee (6%): ₹{buyerFee.toLocaleString("en-IN")}
                 <br />
                 <span className="text-[#0F172A] font-proximaSemiBold">
-                  ₹{totalToPay.toLocaleString("en-IN")} total
+                  Total: ₹{totalBuyerPays.toLocaleString("en-IN")}
                 </span>
               </p>
             </div>

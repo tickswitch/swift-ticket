@@ -28,8 +28,6 @@ import TicketsUpload from "@/components/SellTicketsComponents/TicketsUpload";
 import AddTicketDetails from "@/components/SellTicketsComponents/AddTicketDetails";
 import TicketPrice from "@/components/SellTicketsComponents/TicketPrice";
 import YourTicketPrice from "@/components/SellTicketsComponents/YourTicketPrice";
-import YourAddress from "@/components/SellTicketsComponents/YourAddress";
-import BankDetail from "@/components/SellTicketsComponents/BankDetail";
 import ReviewAndFinish from "@/components/SellTicketsComponents/ReviewAndFinish";
 import CollectionArticles from "@/components/Help/CollectionArticles";
 import ArticlesDetails from "@/components/Help/ArticlesDetails";
@@ -146,8 +144,6 @@ const Routes = () => {
           <Route path="add-ticket-details" element={<AddTicketDetails />} />
           <Route path="ticket-price" element={<TicketPrice />} />
           <Route path="your-ticket-price" element={<YourTicketPrice />} />
-          <Route path="your-address" element={<YourAddress />} />
-          <Route path="bank-details" element={<BankDetail />} />
           <Route path="review-finish" element={<ReviewAndFinish />} />
           <Route path="collection-articles" element={<CollectionArticles />} />
           <Route path="article-details" element={<ArticlesDetails />} />
