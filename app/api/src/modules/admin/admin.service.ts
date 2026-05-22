@@ -20,8 +20,10 @@ const getListings = async (status?: string, page = 1) => {
     }),
   ]);
 
+  const mapped = listings.map((l) => ({ ...l, is_custom_event: l.ticketmaster_id === null }));
+
   return {
-    listings,
+    listings: mapped,
     total,
     page,
     page_size: PAGE_SIZE,

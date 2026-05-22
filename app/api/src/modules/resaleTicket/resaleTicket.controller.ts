@@ -64,8 +64,27 @@ const buyTicketList = catchAsync(async (req: AuthRequest, res: Response) => {
   return res.json({ status: true, data });
 });
 
+const customEventSchema = z.object({
+  title: z.string().min(1, 'Event name is required'),
+  venue: z.string().min(1, 'Venue is required'),
+  city: z.string().min(1, 'City is required'),
+  artist: z.string().optional(),
+  category: z.enum(['Concert', 'Festival', 'Sports', 'Comedy', 'Other']),
+  start_date: z.string().min(1, 'Event date is required'),
+  time: z.string().optional(),
+});
+
+const submitCustomEvent = catchAsync(async (req: AuthRequest, res: Response) => {
+  const parsed = customEventSchema.safeParse(req.body);
+  if (!parsed.success) return errorResponse(res, parsed.error.errors[0].message, 422);
+
+  const ticket = await resaleTicketService.submitCustomEvent(req.user!.id, parsed.data);
+  return successResponse(res, ticket, 'Custom event submitted successfully', 201);
+});
+
 export const resaleTicketController = {
   store,
+  submitCustomEvent,
   eventTickets,
   ticketsByType,
   sellTicketList,

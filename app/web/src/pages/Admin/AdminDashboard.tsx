@@ -19,6 +19,7 @@ interface AdminListingRow {
   ticket_type: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  is_custom_event?: boolean;
   user: { id: number; name: string; email: string; phone: string | null };
 }
 
@@ -139,7 +140,14 @@ const AdminDashboard = () => {
                         <p className="text-[#94A3B8] text-xs mt-0.5">{listing.user.email}</p>
                       </td>
                       <td className="px-5 py-3.5 max-w-[220px]">
-                        <p className="font-medium text-[#F8FAFC] truncate">{listing.title ?? '—'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-[#F8FAFC] truncate">{listing.title ?? '—'}</p>
+                          {listing.is_custom_event && (
+                            <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2563EB]/20 text-[#93C5FD] border border-[#2563EB]/30">
+                              Custom
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[#94A3B8] text-xs mt-0.5 truncate">{listing.venue ?? '—'}</p>
                       </td>
                       <td className="px-5 py-3.5 text-nowrap">
