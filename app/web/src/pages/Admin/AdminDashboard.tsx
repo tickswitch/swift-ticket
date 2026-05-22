@@ -23,8 +23,16 @@ interface AdminListingRow {
   user: { id: number; name: string; email: string; phone: string | null };
 }
 
-const STATUS_TABS = ['pending', 'approved', 'rejected', 'all'] as const;
+const STATUS_TABS = ['pending', 'approved', 'rejected', 'custom', 'all'] as const;
 type StatusFilter = typeof STATUS_TABS[number];
+
+const TAB_LABELS: Record<StatusFilter, string> = {
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  custom: 'Custom Events',
+  all: 'All',
+};
 
 const STATUS_COLORS = {
   pending:  'bg-amber-500/20 text-amber-300 border border-amber-500/30',
@@ -57,7 +65,8 @@ const AdminDashboard = () => {
     staleTime: 30_000,
   });
 
-  const listingsEndpoint = `/admin/listings?${statusFilter !== 'all' ? `status=${statusFilter}&` : ''}page=${page}`;
+  const apiStatus = statusFilter === 'custom' ? 'all' : statusFilter;
+  const listingsEndpoint = `/admin/listings?${apiStatus !== 'all' ? `status=${apiStatus}&` : ''}page=${page}`;
 
   const { data: listingsResp, isLoading } = useQuery({
     queryKey: ['admin-listings', statusFilter, page],
@@ -65,7 +74,8 @@ const AdminDashboard = () => {
     staleTime: 15_000,
   });
 
-  const listings: AdminListingRow[] = listingsResp?.data ?? [];
+  const allRows: AdminListingRow[] = listingsResp?.data ?? [];
+  const listings = statusFilter === 'custom' ? allRows.filter((r) => r.is_custom_event) : allRows;
   const pagination = (listingsResp as unknown as { pagination?: { total: number; page: number; total_pages: number } })?.pagination;
 
   const handleTabChange = (tab: StatusFilter) => {
@@ -94,13 +104,13 @@ const AdminDashboard = () => {
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`px-4 py-1.5 rounded-full text-sm font-proximaSemiBold capitalize transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-sm font-proximaSemiBold transition-colors ${
                 statusFilter === tab
                   ? 'bg-[#2563EB] text-white'
                   : 'text-[#94A3B8] hover:text-white'
               }`}
             >
-              {tab}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
