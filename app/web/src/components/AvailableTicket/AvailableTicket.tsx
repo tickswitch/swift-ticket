@@ -1,12 +1,3 @@
-import {
-  profile1,
-  profile2,
-  profile3,
-  profile4,
-  profile5,
-  profile6,
-  rupe,
-} from "@/assets";
 import Container from "@/components/Common/Container";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate, useParams } from "react-router";
@@ -32,96 +23,6 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Bell, ChevronLeft, Lock, Shield } from "lucide-react";
 import { formatShortDate } from "@/lib/formatDate";
  
-
-const tickets = [
-  {
-    id: 1,
-    quantity: 1,
-    stock: 2,
-    category: "VIP Gallery",
-    pricePerTicket: 200.0,
-    currencyIcon: rupe,
-    image: profile1,
-    original_ticket_price: 400.0,
-    time: "Today, 9:00 PM",
-    name: "Leganes Osasuna",
-    place: "Estadio Municipal da Butarque,Leganes",
-    totalPrice: 0.0,
-    newquantity: 0,
-  },
-  {
-    id: 2,
-    quantity: 1,
-    stock: 1,
-    category: "Regular",
-    pricePerTicket: 150.0,
-    currencyIcon: rupe,
-    image: profile2,
-    original_ticket_price: 400.0,
-    time: "Today, 9:00 PM",
-    name: "Leganes Osasuna",
-    place: "Estadio Municipal de Butarque, Leganes",
-    totalPrice: 0.0,
-  },
-  {
-    id: 3,
-    quantity: 1,
-    stock: 3,
-    category: "VIP Gallery",
-    pricePerTicket: 300.0,
-    currencyIcon: rupe,
-    image: profile3,
-    original_ticket_price: 350.0,
-    time: "Today, 7:30 PM",
-    name: "Real Zaragoza vs Eibar",
-    place: "La Romareda, Zaragoza",
-    totalPrice: 0.0,
-  },
-  {
-    id: 4,
-    quantity: 1,
-    stock: 5,
-    category: "Regular",
-    pricePerTicket: 150.0,
-    currencyIcon: rupe,
-    image: profile4,
-    original_ticket_price: 420.0,
-    time: "Tomorrow, 6:00 PM",
-    name: "Malaga CF vs Albacete",
-    place: "La Rosaleda, Malaga",
-    totalPrice: 0.0,
-  },
-  {
-    id: 5,
-    quantity: 1,
-    stock: 10,
-    category: "VIP Gallery",
-    pricePerTicket: 300.0,
-    currencyIcon: rupe,
-    image: profile5,
-    original_ticket_price: 380.0,
-    time: "Tomorrow, 8:00 PM",
-    name: "Sporting Gijon vs Tenerife",
-    place: "El Molinon, Gijon",
-    totalPrice: 0.0,
-  },
-  {
-    id: 6,
-    quantity: 1,
-    stock: 20,
-    category: "Regular",
-    pricePerTicket: 150.0,
-    currencyIcon: rupe,
-    image: profile6,
-    original_ticket_price: 410.0,
-    time: "Today, 10:00 PM",
-    name: "Racing Santander vs Huesca",
-    place: "Campos de Sport de El Sardinero, Santander",
-    totalPrice: 0.0,
-  },
-];
-
-localStorage.setItem("availableTickets", JSON.stringify(tickets));
 
 type SelectedTicket = {
   id: number | string;
