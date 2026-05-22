@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Wallet } from "lucide-react";
+import { User, Wallet, ShieldCheck } from "lucide-react";
 import { SearchOverlay } from "./SearchOverlay";
 
 const NavElement = [
@@ -127,6 +127,11 @@ const NavItem3 = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
 
+  const storedUser = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+  })();
+  const isAdmin = storedUser?.role === 'admin';
+
   const logout = useMutation({
     mutationKey: ["logout"],
     mutationFn: () => PostData("logout"),
@@ -225,6 +230,15 @@ const NavItem3 = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
             </NavLink>
           </DropdownMenuItem>
 
+          {isAdmin && (
+            <DropdownMenuItem onClick={() => setOpen(false)}>
+              <NavLink to="/admin" className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                Admin
+              </NavLink>
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuItem
             onClick={() => {
               setOpen(false);
@@ -242,6 +256,8 @@ const NavItem3 = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
 const Header = () => {
   const [isOpen, setOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { pathname } = useLocation();
+  const isAdminRoute = pathname.startsWith('/admin');
 
   const navOpen = () => {
     setOpen(false);
@@ -256,7 +272,7 @@ const Header = () => {
 
   return (
     <div className="z-20 ">
-      <div className="w-full px-5 md:px-10 py-4 flex items-center justify-between gap-5 fixed top-0 left-0 z-50 bg-[#000000]/50">
+      <div className={cn("w-full px-5 md:px-10 py-4 flex items-center justify-between gap-5 fixed top-0 left-0 z-50", isAdminRoute ? "bg-[#0F172A]" : "bg-[#000000]/50")}>
         {/* Logo */}
         <div className="flex items-center cursor-pointer" onClick={GoToHome}>
           <img

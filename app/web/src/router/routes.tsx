@@ -46,6 +46,9 @@ import PayoutSettings from "@/pages/Account/PayoutSettings";
 import AllSportsEvents from "@/components/HomePage/AllSportsEvents";
 import AllConcerts from "@/components/HomePage/AllConcerts";
 import ExploreAllEvents from "@/components/HomePage/ExploreAllEvents";
+import AdminDashboard from "@/pages/Admin/AdminDashboard";
+import AdminListingDetail from "@/pages/Admin/AdminListingDetail";
+import AdminRoute from "./AdminRoute";
 
 const HomePage = lazy(() => import("@/pages/HomePage"));
 
@@ -114,6 +117,22 @@ const Routes = () => {
           <Route path="all-sports-events" element={<AllSportsEvents />} />
           <Route path="all-concerts" element={<AllConcerts />} />
           <Route path="all-events" element={<ExploreAllEvents />} />
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="admin/listings/:id"
+            element={
+              <AdminRoute>
+                <AdminListingDetail />
+              </AdminRoute>
+            }
+          />
           <Route path="email" element={<Email />} />
           <Route path="phone" element={<Phone />} />
           <Route path="identy-verify" element={<IdentyVerify />} />
