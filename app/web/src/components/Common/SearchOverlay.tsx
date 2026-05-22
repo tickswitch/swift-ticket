@@ -15,9 +15,9 @@ interface RecentItem {
 }
 
 const TRENDING = [
-  'Amsterdam Dance Event',
-  'Rolling Loud Netherlands',
-  'Awakenings Festival',
+  'Lollapalooza India',
+  'Sunburn Festival',
+  'NH7 Weekender',
 ];
 
 interface SearchOverlayProps {
