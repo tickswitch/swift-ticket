@@ -27,6 +27,7 @@ import {
 import RazorpayCheckout from "@/components/PaymentMethod/RazorpayCheckout";
 import PaymentSuccessScreen from "@/components/PaymentMethod/PaymentSuccessScreen";
 import TicketListingCard, { type ResaleTicket } from "./TicketListingCard";
+import ShareListingButton from "./ShareListingButton";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Bell, ChevronLeft, Lock, Shield } from "lucide-react";
 import { formatShortDate } from "@/lib/formatDate";
@@ -291,14 +292,21 @@ const AvailableTicket = () => {
                 </div>
               ) : null}
 
-              {/* Trust badge */}
-              <div className="flex items-center gap-2 mt-5">
-                <div className="w-5 h-5 rounded-full bg-[#2563EB]/25 flex items-center justify-center shrink-0">
-                  <Shield className="w-3 h-3 text-[#2563EB]" aria-hidden="true" />
+              {/* Trust badge + share */}
+              <div className="flex items-center justify-between gap-3 mt-5 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#2563EB]/25 flex items-center justify-center shrink-0">
+                    <Shield className="w-3 h-3 text-[#2563EB]" aria-hidden="true" />
+                  </div>
+                  <span className="text-white/35 text-xs font-proximaRegular tracking-widest uppercase">
+                    SwiftTickets Buyer Protection
+                  </span>
                 </div>
-                <span className="text-white/35 text-xs font-proximaRegular tracking-widest uppercase">
-                  SwiftTickets Buyer Protection
-                </span>
+                <ShareListingButton
+                  eventName={eventTitle}
+                  price={Number(firstTicket?.price ?? 0)}
+                  listingId={`${id ?? ""}/${name ?? ""}`}
+                />
               </div>
             </div>
           </div>
@@ -381,6 +389,7 @@ const AvailableTicket = () => {
               key={ticket.id}
               ticket={ticket}
               index={i}
+              listingId={`${id ?? ""}/${name ?? ""}`}
               onBuyNow={(t) => {
                 const token = localStorage.getItem("token");
                 if (!token) {

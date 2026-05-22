@@ -13,21 +13,22 @@ const storeSchema = z.object({
   end_date: z.string().optional(),
   time: z.string().optional(),
   additional_info: z.string().optional(),
-  country_of_residence: z.string(),
-  address: z.string(),
-  city: z.string(),
-  postal_code: z.string(),
-  bank_country: z.string(),
-  account_holder_name: z.string(),
-  phone_number: z.string(),
-  bank_account_number: z.string(),
+  country_of_residence: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
+  bank_country: z.string().optional(),
+  account_holder_name: z.string().optional(),
+  phone_number: z.string().optional(),
+  bank_account_number: z.string().optional(),
 });
 
 const store = catchAsync(async (req: AuthRequest, res: Response) => {
   const parsed = storeSchema.safeParse(req.body);
   if (!parsed.success) return errorResponse(res, parsed.error.errors[0].message, 422);
 
-  if (!req.file) return errorResponse(res, 'Ticket file is required.', 422);
+  const files = req.files as Express.Multer.File[];
+  if (!files || files.length === 0) return errorResponse(res, 'Ticket file is required.', 422);
 
   const payload = {
     ...parsed.data,
@@ -37,7 +38,7 @@ const store = catchAsync(async (req: AuthRequest, res: Response) => {
     end_date: parsed.data.end_date ? new Date(parsed.data.end_date) : undefined,
   };
 
-  const filePath = `tickets/${req.file.filename}`;
+  const filePath = `tickets/${files[0].filename}`;
   await resaleTicketService.store(req.user!.id, payload, filePath);
 
   return res.json({ status: true, message: 'Ticket submitted for review successfully.' });

@@ -10,7 +10,7 @@ router.get('/events/tickets/:eventId', resaleTicketController.eventTickets);
 router.get('/events/:eventId/tickets/:ticketType', resaleTicketController.ticketsByType);
 
 // Authenticated routes
-router.post('/tickets/upload', authenticate, ticketUpload.single('ticket_file'), resaleTicketController.store);
+router.post('/tickets/upload', authenticate, ticketUpload.array('ticket_file'), resaleTicketController.store);
 router.get('/tickets/list/sell', authenticate, resaleTicketController.sellTicketList);
 router.get('/tickets/list/buy', authenticate, resaleTicketController.buyTicketList);
 

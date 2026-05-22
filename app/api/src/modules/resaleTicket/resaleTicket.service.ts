@@ -11,14 +11,14 @@ interface TicketStorePayload {
   end_date?: Date;
   time?: string;
   additional_info?: string;
-  country_of_residence: string;
-  address: string;
-  city: string;
-  postal_code: string;
-  bank_country: string;
-  account_holder_name: string;
-  phone_number: string;
-  bank_account_number: string;
+  country_of_residence?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  bank_country?: string;
+  account_holder_name?: string;
+  phone_number?: string;
+  bank_account_number?: string;
 }
 
 const store = async (userId: number, payload: TicketStorePayload, filePath: string) => {

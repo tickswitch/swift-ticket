@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { CheckCircle, ChevronRight, Phone, Shield, Tag, Users } from "lucide-react";
 import { priceCap } from "@/utils/priceCap";
 import { TicketBadge } from "@/components/Common/TicketBadge";
+import ShareListingButton from "./ShareListingButton";
 
 export interface ResaleTicket {
   id: string | number;
@@ -27,12 +28,14 @@ export interface ResaleTicket {
 interface TicketListingCardProps {
   ticket: ResaleTicket;
   index?: number;
+  listingId?: string;
   onBuyNow: (ticket: ResaleTicket) => void;
 }
 
 export default function TicketListingCard({
   ticket,
   index = 0,
+  listingId,
   onBuyNow,
 }: TicketListingCardProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -201,6 +204,16 @@ export default function TicketListingCard({
           <div className="w-5 h-5 rounded-full bg-blue-50 shrink-0" />
           <div className="flex-1 border-t-2 border-dashed border-[#2563EB]/15" />
           <div className="w-5 h-5 rounded-full bg-blue-50 shrink-0" />
+        </div>
+
+        {/* Share action */}
+        <div className="flex justify-center">
+          <ShareListingButton
+            eventName={ticket.title ?? ticket.ticket_type}
+            price={listingPrice}
+            listingId={listingId ?? String(ticket.id)}
+            className="flex items-center gap-1.5 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-full px-3 py-1.5 text-xs transition-colors duration-200 cursor-pointer"
+          />
         </div>
       </div>
     </motion.div>
