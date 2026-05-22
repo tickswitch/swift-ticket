@@ -44,6 +44,7 @@ import Phone from "@/pages/Account/Phone";
 import IdentyVerify from "@/pages/Account/IdentyVerify";
 import ContactDetails from "@/pages/Account/ContactDetails";
 import BankDetails from "@/pages/Account/BankDetails";
+import PayoutSettings from "@/pages/Account/PayoutSettings";
 import AllSportsEvents from "@/components/HomePage/AllSportsEvents";
 import AllConcerts from "@/components/HomePage/AllConcerts";
 import ExploreAllEvents from "@/components/HomePage/ExploreAllEvents";
@@ -119,6 +120,14 @@ const Routes = () => {
           <Route path="phone" element={<Phone />} />
           <Route path="identy-verify" element={<IdentyVerify />} />
           <Route path="contact-details" element={<ContactDetails />} />
+          <Route
+            path="account/payout"
+            element={
+              <ProtectedRoute>
+                <PayoutSettings />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Sell tickets routes */}

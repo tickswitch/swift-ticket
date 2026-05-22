@@ -6,6 +6,13 @@
       "env": {
         "API_KEY": "${TWENTYFIRST_API_KEY}"
       }
+    },
+    "nano-banana-2": {
+      "command": "npx",
+      "args": ["-y", "nano-banana-2-mcp"],
+      "env": {
+        "GEMINI_API_KEY": "AIzaSyAVAiM9ox6Mlv1JlTS8r2rl7gDusMJAMq8"
+      }
     }
   }
 }

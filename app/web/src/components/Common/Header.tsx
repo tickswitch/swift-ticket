@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { User, Wallet } from "lucide-react";
 import { SearchOverlay } from "./SearchOverlay";
 
 const NavElement = [
@@ -216,6 +216,13 @@ const NavItem3 = ({ onSearchOpen }: { onSearchOpen: () => void }) => {
 
           <DropdownMenuItem onClick={() => setOpen(false)}>
             <NavLink to="/help">Help</NavLink>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => setOpen(false)}>
+            <NavLink to="/account/payout" className="flex items-center gap-2">
+              <Wallet className="w-4 h-4" />
+              Payouts
+            </NavLink>
           </DropdownMenuItem>
 
           <DropdownMenuItem
