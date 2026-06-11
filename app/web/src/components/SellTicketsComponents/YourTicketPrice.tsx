@@ -19,7 +19,6 @@ import {
 import { ChevronLeft } from "lucide-react";
 import CheckElement from "../AddToCart/CheckElement"; 
 import { RiMoneyRupeeCircleLine } from "react-icons/ri";
-import { TbCoinTaka } from "react-icons/tb"; 
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -67,7 +66,7 @@ const YourTicketPrice = () => {
         price: Number(amount),
       })
     );
-    navigate("/your-address");
+    navigate("/review-finish");
   };
 
   const progress = useSelector((state: RootState) => state.stepper.progress);
@@ -130,9 +129,6 @@ const YourTicketPrice = () => {
               <SelectGroup>
                 <SelectItem value="Rupe">
                   Rupee <RiMoneyRupeeCircleLine className="text-[#606060]" />
-                </SelectItem>
-                <SelectItem value="BDT">
-                  Taka <TbCoinTaka className="text-[#606060]" />
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
@@ -219,7 +215,7 @@ const YourTicketPrice = () => {
             What you’ll get per ticket
           </h3>
           <span className="text-base md:text-[20px] text-[#606060]">
-            Your price minus 5% seller fee
+            Your price minus 6% seller fee (min ₹25)
           </span>
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />
@@ -237,7 +233,7 @@ const YourTicketPrice = () => {
             Buyer pays per ticket
           </h3>
           <span className="text-base md:text-[20px] text-[#606060]">
-            Your price plus 6% service fee & 3% transaction fee.
+            Your price plus 6% platform fee (min ₹25)
           </span>
           <div className="flex items-start gap-[6px]">
             <MoneyIcon />

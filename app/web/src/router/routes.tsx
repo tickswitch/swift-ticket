@@ -28,8 +28,6 @@ import TicketsUpload from "@/components/SellTicketsComponents/TicketsUpload";
 import AddTicketDetails from "@/components/SellTicketsComponents/AddTicketDetails";
 import TicketPrice from "@/components/SellTicketsComponents/TicketPrice";
 import YourTicketPrice from "@/components/SellTicketsComponents/YourTicketPrice";
-import YourAddress from "@/components/SellTicketsComponents/YourAddress";
-import BankDetail from "@/components/SellTicketsComponents/BankDetail";
 import ReviewAndFinish from "@/components/SellTicketsComponents/ReviewAndFinish";
 import CollectionArticles from "@/components/Help/CollectionArticles";
 import ArticlesDetails from "@/components/Help/ArticlesDetails";
@@ -44,9 +42,13 @@ import Phone from "@/pages/Account/Phone";
 import IdentyVerify from "@/pages/Account/IdentyVerify";
 import ContactDetails from "@/pages/Account/ContactDetails";
 import BankDetails from "@/pages/Account/BankDetails";
+import PayoutSettings from "@/pages/Account/PayoutSettings";
 import AllSportsEvents from "@/components/HomePage/AllSportsEvents";
 import AllConcerts from "@/components/HomePage/AllConcerts";
 import ExploreAllEvents from "@/components/HomePage/ExploreAllEvents";
+import AdminDashboard from "@/pages/Admin/AdminDashboard";
+import AdminListingDetail from "@/pages/Admin/AdminListingDetail";
+import AdminRoute from "./AdminRoute";
 
 const HomePage = lazy(() => import("@/pages/HomePage"));
 
@@ -115,10 +117,34 @@ const Routes = () => {
           <Route path="all-sports-events" element={<AllSportsEvents />} />
           <Route path="all-concerts" element={<AllConcerts />} />
           <Route path="all-events" element={<ExploreAllEvents />} />
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="admin/listings/:id"
+            element={
+              <AdminRoute>
+                <AdminListingDetail />
+              </AdminRoute>
+            }
+          />
           <Route path="email" element={<Email />} />
           <Route path="phone" element={<Phone />} />
           <Route path="identy-verify" element={<IdentyVerify />} />
           <Route path="contact-details" element={<ContactDetails />} />
+          <Route
+            path="account/payout"
+            element={
+              <ProtectedRoute>
+                <PayoutSettings />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Sell tickets routes */}
@@ -137,8 +163,6 @@ const Routes = () => {
           <Route path="add-ticket-details" element={<AddTicketDetails />} />
           <Route path="ticket-price" element={<TicketPrice />} />
           <Route path="your-ticket-price" element={<YourTicketPrice />} />
-          <Route path="your-address" element={<YourAddress />} />
-          <Route path="bank-details" element={<BankDetail />} />
           <Route path="review-finish" element={<ReviewAndFinish />} />
           <Route path="collection-articles" element={<CollectionArticles />} />
           <Route path="article-details" element={<ArticlesDetails />} />

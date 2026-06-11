@@ -14,7 +14,7 @@ import {
 import toast from "react-hot-toast";
 import { setStep } from "@/features/StepperSlice";
 import { useQuery } from "@tanstack/react-query";
-import { GetData } from "@/API/API";
+import { GetData, PostData } from "@/API/API";
 import Loader from "../Common/Loader";
 import ErrorText from "../Common/ErrorText";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -42,9 +42,28 @@ type EventItem = {
   imageUrl: string;
 };
 
+const CATEGORIES = ['Concert', 'Festival', 'Sports', 'Comedy', 'Other'] as const;
+
+type CustomEventForm = {
+  title: string;
+  artist: string;
+  venue: string;
+  city: string;
+  start_date: string;
+  time: string;
+  category: string;
+};
+
+const EMPTY_CUSTOM_FORM: CustomEventForm = {
+  title: '', artist: '', venue: '', city: '', start_date: '', time: '', category: 'Concert',
+};
+
 const SelectEvents = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [query, setQuery] = useState("");
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customForm, setCustomForm] = useState<CustomEventForm>(EMPTY_CUSTOM_FORM);
+  const [isSubmittingCustom, setIsSubmittingCustom] = useState(false);
   const location: Location = useLocation();
   const isEdit = location.state;
   const dispatch: AppDispatch = useDispatch();
@@ -57,6 +76,47 @@ const SelectEvents = () => {
     }
     dispatch(setStep(2));
     navigate("/review-finish");
+  };
+
+  const handleCustomFieldChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setCustomForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleCustomEventSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customForm.title || !customForm.venue || !customForm.city || !customForm.start_date || !customForm.category) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    setIsSubmittingCustom(true);
+    try {
+      type CustomEventResponse = { status: boolean; data: { id: number; title: string; venue: string; start_date: string } };
+      await PostData<CustomEventResponse>('resale-tickets/custom-event', {
+        title: customForm.title,
+        venue: customForm.venue,
+        city: customForm.city,
+        ...(customForm.artist ? { artist: customForm.artist } : {}),
+        category: customForm.category,
+        start_date: customForm.start_date,
+        ...(customForm.time ? { time: customForm.time } : {}),
+      });
+      dispatch(updateData({
+        event_title: customForm.title,
+        venue: customForm.venue,
+        start_date: customForm.start_date,
+        ...(customForm.time ? { time: customForm.time } : {}),
+      }));
+      toast.success("Event submitted! Your listing will be visible once our team reviews it (usually within a few hours).");
+      setShowCustomForm(false);
+      setCustomForm(EMPTY_CUSTOM_FORM);
+      navigate("/upload-tickets");
+    } catch {
+      toast.error("Failed to submit event. Please try again.");
+    } finally {
+      setIsSubmittingCustom(false);
+    }
   };
 
   const progress = useSelector((state: RootState) => state.stepper.progress);
@@ -134,6 +194,119 @@ const SelectEvents = () => {
           error={error}
           dispatch={dispatch}
         />
+      </div>
+
+      {/* Custom event path */}
+      <div className="mb-5">
+        <button
+          type="button"
+          onClick={() => setShowCustomForm((v) => !v)}
+          className="text-sm text-[#2563EB] hover:underline"
+        >
+          Can't find your event? Add it manually →
+        </button>
+
+        {showCustomForm && (
+          <form
+            onSubmit={handleCustomEventSubmit}
+            className="mt-4 p-5 bg-white border border-gray-200 rounded-2xl flex flex-col gap-4"
+          >
+            <p className="text-base font-semibold text-secondaryText001">Add your event</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">Event name *</label>
+                <input
+                  name="title"
+                  value={customForm.title}
+                  onChange={handleCustomFieldChange}
+                  placeholder="e.g. Arijit Singh Live"
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">Artist / Performer</label>
+                <input
+                  name="artist"
+                  value={customForm.artist}
+                  onChange={handleCustomFieldChange}
+                  placeholder="e.g. Arijit Singh"
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">Venue name *</label>
+                <input
+                  name="venue"
+                  value={customForm.venue}
+                  onChange={handleCustomFieldChange}
+                  placeholder="e.g. Jawaharlal Nehru Stadium"
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">City *</label>
+                <input
+                  name="city"
+                  value={customForm.city}
+                  onChange={handleCustomFieldChange}
+                  placeholder="e.g. Bengaluru"
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">Event date *</label>
+                <input
+                  name="start_date"
+                  type="date"
+                  value={customForm.start_date}
+                  onChange={handleCustomFieldChange}
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">Time</label>
+                <input
+                  name="time"
+                  type="time"
+                  value={customForm.time}
+                  onChange={handleCustomFieldChange}
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                />
+              </div>
+              <div className="flex flex-col gap-1 sm:col-span-2">
+                <label className="text-xs font-medium text-gray-500">Category *</label>
+                <select
+                  name="category"
+                  value={customForm.category}
+                  onChange={handleCustomFieldChange}
+                  className="px-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm outline-none focus:border-[#2563EB]"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => { setShowCustomForm(false); setCustomForm(EMPTY_CUSTOM_FORM); }}
+                className="px-6 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingCustom}
+                className="px-6 py-2.5 rounded-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium transition-colors disabled:opacity-60"
+              >
+                {isSubmittingCustom ? "Submitting…" : "Submit Event"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       <Button

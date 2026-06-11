@@ -197,7 +197,7 @@ const RazorpayCheckout = ({
         <hr className="border-t border-[#E7EAEC] my-1" />
 
         <div className="flex items-center justify-between">
-          <span className="text-[#606060] text-base">Platform fee (5%)</span>
+          <span className="text-[#606060] text-base">Platform fee (6%)</span>
           <span
             className="text-[#181818] text-base font-semibold"
             data-testid="summary-platform-fee"

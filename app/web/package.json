@@ -37,6 +37,7 @@
     "i18n-iso-countries": "^7.14.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.507.0",
+    "motion": "^12.38.0",
     "pdfjs-dist": "^5.2.133",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

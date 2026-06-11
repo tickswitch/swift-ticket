@@ -70,9 +70,6 @@ const checkout = async (userId: number, couponCode?: string) => {
       data: { razorpay_order_id: rzpOrder.id },
     });
 
-    // Option: wait until verify to empty cart & update reservation, or empty cart now (Laravel version empties now)
-    await tx.cartItem.deleteMany({ where: { cart_id: cart.id } });
-
     return {
       message: 'Order Placed successful',
       order,
@@ -128,6 +125,14 @@ const verify = async (
         where: { id: order.id },
         data: { payment_status: 'paid', transaction_id: razorpay_payment_id },
       });
+
+      // Clear the buyer's cart now that payment is confirmed
+      const userCart = await tx.cart.findFirst({
+        where: { user_id: order.user_id },
+      });
+      if (userCart) {
+        await tx.cartItem.deleteMany({ where: { cart_id: userCart.id } });
+      }
     }
 
     return { message: 'Payment verified successfully' };

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 7;
 
 interface StepperState {
   currentStep: number;
