@@ -15,3 +15,10 @@
 - **Root cause**: Premature cart deletion in checkout() instead of verify(). Comment in code even flagged the decision.
 - **Fix**: Moved cartItem.deleteMany to verify(), inside the payment_status !== 'paid' guard, after order marked paid.
 - **Rule going forward**: Never release a reservation or delete cart items until payment signature is verified. Order creation ≠ payment success.
+
+## [12 Jun 2026] — Leaked Gemini API key in .mcp.json
+- **What happened**: `GEMINI_API_KEY` for the nano-banana-2 MCP server was hardcoded as a literal value in `.mcp.json`, committed across ~20 commits on `nishant` (first introduced at 965e34d), pushed to `origin/nishant`. Google's automated key-leak scanner detected and auto-revoked it (`403 PERMISSION_DENIED: "Your API key was reported as leaked"`).
+- **Root cause**: `.mcp.json` was tracked in git with a literal API key instead of an env var reference. GitHub secret scanning is disabled on this repo (404 on `/secret-scanning/alerts`), so detection came from Google's own scanner, not GitHub — no alert to close on GitHub's side.
+- **Fix applied**: New key generated, set as `NANO_BANANA_GEMINI_API_KEY` user-level env var (not committed). `.mcp.json` untracked from git (6ba74fa), `.mcp.json.example` added as the template with `${NANO_BANANA_GEMINI_API_KEY}` placeholder, `.gitignore` updated to exclude `.mcp.json`.
+- **History scrub**: Skipped — key already revoked/inert, decided cosmetic-only. Would require `git filter-repo --replace-text` + force-push to `nishant` for ~20 commits (out of 165) if ever needed.
+- **Rule going forward**: Any MCP server config requiring a secret must use `${ENV_VAR}` placeholders in `.mcp.json`, never literal values. Real values live only in user-level env vars (`setx` on Windows), never in any tracked file.
