@@ -324,3 +324,8 @@ credentials.json
 *.pem
 *.key
 .credentials
+.claude/settings.local.json
+__pycache__/
+*.pyc
+.claude/settings.local.json
+.mcp.json

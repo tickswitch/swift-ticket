@@ -6,13 +6,14 @@ import cors from "cors";
 import path from "path";
 
 // Routes
-import authRoutes from "./modules/auth/auth.routes";
-import userRoutes from "./modules/user/user.routes";
-import eventRoutes from "./modules/event/event.routes";
-import cartRoutes from "./modules/cart/cart.routes";
-import checkoutRoutes from "./modules/checkout/checkout.routes";
-import resaleTicketRoutes from "./modules/resaleTicket/resaleTicket.routes";
-import publicRoutes from "./modules/public/public.routes";
+import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/user/user.routes';
+import eventRoutes from './modules/event/event.routes';
+import cartRoutes from './modules/cart/cart.routes';
+import checkoutRoutes from './modules/checkout/checkout.routes';
+import resaleTicketRoutes from './modules/resaleTicket/resaleTicket.routes';
+import publicRoutes from './modules/public/public.routes';
+import adminRoutes from './modules/admin/admin.routes';
 
 // Middleware
 import globalErrorHandler from "./middleware/errorHandler";
@@ -49,14 +50,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // API Routes
-app.use("/api", authRoutes); // /api/register, /api/login, etc.
-app.use("/api", userRoutes); // /api/profile, etc.
-app.use("/api", eventRoutes); // /api/favorites-calendar, etc.
-app.use("/api/cart", cartRoutes);
-app.use("/api/checkout", checkoutRoutes);
-app.use("/api", resaleTicketRoutes); // /api/tickets/upload, etc.
-app.use("/api", publicRoutes); // /api/cms, /api/contact-us, /api/faq, etc.
-// Note: Some laravel routes lacked specific prefixes so they sit on /api.
+app.use('/api', authRoutes); // /api/register, /api/login, etc.
+app.use('/api', userRoutes); // /api/profile, etc.
+app.use('/api', eventRoutes); // /api/favorites-calendar, etc.
+app.use('/api/cart', cartRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api', resaleTicketRoutes); // /api/tickets/upload, etc.
+app.use('/api', publicRoutes); // /api/cms, /api/contact-us, /api/faq, etc.
+app.use('/api/admin', adminRoutes);
+// Note: Some laravel routes lacked specific prefixes so they sit on /api. 
 // E.g., /api/sports-in-area was defined directly in api.php. Our eventRoutes are bound to /api, which covers this.
 
 // Handle unhandled routes

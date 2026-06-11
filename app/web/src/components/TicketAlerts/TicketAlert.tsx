@@ -22,6 +22,7 @@ import ErrorText from "../Common/ErrorText";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { ChevronRight, Ticket } from "lucide-react";
 
 const TicketAlert = () => {
   const { id } = useParams();
@@ -48,7 +49,7 @@ const TicketAlert = () => {
               {data?.total_reserved_quantity || "0"} wanted
             </p>
           </div>
-          <div className="py-5 flex flex-col gap-2">
+          <div className="py-5 w-full max-w-3xl mx-auto flex flex-col gap-2">
             <Alert />
             {error ? (
               <ErrorText />
@@ -240,7 +241,7 @@ const Banner = ({ data, id }) => {
 };
 
 const Alert = () => {
-  const id = "demo-event-123"; // Mock ID for demo
+  const { id } = useParams();
   const [isNotificationOn, setIsNotificationOn] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -295,7 +296,7 @@ const Alert = () => {
   // Don't render switch until we've loaded the initial state
   if (!isInitialized) {
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl gap-5 lg:gap-[300px] bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4 mx-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-5 bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4">
         <div className="flex items-center gap-2 w-full">
           <p className="bg-[#FF7E35] p-4 rounded-md">
             <TickertAlertIcons />
@@ -315,7 +316,7 @@ const Alert = () => {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl gap-5 lg:gap-[300px] bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4 mx-auto">
+    <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-5 bg-[#FF6D00]/10 border border-[#FF6D00] rounded-2xl p-4">
       <div className="flex items-center gap-2 w-full">
         <p className="bg-[#FF7E35] p-4 rounded-md">
           <TickertAlertIcons />
@@ -339,79 +340,89 @@ const Alert = () => {
   );
 };
 
-const EntranceTickets = ({  allData, isLoading, error }) => {
-  // data is an array of ticket types, each with tickets array
-  // if (!data || !Array.isArray(data)) return null;
-  console.log("all data", allData);
+const EntranceTickets = ({ allData, isLoading, error }) => {
   return isLoading ? (
     <Loader className="text-primary001" />
   ) : error ? (
     <ErrorText />
   ) : (
-    <div className="pt-5">
-      <div className="flex items-center justify-center w-full">
-        {/* <p className="text-2xl font-semibold pt-10 pb-5">Entrance tickets</p> */}
-
-        {!allData?.tickets_by_type ? (
-          <div className="pt-5">
-            <div className="max-w-3xl w-full mx-auto rounded-xl p-8 flex flex-col items-center gap-4 border border-gray-400">
-              <div className="bg-gray-300 rounded-full p-4">
-                <div className="w-10 h-10 flex items-center justify-center text-gray-500">
-                  <TicketIcons />
-                </div>
+    <div className="pt-5 w-full">
+      {!allData?.tickets_by_type ? (
+        <div className="pt-5">
+          <div className="max-w-3xl w-full mx-auto rounded-xl p-8 flex flex-col items-center gap-4 border border-gray-400">
+            <div className="bg-gray-300 rounded-full p-4">
+              <div className="w-10 h-10 flex items-center justify-center text-gray-500">
+                <TicketIcons />
               </div>
-
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-800">
-                No tickets available right now
-              </h3>
-
-              <p className="text-gray-500 text-center max-w-xl">
-                Got tickets to sell? Set up a listing for one of the fans
-                looking for a ticket.
-              </p>
-
-              <Link
-                to="/sell-tickets"
-                className="mt-2 bg-primary001/20 text-primary001 font-semibold px-4 py-1.5 rounded-full text-sm"
-              >
-                Start selling
-              </Link>
             </div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-gray-800">
+              No tickets available right now
+            </h3>
+            <p className="text-gray-500 text-center max-w-xl">
+              Got tickets to sell? Set up a listing for one of the fans
+              looking for a ticket.
+            </p>
+            <Link
+              to="/sell-tickets"
+              className="mt-2 bg-primary001/20 text-primary001 font-semibold px-4 py-1.5 rounded-full text-sm"
+            >
+              Start selling
+            </Link>
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-3 w-full">
-            {allData?.tickets_by_type?.[0]?.tickets?.map((type) => {
-              return (
-                <Link
-                  to={`/availabletickets/${allData?.event_id}/${type?.ticket_type}`}
-                  className="border border-gray-200 bg-[#DDE9F5]/80 rounded-xl w-1/2 p-3 cursor-pointer hover:bg-[#DDE9F5] transition-all duration-300 hover:-translate-y-2 flex items-center justify-between"
-                >
-                  <div>
-                    {" "}
-                    <p className="text-2xl font-semibold">
-                      {type?.ticket_type}
+        </div>
+      ) : (
+        <div className="w-full">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-3">
+            Entrance tickets
+          </p>
+          {allData?.tickets_by_type?.map((typeGroup) => {
+            const count =
+              typeGroup?.total_available_quantity_type ??
+              typeGroup?.tickets?.length ??
+              0;
+            const isSoldOut = count === 0;
+            const label = typeGroup?.ticket_type
+              ? typeGroup.ticket_type.charAt(0).toUpperCase() +
+                typeGroup.ticket_type.slice(1)
+              : "";
+            return (
+              <Link
+                key={typeGroup?.ticket_type}
+                to={`/availabletickets/${allData?.event_id}/${typeGroup?.ticket_type}`}
+                className={`w-full bg-white border border-gray-100 rounded-xl px-4 py-4 flex items-center justify-between mb-2 transition-colors ${
+                  isSoldOut
+                    ? "opacity-50 cursor-default pointer-events-none"
+                    : "hover:bg-gray-50 cursor-pointer"
+                }`}
+              >
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    {label}
+                  </p>
+                  {allData?.start_date && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {formatEventDate(allData.start_date)}
                     </p>
-                    {/* <p>
-                      {(allData?.date || allData?.start_date) &&
-                        formatEventDate(allData?.date, allData?.time)}{" "}
-                      {(allData?.date || allData?.start_date) &&
-                        getLocalTime(allData?.date, allData?.time)}
-                    </p> */}
-                  </div>
-                  <div>
-                    <p className="bg-[#FEC100] px-2 py-1 rounded-md w-fit">
-                      <span className="flex gap-1 text-white">
-                        <TicketIcons />
-                        {type?.quantity}
-                      </span>
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${
+                      isSoldOut
+                        ? "bg-gray-200 text-gray-500"
+                        : "bg-amber-400 text-amber-900"
+                    }`}
+                  >
+                    <Ticket size={14} />
+                    {count} left
+                  </span>
+                  <ChevronRight size={18} className="text-gray-400" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

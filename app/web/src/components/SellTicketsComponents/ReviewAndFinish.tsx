@@ -217,7 +217,7 @@ const ReviewAndFinish = () => {
       return;
     }
 
-    dispatch(setStep(9));
+    dispatch(setStep(7));
     FinalSubmit.mutate(formData);
     console.log("form data", formData);
   };
@@ -349,50 +349,25 @@ const ReviewAndFinish = () => {
           </div>
         </div>
 
-        {/* Phone number */}
+        {/* Payout method */}
         <div className=" bg-white p-5 border border-[#E7EAEC] rounded-2xl hover:shadow-xl duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between mb-3">
             <div className="flex gap-2 items-center">
               <OptinIcon />
               <p className="text-[#606060] sm:text-xl text-lg font-proximaSemiBold">
-                Phone number
+                Payout method
               </p>
             </div>
-            <button
-              onClick={() => navigate("/bank-details", { state: true })}
-              className="text-[#606060] sm:text-xl text-lg font-proximaSemiBold cursor-pointer"
+            <Link
+              to="/account/payout"
+              className="text-[#606060] sm:text-xl text-lg font-proximaSemiBold cursor-pointer hover:text-primary001 transition-colors"
             >
-              Edit
-            </button>
+              Manage in your profile →
+            </Link>
           </div>
           <div>
-            <p className="text-[#838383] sm:text-xl text-base ">
-              {data?.phone_number}
-            </p>
-          </div>
-        </div>
-
-        {/* Bank details */}
-        <div className=" bg-white p-5 border border-[#E7EAEC] rounded-2xl hover:shadow-xl duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex gap-2 items-center">
-              <OptinIcon />
-              <p className="text-[#606060] sm:text-xl text-lg font-proximaSemiBold">
-                Bank details
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/bank-details", { state: true })}
-              className="text-[#606060] sm:text-xl text-lg font-proximaSemiBold cursor-pointer"
-            >
-              Edit
-            </button>
-          </div>
-          <div>
-            <p className="text-[#838383] sm:text-xl text-sm">
-              {data?.account_holder_name} ({data?.bank_country}) ••••{" "}
-              {data?.bank_account_number?.slice(-4)}
-              {/* need just last four digit of bank account number */}
+            <p className="text-[#838383] sm:text-xl text-base">
+              UPI / Bank account
             </p>
           </div>
         </div>
