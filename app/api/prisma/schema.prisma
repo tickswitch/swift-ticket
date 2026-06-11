@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -10,90 +8,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  user
-  admin
-}
-
-enum UserStatus {
-  active
-  inactive
-}
-
-enum PaymentStatus {
-  pending
-  paid
-  failed
-}
-
-enum TicketStatus {
-  pending
-  approved
-  rejected
-}
-
-enum CmsStatus {
-  active
-  inactive
-}
-
-enum CouponType {
-  fixed
-  percent
-}
-
-enum FavoriteStatus {
-  interest
-  going
-}
-
 model User {
-  id               Int               @id @default(autoincrement())
-  provider         String?
-  provider_id      String?
-  name             String
-  email            String            @unique
+  id                Int                 @id @default(autoincrement())
+  provider          String?
+  provider_id       String?
+  name              String
+  email             String              @unique
   email_verified_at DateTime?
-  password         String
-  role             UserRole          @default(user)
-  status           UserStatus        @default(active)
-  avatar           String?
-  phone            String?
-  remember_token   String?
-  otp              String?
-  otp_expiration   DateTime?
-  reset_token      String?
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
-
-  financialProfiles FinancialProfile[]
-  resaleTickets     ResaleTicket[]
-  orders            Order[]
-  reviews           Review[]
+  password          String
+  role              UserRole            @default(user)
+  status            UserStatus          @default(active)
+  avatar            String?
+  phone             String?
+  remember_token    String?
+  otp               String?
+  otp_expiration    DateTime?
+  reset_token       String?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
   carts             Cart[]
   favorites         Favorite[]
+  financialProfiles FinancialProfile[]
   notifications     EventNotification[]
+  orders            Order[]
+  resaleTickets     ResaleTicket[]
+  reviews           Review[]
 
   @@map("users")
 }
 
 model FinancialProfile {
-  id                    Int      @id @default(autoincrement())
-  user_id               Int
-  address               String?
-  city                  String?
-  country_of_residence  String?
-  postal_code           String?
-  dob                   String?
-  bank_country          String?
-  account_holder_name   String?
-  phone_number          String?
-  bank_account_number   String?
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
-
-  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  resaleTickets ResaleTicket[]
+  id                   Int            @id @default(autoincrement())
+  user_id              Int
+  address              String?
+  city                 String?
+  country_of_residence String?
+  postal_code          String?
+  dob                  String?
+  bank_country         String?
+  account_holder_name  String?
+  phone_number         String?
+  bank_account_number  String?
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+  user                 User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  resaleTickets        ResaleTicket[]
 
   @@map("financial_profiles")
 }
@@ -116,12 +75,6 @@ model ResaleTicket {
   sold_quantity        Int              @default(0)
   original_price       Decimal          @db.Decimal(10, 2)
   price                Decimal          @db.Decimal(10, 2)
-  originalFaceValue    Decimal          @map("original_face_value") @db.Decimal(10, 2)
-  maxAllowedPrice      Decimal          @map("max_allowed_price") @db.Decimal(10, 2)
-  buyerFee             Decimal?         @map("buyer_fee") @db.Decimal(10, 2)
-  sellerFee            Decimal?         @map("seller_fee") @db.Decimal(10, 2)
-  sellerReceives       Decimal?         @map("seller_receives") @db.Decimal(10, 2)
-  totalBuyerPays       Decimal?         @map("total_buyer_pays") @db.Decimal(10, 2)
   ticket_type          String           @default("Regular")
   seat_info            String?
   additional_info      String?
@@ -130,11 +83,17 @@ model ResaleTicket {
   admin_notes          String?
   created_at           DateTime         @default(now())
   updated_at           DateTime         @updatedAt
-
-  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  financialProfile FinancialProfile @relation(fields: [financial_profile_id], references: [id], onDelete: Cascade)
-  cartItems        CartItem[]
-  orderItems       OrderItem[]
+  originalFaceValue    Decimal          @default(0) @map("original_face_value") @db.Decimal(10, 2)
+  maxAllowedPrice      Decimal          @default(0) @map("max_allowed_price") @db.Decimal(10, 2)
+  buyerFee             Decimal          @default(0) @map("buyer_fee") @db.Decimal(10, 2)
+  sellerFee            Decimal          @default(0) @map("seller_fee") @db.Decimal(10, 2)
+  sellerReceives       Decimal          @default(0) @map("seller_receives") @db.Decimal(10, 2)
+  totalBuyerPays       Decimal          @default(0) @map("total_buyer_pays") @db.Decimal(10, 2)
+  whatsapp_sent        Boolean          @default(false)
+  cartItems            CartItem[]
+  orderItems           OrderItem[]
+  financialProfile     FinancialProfile @relation(fields: [financial_profile_id], references: [id], onDelete: Cascade)
+  user                 User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("resale_tickets")
 }
@@ -144,27 +103,25 @@ model Cart {
   user_id    Int
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
-
-  user  User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  items CartItem[]
+  items      CartItem[]
+  user       User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("carts")
 }
 
 model CartItem {
-  id               Int       @id @default(autoincrement())
+  id               Int          @id @default(autoincrement())
   cart_id          Int
   resale_ticket_id Int
-  quantity         Int       @default(1)
-  price            Decimal   @db.Decimal(10, 2)
-  total_price      Decimal   @db.Decimal(10, 2)
+  quantity         Int          @default(1)
+  price            Decimal      @db.Decimal(10, 2)
+  total_price      Decimal      @db.Decimal(10, 2)
   reserved_until   DateTime?
-  is_purchased     Boolean   @default(false)
-  created_at       DateTime  @default(now())
-  updated_at       DateTime  @updatedAt
-
-  cart         Cart         @relation(fields: [cart_id], references: [id], onDelete: Cascade)
-  resaleTicket ResaleTicket @relation(fields: [resale_ticket_id], references: [id], onDelete: Cascade)
+  is_purchased     Boolean      @default(false)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  cart             Cart         @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  resaleTicket     ResaleTicket @relation(fields: [resale_ticket_id], references: [id], onDelete: Cascade)
 
   @@map("cart_items")
 }
@@ -179,45 +136,42 @@ model Coupon {
   expires_at       DateTime?
   created_at       DateTime   @default(now())
   updated_at       DateTime   @updatedAt
-
-  orders Order[]
+  orders           Order[]
 
   @@map("coupons")
 }
 
 model Order {
-  id               Int           @id @default(autoincrement())
-  user_id          Int
-  order_number     String        @unique
-  subtotal         Decimal       @db.Decimal(10, 2)
-  discount         Decimal       @default(0) @db.Decimal(10, 2)
-  total            Decimal       @db.Decimal(10, 2)
-  coupon_id        Int?
-  payment_method   String?
-  payment_status   PaymentStatus @default(pending)
+  id                Int           @id @default(autoincrement())
+  user_id           Int
+  order_number      String        @unique
+  subtotal          Decimal       @db.Decimal(10, 2)
+  discount          Decimal       @default(0) @db.Decimal(10, 2)
+  total             Decimal       @db.Decimal(10, 2)
+  coupon_id         Int?
+  payment_method    String?
+  payment_status    PaymentStatus @default(pending)
   razorpay_order_id String?
-  transaction_id   String?
-  created_at       DateTime      @default(now())
-  updated_at       DateTime      @updatedAt
-
-  user       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  coupon     Coupon?     @relation(fields: [coupon_id], references: [id], onDelete: SetNull)
-  orderItems OrderItem[]
+  transaction_id    String?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  orderItems        OrderItem[]
+  coupon            Coupon?       @relation(fields: [coupon_id], references: [id])
+  user              User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("orders")
 }
 
 model OrderItem {
-  id               Int      @id @default(autoincrement())
+  id               Int          @id @default(autoincrement())
   order_id         Int
   resale_ticket_id Int
   quantity         Int
-  price            Decimal  @db.Decimal(10, 2)
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-
-  order        Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  ticket       ResaleTicket @relation(fields: [resale_ticket_id], references: [id])
+  price            Decimal      @db.Decimal(10, 2)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  order            Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  ticket           ResaleTicket @relation(fields: [resale_ticket_id], references: [id])
 
   @@map("order_items")
 }
@@ -256,35 +210,33 @@ model Review {
   comment    String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("reviews")
 }
 
 model CMS {
-  id               Int       @id @default(autoincrement())
-  page             String?
-  section          String?
-  title            String?
-  sub_title        String?
-  image            String?
-  video            String?
-  description      String?   @db.Text
-  sub_description  String?   @db.Text
-  main_text        String?   @db.Text
-  sub_text         String?   @db.Text
-  button_text      String?
-  sub_button_text  String?
-  link_url         String?
-  email            String?
-  phone            String?
-  location         String?
-  status           CmsStatus @default(active)
-  created_at       DateTime  @default(now())
-  updated_at       DateTime  @updatedAt
-
-  galleries Gallery[]
+  id              Int       @id @default(autoincrement())
+  page            String?
+  section         String?
+  title           String?
+  sub_title       String?
+  image           String?
+  video           String?
+  description     String?
+  sub_description String?
+  main_text       String?
+  sub_text        String?
+  button_text     String?
+  sub_button_text String?
+  link_url        String?
+  email           String?
+  phone           String?
+  location        String?
+  status          CmsStatus @default(active)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  galleries       Gallery[]
 
   @@map("c_m_s")
 }
@@ -295,8 +247,7 @@ model Gallery {
   gallery    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  cms CMS @relation(fields: [cms_id], references: [id], onDelete: Cascade)
+  cms        CMS      @relation(fields: [cms_id], references: [id], onDelete: Cascade)
 
   @@map("galleries")
 }
@@ -304,7 +255,7 @@ model Gallery {
 model Service {
   id          Int       @id @default(autoincrement())
   title       String
-  description String?   @db.Text
+  description String?
   image       String?
   status      CmsStatus @default(active)
   created_at  DateTime  @default(now())
@@ -316,7 +267,7 @@ model Service {
 model CurrentSpecial {
   id          Int       @id @default(autoincrement())
   title       String?
-  description String?   @db.Text
+  description String?
   image       String?
   status      CmsStatus @default(active)
   created_at  DateTime  @default(now())
@@ -339,7 +290,7 @@ model LinkSocial {
 model SystemSetting {
   id         Int      @id @default(autoincrement())
   key        String   @unique
-  value      String?  @db.Text
+  value      String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -350,7 +301,7 @@ model DynamicPage {
   id         Int       @id @default(autoincrement())
   title      String
   slug       String    @unique
-  content    String?   @db.Text
+  content    String?
   status     CmsStatus @default(active)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
@@ -375,7 +326,7 @@ model MailSetting {
 model CustomScript {
   id         Int       @id @default(autoincrement())
   title      String?
-  script     String?   @db.Text
+  script     String?
   position   String?
   status     CmsStatus @default(active)
   created_at DateTime  @default(now())
@@ -391,8 +342,7 @@ model Favorite {
   status     FavoriteStatus @default(interest)
   created_at DateTime       @default(now())
   updated_at DateTime       @updatedAt
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, event_id])
   @@map("favorites")
@@ -405,9 +355,56 @@ model EventNotification {
   notify     Boolean  @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, event_id])
   @@map("notifications")
+}
+
+model disputes {
+  id           String    @id
+  order_id     String
+  raised_by_id String
+  reason       String
+  status       String    @default("Open")
+  admin_notes  String?
+  created_at   DateTime  @default(now())
+  resolved_at  DateTime?
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
+enum TicketStatus {
+  pending
+  approved
+  rejected
+}
+
+enum CmsStatus {
+  active
+  inactive
+}
+
+enum CouponType {
+  fixed
+  percent
+}
+
+enum FavoriteStatus {
+  interest
+  going
 }

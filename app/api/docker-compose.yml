@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: swift_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_DB: lokesh
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: swift_backend
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - postgres-db
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:your_secure_password@postgres-db:5432/lokesh
+
+volumes:
+  postgres_data:
