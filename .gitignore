@@ -20,6 +20,11 @@ __pycache__/
 # Playwright MCP debug output (logs, page snapshots)
 .playwright-mcp/
 
+# Playwright test runner output
+app/web/test-results/
+app/web/playwright-report/
+app/web/blob-report/
+
 # graphify generated graph data, caches, snapshots
 graphify-out/
 
