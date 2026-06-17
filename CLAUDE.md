@@ -55,10 +55,9 @@ swift-ticket/
 ├── CLAUDE.md                       This file
 │
 ├── .claude/
-│   ├── settings.local.json         Local only — never commit, in .gitignore
-│   └── skills/
-│       ├── ui-ux-pro-max/          UX logic skill (SKILL.md + CSV data + Python scripts)
-│       └── frontend-design/        Anthropic design aesthetics skill (SKILL.md)
+│   └── settings.local.json         Local only — never commit, in .gitignore
+│   (ui-ux-pro-max, frontend-design, and other skills now live globally in
+│    ~/.claude/skills/ — see §20)
 │
 ├── .emergent/
 │   └── emergent.yml                Emergent AI config
@@ -655,7 +654,7 @@ Do not invent interim solutions for these — they are committed and have define
 Two skills are active. Apply both on every UI task. They are complementary, not competing.
 
 ### Skill A: Anthropic frontend-design
-**Location**: `.claude/skills/frontend-design/SKILL.md`
+**Location**: `~/.claude/skills/frontend-design/` (global — invoke via Skill tool by name, no project-local copy)
 **Job**: Prevents generic "AI slop" output. Forces intentional, memorable visual direction.
 
 Key rules it enforces:
@@ -671,7 +670,7 @@ When this skill asks "what's unforgettable?" — the answer is: the feeling that
 your ticket are completely safe.
 
 ### Skill B: UI/UX Pro Max
-**Location**: `.claude/skills/ui-ux-pro-max/`
+**Location**: `~/.claude/skills/ui-ux-pro-max/` (global — invoke via Skill tool by name, no project-local copy)
 **Job**: UX logic, information hierarchy, interaction patterns, accessibility.
 
 Key rules it enforces:
