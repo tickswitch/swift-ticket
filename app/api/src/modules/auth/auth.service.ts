@@ -5,6 +5,20 @@ import { sendMail } from '../../config/mail';
 import { authRepository } from './auth.repository';
 import type { RegisterInput, LoginInput } from './auth.validation';
 
+// Pending email-OTP logins for emails with NO account yet. Verify-then-create:
+// the User row is only created once the OTP is confirmed, so an unverified
+// email never leaves a DB row behind.
+// ponytail: in-memory (fine for single-instance Render free tier + 5-min TTL);
+// move to Redis/a table if the API ever runs multiple instances.
+const pendingEmailOtps = new Map<string, { otp: string; expiresAt: number }>();
+
+const sweepExpiredOtps = () => {
+  const now = Date.now();
+  for (const [email, entry] of pendingEmailOtps) {
+    if (entry.expiresAt < now) pendingEmailOtps.delete(email);
+  }
+};
+
 const register = async (payload: RegisterInput, avatarPath?: string) => {
   // Check if email already exists
   const existing = await authRepository.findByEmail(payload.email);
@@ -55,8 +69,10 @@ const login = async (payload: LoginInput) => {
 
 const forgotPassword = async (email: string) => {
   const user = await authRepository.findByEmail(email);
+  // Do not reveal whether the email exists (account enumeration). Return a
+  // generic result; the controller responds identically either way.
   if (!user) {
-    throw new AppError('The provided email is not found.', 422);
+    return { otp: undefined, email };
   }
 
   const otp = String(Math.floor(1000 + Math.random() * 9000));
@@ -88,13 +104,15 @@ const verifyOtp = async (email: string, otp: string) => {
     throw new AppError('Invalid OTP or OTP has expired.', 403);
   }
 
-  // Generate reset token
+  // Generate reset token; reuse otp_expiration as the reset-token expiry
+  // window (15 min) so a leaked/stale token cannot reset a password forever.
   const rememberToken = await bcrypt.hash(user.email + Date.now(), 10);
+  const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
   await authRepository.updateById(user.id, {
     remember_token: rememberToken,
     otp: null,
-    otp_expiration: null,
+    otp_expiration: resetTokenExpiry,
   });
 
   return { remember_token: rememberToken };
@@ -106,17 +124,22 @@ const resetPassword = async (rememberToken: string, password: string) => {
     throw new AppError('Invalid or expired remember token.', 403);
   }
 
+  if (!user.otp_expiration || new Date() > user.otp_expiration) {
+    throw new AppError('Reset link has expired. Please request a new one.', 403);
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
   await authRepository.updateById(user.id, {
     password: hashedPassword,
     remember_token: null,
+    otp_expiration: null,
   });
 };
 
 const resendOtp = async (email: string) => {
   const user = await authRepository.findByEmail(email);
   if (!user) {
-    throw new AppError('The provided email is not found.', 422);
+    return { otp: undefined, email };
   }
 
   const otp = String(Math.floor(1000 + Math.random() * 9000));
@@ -166,44 +189,68 @@ const sendPhoneOtp = async (phone: string) => {
 };
 
 const sendEmailOtp = async (email: string) => {
-  let user = await authRepository.findByEmail(email);
-  if (!user) {
-    const placeholderPassword = await bcrypt.hash(`email-otp-${email}-${Date.now()}`, 10);
-    user = await authRepository.create({
-      name: email.split('@')[0],
-      email,
-      phone: null,
-      password: placeholderPassword,
-      avatar: null,
-    });
-  }
+  sweepExpiredOtps();
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
 
-  await authRepository.updateById(user.id, { otp, otp_expiration: otpExpiration });
+  const user = await authRepository.findByEmail(email);
+  if (user) {
+    // Existing account — store the OTP on their row (legitimate user).
+    await authRepository.updateById(user.id, { otp, otp_expiration: otpExpiration });
+  } else {
+    // New email — hold the OTP in memory only. No DB row until verified.
+    pendingEmailOtps.set(email, { otp, expiresAt: otpExpiration.getTime() });
+  }
 
-  const body = `Hello ${user.name},\n\nYour SwiftTickets login OTP is:\n\n${otp}\n\nThis code expires in 5 minutes. If you didn't request this, you can safely ignore this email.`;
+  const greetingName = user?.name ?? email.split('@')[0];
+  const body = `Hello ${greetingName},\n\nYour SwiftTickets login OTP is:\n\n${otp}\n\nThis code expires in 5 minutes. If you didn't request this, you can safely ignore this email.`;
   await sendMail(email, 'Your SwiftTickets Login OTP', body);
 
   return { email };
 };
 
 const verifyEmailOtp = async (email: string, otp: string) => {
-  const user = await authRepository.findByEmail(email);
-  if (!user) {
+  sweepExpiredOtps();
+
+  const existing = await authRepository.findByEmail(email);
+
+  if (existing) {
+    // Existing account — verify against the OTP stored on their row.
+    if (existing.otp !== String(otp)) {
+      throw new AppError('Invalid OTP or OTP has expired.', 403);
+    }
+    if (!existing.otp_expiration || new Date() > existing.otp_expiration) {
+      throw new AppError('Invalid OTP or OTP has expired.', 403);
+    }
+
+    await authRepository.updateById(existing.id, { otp: null, otp_expiration: null });
+
+    const token = generateToken({
+      id: existing.id,
+      email: existing.email,
+      role: existing.role,
+      name: existing.name,
+    });
+    return { user: existing, token };
+  }
+
+  // New email — verify against the in-memory pending OTP, then create the
+  // account. This is the verify-then-create step: no row exists until now.
+  const pending = pendingEmailOtps.get(email);
+  if (!pending || pending.otp !== String(otp) || pending.expiresAt < Date.now()) {
     throw new AppError('Invalid OTP or OTP has expired.', 403);
   }
 
-  if (user.otp !== String(otp)) {
-    throw new AppError('Invalid OTP or OTP has expired.', 403);
-  }
-
-  if (!user.otp_expiration || new Date() > user.otp_expiration) {
-    throw new AppError('Invalid OTP or OTP has expired.', 403);
-  }
-
-  await authRepository.updateById(user.id, { otp: null, otp_expiration: null });
+  const placeholderPassword = await bcrypt.hash(`email-otp-${email}-${Date.now()}`, 10);
+  const user = await authRepository.create({
+    name: email.split('@')[0],
+    email,
+    phone: null,
+    password: placeholderPassword,
+    avatar: null,
+  });
+  pendingEmailOtps.delete(email);
 
   const token = generateToken({
     id: user.id,

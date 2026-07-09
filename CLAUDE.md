@@ -331,17 +331,21 @@ maxListingPrice = floor(faceValue × 1.2)
 - **Server**: `resaleTicket.service.ts` throws `AppError(400)` if exceeded
 - **Never hardcode** `1.2` or `120%` anywhere — always import from `priceCap.ts`
 
-### Rule 2 — Platform Fees (5% + 5%)
+### Rule 2 — Platform Fees (6% + 6%, ₹25 minimum)
 ```
-buyerFee       = ceil(price × 0.05)
-sellerFee      = ceil(price × 0.05)
+buyerFee       = max(25, ceil(price × 0.06))
+sellerFee      = max(25, ceil(price × 0.06))
 totalBuyerPays = price + buyerFee
 sellerReceives = price - sellerFee
 ```
+- **Single source of truth**: `app/web/src/utils/priceCap.ts` (frontend) mirrored exactly by
+  `app/api/src/utils/pricing.ts` (backend) — never hardcode the rate or the ₹25 floor anywhere else
 - All fee fields are **stored on `ResaleTicket` at creation and are immutable** — price changes
   after listing are not allowed
-- `priceCap.ts` exports: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`,
+- `priceCap.ts` / `pricing.ts` export: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`,
   `sellerReceives`, `markupPercent`, `isWithinCap`
+- Backend checkout (`checkout.service.ts`) charges `buyerFee` on top of listing price via
+  Razorpay — the amount charged must always equal the amount shown on the pay button
 
 ### Rule 3 — Ticket Status Flow
 ```

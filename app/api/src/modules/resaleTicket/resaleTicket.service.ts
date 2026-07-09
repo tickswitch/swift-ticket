@@ -2,6 +2,7 @@ import axios from 'axios';
 import prisma from '../../config/prisma';
 import { AppError } from '../../utils/AppError';
 import { userRepository } from '../user/user.repository';
+import { maxListingPrice, buyerFee as calcBuyerFee, sellerFee as calcSellerFee, totalBuyerPays as calcTotalBuyerPays, sellerReceives as calcSellerReceives } from '../../utils/pricing';
 
 interface CustomEventPayload {
   title: string;
@@ -33,10 +34,9 @@ interface TicketStorePayload {
 
 const store = async (userId: number, payload: TicketStorePayload, filePath: string) => {
   // Enforce 120% price cap (SwiftTickets core business rule)
-  const MAX_MARKUP = 1.2;
   const faceValue = Number(payload.original_price);
   const listingPrice = Number(payload.price);
-  const maxAllowed = Math.floor(faceValue * MAX_MARKUP);
+  const maxAllowed = maxListingPrice(faceValue);
 
   if (listingPrice > maxAllowed) {
     throw new AppError(
@@ -45,11 +45,31 @@ const store = async (userId: number, payload: TicketStorePayload, filePath: stri
     );
   }
 
-  // Computed fee / payout fields
-  const buyerFee = Math.ceil(listingPrice * 0.05);
-  const sellerFee = Math.ceil(listingPrice * 0.05);
-  const totalBuyerPays = listingPrice + buyerFee;
-  const sellerReceives = listingPrice - sellerFee;
+  // Computed fee / payout fields — same rule as the frontend (utils/pricing.ts)
+  const buyerFee = calcBuyerFee(listingPrice);
+  const sellerFee = calcSellerFee(listingPrice);
+  const totalBuyerPays = calcTotalBuyerPays(listingPrice);
+  const sellerReceives = calcSellerReceives(listingPrice);
+
+  // Fetch event metadata BEFORE opening the DB transaction — never hold a
+  // Postgres connection open across an external HTTP round-trip.
+  let title = 'Unknown Event';
+  let venue: string | null = null;
+  let category: string | null = null;
+  let artist: string | null = null;
+
+  try {
+    const { data } = await axios.get(
+      `https://app.ticketmaster.com/discovery/v2/events/${payload.ticketmaster_id}`,
+      { params: { apikey: process.env.TICKETMASTER_API_KEY }, timeout: 5000 }
+    );
+    title = data.name ?? 'Unknown Event';
+    venue = data._embedded?.venues?.[0]?.name ?? null;
+    category = data.classifications?.[0]?.segment?.name ?? null;
+    artist = data._embedded?.attractions?.[0]?.name ?? null;
+  } catch {
+    // fallback to defaults
+  }
 
   return prisma.$transaction(async (tx) => {
     // 1. Store financial info
@@ -84,26 +104,7 @@ const store = async (userId: number, payload: TicketStorePayload, filePath: stri
       });
     }
 
-    // 2. Fetch event details from Ticketmaster
-    let title = 'Unknown Event';
-    let venue = null;
-    let category = null;
-    let artist = null;
-
-    try {
-      const { data } = await axios.get(
-        `https://app.ticketmaster.com/discovery/v2/events/${payload.ticketmaster_id}`,
-        { params: { apikey: process.env.TICKETMASTER_API_KEY } }
-      );
-      title = data.name ?? 'Unknown Event';
-      venue = data._embedded?.venues?.[0]?.name ?? null;
-      category = data.classifications?.[0]?.segment?.name ?? null;
-      artist = data._embedded?.attractions?.[0]?.name ?? null;
-    } catch {
-      // fallback to defaults
-    }
-
-    // 3. Store resale ticket
+    // 2. Store resale ticket (event metadata fetched above, before the tx)
     const ticket = await tx.resaleTicket.create({
       data: {
         user_id: userId,
@@ -297,7 +298,19 @@ const ticketsByType = async (eventId: string, ticketType: string) => {
       status: 'approved',
       ticket_type: { equals: normalizedType, mode: 'insensitive' },
     },
-    include: { user: { select: { id: true, name: true, avatar: true } } },
+    // Explicit select — NEVER expose ticket_file on a public endpoint, or the
+    // actual ticket/barcode can be downloaded without paying.
+    select: {
+      id: true, user_id: true, event_id: true, ticketmaster_id: true,
+      title: true, venue: true, artist: true, category: true,
+      start_date: true, end_date: true, time: true,
+      quantity: true, reserved_quantity: true, sold_quantity: true,
+      original_price: true, price: true, ticket_type: true,
+      seat_info: true, additional_info: true, status: true, created_at: true,
+      originalFaceValue: true, maxAllowedPrice: true,
+      buyerFee: true, sellerFee: true, sellerReceives: true, totalBuyerPays: true,
+      user: { select: { id: true, name: true, avatar: true } },
+    },
   });
 
   if (tickets.length === 0) {
