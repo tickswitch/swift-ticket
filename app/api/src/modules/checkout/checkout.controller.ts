@@ -8,11 +8,15 @@ import { z } from 'zod';
 const checkout = catchAsync(async (req: AuthRequest, res: Response) => {
   const parsed = z.object({
     coupon_code: z.string().optional(),
+    // Present when buying a single ticket (e.g. "Buy now" on a listing) —
+    // limits the order to that cart item instead of the whole cart.
+    ticket_id: z.string().or(z.number()).optional(),
   }).safeParse(req.body);
 
   if (!parsed.success) return errorResponse(res, parsed.error.errors[0].message, 422);
 
-  const data = await checkoutService.checkout(req.user!.id, parsed.data.coupon_code);
+  const ticketId = parsed.data.ticket_id !== undefined ? Number(parsed.data.ticket_id) : undefined;
+  const data = await checkoutService.checkout(req.user!.id, parsed.data.coupon_code, ticketId);
   return res.json({ success: true, ...data });
 });
 

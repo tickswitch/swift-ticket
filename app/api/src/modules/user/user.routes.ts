@@ -11,6 +11,7 @@ router.post('/bank/update', authenticate, uploadNone, userController.updateBank)
 router.post('/profile/photo', authenticate, avatarUpload.single('avatar'), userController.uploadAvatar);
 router.post('/email/update/request', authenticate, uploadNone, userController.requestEmailUpdate);
 router.post('/email/update/verify', authenticate, uploadNone, userController.verifyEmailUpdate);
-router.get('/remove/account', authenticate, userController.removeAccount);
+// Destructive: must not be a GET (prefetch/CSRF can trigger it).
+router.delete('/remove/account', authenticate, userController.removeAccount);
 
 export default router;
