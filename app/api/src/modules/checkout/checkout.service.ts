@@ -1,16 +1,36 @@
 import prisma from '../../config/prisma';
 import { AppError } from '../../utils/AppError';
 import { cartRepository } from '../cart/cart.repository';
+import { buyerFee } from '../../utils/pricing';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-const checkout = async (userId: number, couponCode?: string) => {
+const razorpayKeyId = () => process.env.RAZORPAY_KEY_ID ?? process.env.RAZORPAY_KEY ?? '';
+const razorpayKeySecret = () => process.env.RAZORPAY_KEY_SECRET ?? process.env.RAZORPAY_SECRET ?? '';
+
+const checkout = async (userId: number, couponCode?: string, ticketId?: number) => {
   const cart = await cartRepository.getCartWithItems(userId);
   if (!cart || cart.items.length === 0) {
     throw new AppError('Cart is empty', 400);
   }
 
-  const subtotal = cart.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  // "Buy now" on a single listing passes ticket_id — only that cart item is
+  // ordered/charged, not everything sitting in the buyer's cart.
+  let items = cart.items;
+  if (ticketId !== undefined) {
+    items = cart.items.filter((item) => item.resale_ticket_id === ticketId);
+    if (items.length === 0) {
+      throw new AppError('Ticket not found in cart.', 404);
+    }
+  }
+
+  const subtotal = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  // Buyer platform fee, computed with the same rule the frontend displays.
+  // Without this the buyer is never charged the fee shown on the pay button.
+  const buyerFeesTotal = items.reduce(
+    (sum, item) => sum + buyerFee(Number(item.price)) * item.quantity,
+    0
+  );
   let discount = 0;
   let couponId: number | null = null;
 
@@ -26,7 +46,7 @@ const checkout = async (userId: number, couponCode?: string) => {
     }
   }
 
-  const total = Math.max(0, subtotal - discount);
+  const total = Math.max(0, subtotal - discount) + buyerFeesTotal;
 
   return prisma.$transaction(async (tx) => {
     const orderNumber = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -42,7 +62,7 @@ const checkout = async (userId: number, couponCode?: string) => {
         payment_method: 'razorpay',
         payment_status: 'pending',
         orderItems: {
-          create: cart.items.map((item) => ({
+          create: items.map((item) => ({
             resale_ticket_id: item.resale_ticket_id,
             quantity: item.quantity,
             price: item.price,
@@ -52,8 +72,8 @@ const checkout = async (userId: number, couponCode?: string) => {
     });
 
     const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY as string,
-      key_secret: process.env.RAZORPAY_SECRET as string,
+      key_id: razorpayKeyId(),
+      key_secret: razorpayKeySecret(),
     });
 
     const options = {
@@ -75,7 +95,7 @@ const checkout = async (userId: number, couponCode?: string) => {
       order,
       razorpay: {
         order_id: rzpOrder.id,
-        key: process.env.RAZORPAY_KEY,
+        key: razorpayKeyId(),
         amount: Math.round(total * 100),
         currency: 'INR',
       },
@@ -88,7 +108,7 @@ const verify = async (
   razorpay_payment_id: string,
   razorpay_signature: string
 ) => {
-  const secret = process.env.RAZORPAY_SECRET as string;
+  const secret = razorpayKeySecret();
   const body = razorpay_order_id + '|' + razorpay_payment_id;
 
   const expectedSignature = crypto
@@ -126,12 +146,17 @@ const verify = async (
         data: { payment_status: 'paid', transaction_id: razorpay_payment_id },
       });
 
-      // Clear the buyer's cart now that payment is confirmed
+      // Clear only the cart items that were part of THIS order — checkout
+      // can now be scoped to a single ticket (ticket_id), so wiping the
+      // whole cart here would delete the buyer's other, still-unpaid items.
       const userCart = await tx.cart.findFirst({
         where: { user_id: order.user_id },
       });
       if (userCart) {
-        await tx.cartItem.deleteMany({ where: { cart_id: userCart.id } });
+        const paidTicketIds = order.orderItems.map((item) => item.resale_ticket_id);
+        await tx.cartItem.deleteMany({
+          where: { cart_id: userCart.id, resale_ticket_id: { in: paidTicketIds } },
+        });
       }
     }
 
