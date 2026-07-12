@@ -1,13 +1,50 @@
 import prisma from '../../config/prisma';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../utils/AppError';
 import { cartRepository } from './cart.repository';
 import axios from 'axios';
+
+// Release any cart holds whose reservation window has expired, freeing the
+// reserved_quantity back to availability. Runs opportunistically on cart add
+// since the free tier has no background scheduler.
+// ponytail: global sweep on every add; move to a cron/interval if volume grows.
+const releaseExpiredReservations = async (tx: Prisma.TransactionClient) => {
+  const expired = await tx.cartItem.findMany({
+    where: { reserved_until: { lt: new Date() }, is_purchased: false },
+    select: { id: true, resale_ticket_id: true, quantity: true },
+  });
+  if (expired.length === 0) return;
+
+  const freedByTicket = new Map<number, number>();
+  for (const item of expired) {
+    freedByTicket.set(
+      item.resale_ticket_id,
+      (freedByTicket.get(item.resale_ticket_id) ?? 0) + item.quantity
+    );
+  }
+
+  for (const [ticketId, freed] of freedByTicket) {
+    const ticket = await tx.resaleTicket.findUnique({
+      where: { id: ticketId },
+      select: { reserved_quantity: true },
+    });
+    if (!ticket) continue;
+    await tx.resaleTicket.update({
+      where: { id: ticketId },
+      data: { reserved_quantity: Math.max(0, ticket.reserved_quantity - freed) },
+    });
+  }
+
+  await tx.cartItem.deleteMany({ where: { id: { in: expired.map((e) => e.id) } } });
+};
 
 const add = async (userId: number, ticketId: number, qty: number) => {
   const cart = await cartRepository.getCart(userId);
 
   return prisma.$transaction(async (tx) => {
-    // using Prisma transaction to "lock" / ensure consistency in real-world scenarios
+    // Free expired holds first so freed seats count toward availability.
+    await releaseExpiredReservations(tx);
+
     const ticket = await tx.resaleTicket.findUnique({ where: { id: ticketId } });
     if (!ticket) throw new AppError('Ticket not found', 404);
 
@@ -38,6 +75,17 @@ const add = async (userId: number, ticketId: number, qty: number) => {
       where: { id: ticket.id },
       data: { reserved_quantity: { increment: qty } },
     });
+
+    // Defensive re-check: if a concurrent add pushed reservations past the
+    // available supply, roll back rather than oversell.
+    // ponytail: full fix needs SELECT ... FOR UPDATE / Serializable isolation.
+    const after = await tx.resaleTicket.findUnique({
+      where: { id: ticket.id },
+      select: { quantity: true, reserved_quantity: true, sold_quantity: true },
+    });
+    if (after && after.reserved_quantity + after.sold_quantity > after.quantity) {
+      throw new AppError('Not enough tickets available.', 409);
+    }
 
     return cartItem;
   });

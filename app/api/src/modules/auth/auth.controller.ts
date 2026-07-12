@@ -79,8 +79,10 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 
   return res.status(200).json({
     status: true,
-    message: 'OTP sent to your email.',
-    otp: result.otp, // exposed for dev/testing (remove in production)
+    message: 'If an account exists for this email, an OTP has been sent.',
+    // OTP is delivered by email. Never expose it in the HTTP response in a
+    // real environment — only surface it in local development for testing.
+    ...(process.env.NODE_ENV === 'development' ? { otp: result.otp } : {}),
     email: result.email,
     code: '200',
   });
@@ -127,8 +129,8 @@ const resendOtp = catchAsync(async (req: Request, res: Response) => {
 
   return res.status(200).json({
     status: true,
-    message: 'OTP resent to your email.',
-    otp: result.otp,
+    message: 'If an account exists for this email, an OTP has been sent.',
+    ...(process.env.NODE_ENV === 'development' ? { otp: result.otp } : {}),
     email: result.email,
     code: '200',
   });

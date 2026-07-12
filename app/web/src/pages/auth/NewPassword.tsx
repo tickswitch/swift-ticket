@@ -6,11 +6,13 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { passwordRules, firstPasswordError } from "@/utils/password";
 
 const Register = () => {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState({ first: false, second: false });
   const [isPending, setIsPending] = useState(false);
+  const [pwd, setPwd] = useState("");
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,6 +28,12 @@ const Register = () => {
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match.");
+      return;
+    }
+
+    const pwError = firstPasswordError(password);
+    if (pwError) {
+      toast.error(pwError);
       return;
     }
     try {
@@ -86,6 +94,8 @@ const Register = () => {
                 autoComplete="new-password"
                 placeholder="Password"
                 required
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
                 className="border border-white/50 rounded-md px-3 py-3 w-full text-white/50"
               />
             </div>
@@ -109,27 +119,22 @@ const Register = () => {
               />
             </div>
 
-            <div className="py-5 grid grid-cols-2 gap-4 text-green-500">
-              <p className={cn("flex items-center gap-2")}>
-                <GreenCheckIcon />
-                Uppercase letter
-              </p>
-              <p className={cn("flex items-center gap-2")}>
-                <GreenCheckIcon />
-                Lowercase letter
-              </p>
-              <p className={cn("flex items-center gap-2")}>
-                <GreenCheckIcon />
-                Number
-              </p>
-              <p className={cn("flex items-center gap-2")}>
-                <GreenCheckIcon />
-                Special character
-              </p>
-              <p className={cn("flex items-center gap-2")}>
-                <GreenCheckIcon />
-                8+ characters
-              </p>
+            <div className="py-5 grid grid-cols-2 gap-4">
+              {passwordRules.map((rule) => {
+                const met = rule.test(pwd);
+                return (
+                  <p
+                    key={rule.label}
+                    className={cn(
+                      "flex items-center gap-2",
+                      met ? "text-green-500" : "text-white/40"
+                    )}
+                  >
+                    <GreenCheckIcon />
+                    {rule.label}
+                  </p>
+                );
+              })}
             </div>
 
             <div className="pt-5">
