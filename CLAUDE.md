@@ -55,10 +55,9 @@ swift-ticket/
 ├── CLAUDE.md                       This file
 │
 ├── .claude/
-│   ├── settings.local.json         Local only — never commit, in .gitignore
-│   └── skills/
-│       ├── ui-ux-pro-max/          UX logic skill (SKILL.md + CSV data + Python scripts)
-│       └── frontend-design/        Anthropic design aesthetics skill (SKILL.md)
+│   └── settings.local.json         Local only — never commit, in .gitignore
+│   (ui-ux-pro-max, frontend-design, and other skills now live globally in
+│    ~/.claude/skills/ — see §20)
 │
 ├── .emergent/
 │   └── emergent.yml                Emergent AI config
@@ -332,17 +331,21 @@ maxListingPrice = floor(faceValue × 1.2)
 - **Server**: `resaleTicket.service.ts` throws `AppError(400)` if exceeded
 - **Never hardcode** `1.2` or `120%` anywhere — always import from `priceCap.ts`
 
-### Rule 2 — Platform Fees (5% + 5%)
+### Rule 2 — Platform Fees (6% + 6%, ₹25 minimum)
 ```
-buyerFee       = ceil(price × 0.05)
-sellerFee      = ceil(price × 0.05)
+buyerFee       = max(25, ceil(price × 0.06))
+sellerFee      = max(25, ceil(price × 0.06))
 totalBuyerPays = price + buyerFee
 sellerReceives = price - sellerFee
 ```
+- **Single source of truth**: `app/web/src/utils/priceCap.ts` (frontend) mirrored exactly by
+  `app/api/src/utils/pricing.ts` (backend) — never hardcode the rate or the ₹25 floor anywhere else
 - All fee fields are **stored on `ResaleTicket` at creation and are immutable** — price changes
   after listing are not allowed
-- `priceCap.ts` exports: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`,
+- `priceCap.ts` / `pricing.ts` export: `maxListingPrice`, `buyerFee`, `sellerFee`, `totalBuyerPays`,
   `sellerReceives`, `markupPercent`, `isWithinCap`
+- Backend checkout (`checkout.service.ts`) charges `buyerFee` on top of listing price via
+  Razorpay — the amount charged must always equal the amount shown on the pay button
 
 ### Rule 3 — Ticket Status Flow
 ```
@@ -655,7 +658,7 @@ Do not invent interim solutions for these — they are committed and have define
 Two skills are active. Apply both on every UI task. They are complementary, not competing.
 
 ### Skill A: Anthropic frontend-design
-**Location**: `.claude/skills/frontend-design/SKILL.md`
+**Location**: `~/.claude/skills/frontend-design/` (global — invoke via Skill tool by name, no project-local copy)
 **Job**: Prevents generic "AI slop" output. Forces intentional, memorable visual direction.
 
 Key rules it enforces:
@@ -671,7 +674,7 @@ When this skill asks "what's unforgettable?" — the answer is: the feeling that
 your ticket are completely safe.
 
 ### Skill B: UI/UX Pro Max
-**Location**: `.claude/skills/ui-ux-pro-max/`
+**Location**: `~/.claude/skills/ui-ux-pro-max/` (global — invoke via Skill tool by name, no project-local copy)
 **Job**: UX logic, information hierarchy, interaction patterns, accessibility.
 
 Key rules it enforces:

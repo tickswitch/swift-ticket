@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { BeatLoader } from "react-spinners";
+import { firstPasswordError } from "@/utils/password";
 
 interface RegisterFormData {
   name: string;
@@ -144,6 +145,12 @@ const Register = () => {
 
     if (data.password !== data.password_confirmation) {
       toast.error("Passwords do not match.");
+      return;
+    }
+
+    const pwError = firstPasswordError(data.password);
+    if (pwError) {
+      toast.error(pwError);
       return;
     }
 
