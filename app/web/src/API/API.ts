@@ -25,14 +25,15 @@ const SUBSCRIPTION_KEY = import.meta.env.VITE_DOSESPOT_SUBSCRIPTION_KEY;
 
 // --- Auth Data ---
 const user = safeParse<{ token?: string }>(localStorage.getItem("userInfo"));
-let token = localStorage.getItem("token");
 
-// let token = safeParse<string>(localStorage.getItem("token"));
+// Read the freshest token available at call time.
+const currentToken = (): string =>
+  localStorage.getItem("token") ?? user?.token ?? "";
 
 // --- Headers Generator ---
 const getHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${(token || token) ?? user?.token ?? ""}`,
+  Authorization: `Bearer ${currentToken()}`,
   "X-Subscription-Key": SUBSCRIPTION_KEY,
 });
 
@@ -46,6 +47,18 @@ const pharPayApi: AxiosInstance = axios.create({
   baseURL: PHARPAY_URL,
   headers: getHeaders(),
 });
+
+// Inject the live token on every request so a login mid-session (or another
+// tab) is always reflected without relying on setAuthToken having been called.
+const attachLiveToken = (instance: AxiosInstance) => {
+  instance.interceptors.request.use((config) => {
+    const t = currentToken();
+    if (t) config.headers.Authorization = `Bearer ${t}`;
+    return config;
+  });
+};
+attachLiveToken(baseApi);
+attachLiveToken(pharPayApi);
 
 // --- API Client Selector ---
 const getClient = (client: ApiClient): AxiosInstance =>
@@ -99,10 +112,10 @@ export const DeleteData = async <T>(
 };
 
 // --- Token Updater (if login state changes later) ---
-export const setAuthToken = (newToken: string) => {
-  token = newToken;
-  baseApi.defaults.headers["Authorization"] = `Bearer ${newToken}`;
-  pharPayApi.defaults.headers["Authorization"] = `Bearer ${newToken}`;
+export const setAuthToken = (newToken: string | null) => {
+  const value = newToken ? `Bearer ${newToken}` : "";
+  baseApi.defaults.headers["Authorization"] = value;
+  pharPayApi.defaults.headers["Authorization"] = value;
 };
 
 export const PostFormUrlEncoded = async <T>(

@@ -12,9 +12,9 @@ export const updateContactSchema = z.object({
 
 export const updateBankSchema = z.object({
   bank_country: z.string().max(100),
-  account_holder_name: z.string().max(20),
-  phone_number: z.string(),
-  bank_account_number: z.string().regex(/^\+?[0-9\s\-()?]{7,15}$/, 'Invalid account number'),
+  account_holder_name: z.string().min(1).max(255),
+  phone_number: z.string().max(20),
+  bank_account_number: z.string().regex(/^\d{9,18}$/, 'Invalid account number'),
 });
 
 export const requestEmailUpdateSchema = z.object({
