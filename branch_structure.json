@@ -1,0 +1,33 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dev",
+    "feat/india-launch-seo-fonts",
+    "feat/redesign",
+    "feature/event-scraper",
+    "main",
+    "naim",
+    "nishant",
+    "origin"
+  ],
+  "parent": {
+    "dev": "main",
+    "feat/india-launch-seo-fonts": "main",
+    "feat/redesign": "main",
+    "feature/event-scraper": "main",
+    "main": null,
+    "naim": "main",
+    "nishant": "main",
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "dev",
+    "feat/india-launch-seo-fonts",
+    "feat/redesign",
+    "feature/event-scraper",
+    "naim",
+    "nishant",
+    "origin"
+  ]
+}
