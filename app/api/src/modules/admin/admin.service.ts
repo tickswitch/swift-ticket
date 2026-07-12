@@ -50,6 +50,7 @@ const approveListing = async (id: number) => {
     include: { user: { select: { name: true, email: true } } },
   });
   if (!ticket) throw new AppError('Listing not found', 404);
+  if (ticket.status === 'approved') throw new AppError('Listing is already approved.', 409);
 
   const updated = await prisma.resaleTicket.update({
     where: { id },
@@ -71,6 +72,7 @@ const rejectListing = async (id: number, reason: string) => {
     include: { user: { select: { name: true, email: true } } },
   });
   if (!ticket) throw new AppError('Listing not found', 404);
+  if (ticket.status === 'rejected') throw new AppError('Listing is already rejected.', 409);
 
   const updated = await prisma.resaleTicket.update({
     where: { id },
