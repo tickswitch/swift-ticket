@@ -113,6 +113,8 @@ const Footer = () => {
                 Support
               </p>
               <div className="flex flex-col gap-3 text-white/70 font-proximaRegular text-base">
+                <NavLink to="/trust-and-safety" className="hover:text-white transition-colors">Trust &amp; Safety</NavLink>
+                <NavLink to="/fees" className="hover:text-white transition-colors">Fees &amp; Price Cap</NavLink>
                 <p className="cursor-pointer hover:text-white transition-colors">Terms & Conditions</p>
                 <p className="cursor-pointer hover:text-white transition-colors">Privacy Policy</p>
                 <p className="cursor-pointer hover:text-white transition-colors">Help & FAQs</p>
@@ -181,6 +183,8 @@ const Footer = () => {
                 <div>
                   <p className="text-white text-xl font-proximaSemiBold mb-4">Support</p>
                   <div className="flex flex-col gap-3 text-white/70 font-proximaRegular text-sm">
+                    <NavLink to="/trust-and-safety">Trust &amp; Safety</NavLink>
+                    <NavLink to="/fees">Fees &amp; Price Cap</NavLink>
                     <p className="cursor-pointer">Terms & Conditions</p>
                     <p className="cursor-pointer">Privacy Policy</p>
                     <p className="cursor-pointer">Help & FAQs</p>
