@@ -1,6 +1,4 @@
 # Environment and credential files
-.env
-.env.*
 *.env
 !app/web/.env.example
 !app/api/.env.example
@@ -40,3 +38,5 @@ skills-lock.json
 .claude/skills/caveman-help/
 .claude/skills/caveman-review/
 .claude/skills/caveman-stats/
+config.bat
+node_modules
