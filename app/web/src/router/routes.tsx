@@ -5,6 +5,8 @@ import MainLayout from "@/layouts/MainLayout";
 import HowItWorks from "@/pages/HowItWorks";
 import HowToSell from "@/pages/HowToSell";
 import About from "@/pages/About";
+import TrustSafety from "@/pages/TrustSafety";
+import Fees from "@/pages/Fees";
 import Magazine from "@/pages/Magazine";
 import Jobs from "@/pages/Jobs";
 import TicketAlerts from "@/pages/TicketAlerts";
@@ -62,6 +64,8 @@ const Routes = () => {
           <Route path="/howitworks" element={<HowItWorks />} />
           <Route path="/howtosell" element={<HowToSell />} />
           <Route path="/about" element={<About />} />
+          <Route path="/trust-and-safety" element={<TrustSafety />} />
+          <Route path="/fees" element={<Fees />} />
           <Route path="/magazine" element={<Magazine />} />
           <Route path="/magazine/:id" element={<DiscoverDetails />} />
           <Route path="/jobs" element={<Jobs />} />
