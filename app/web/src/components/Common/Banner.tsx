@@ -40,8 +40,8 @@ const Banner = () => {
 
       <div className="relative z-10 flex flex-col items-center text-center px-4 py-16 max-w-3xl mx-auto">
 
-        <h1 className="text-4xl md:text-5xl font-proximaBold text-white leading-tight mb-4">
-          Buy & Sell Tickets Securely
+        <h1 className="text-4xl md:text-5xl font-proximaBold tracking-tight text-white leading-tight mb-4">
+          Buy & Sell Tickets <em className="font-fraunces italic font-medium">Securely</em>
         </h1>
 
         <p className="text-sm md:text-base font-proximaRegular text-white/70 mb-8">

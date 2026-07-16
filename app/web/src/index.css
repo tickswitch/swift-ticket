@@ -1,16 +1,50 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Option B "Full Liquid" — these three names now route to Instrument Sans
+   (single variable file, weight set per name) instead of Proxima Nova.
+   Names kept as-is to avoid a 34-file rename; see CLAUDE.md §17. */
 @font-face {
   font-family: "proximaRegular";
-  src: url("../public/ProximaNova/proximanova_regular.ttf");
-}
-@font-face {
-  font-family: "proximaBold";
-  src: url("../public/ProximaNova/proximanova_bold.otf");
+  font-weight: 400;
+  font-display: swap;
+  src: url("../public/InstrumentSans/InstrumentSans-Variable.woff2") format("woff2");
 }
 @font-face {
   font-family: "proximaSemiBold";
-  src: url("../public/ProximaNova/proximanova_semibold.otf");
+  font-weight: 600;
+  font-display: swap;
+  src: url("../public/InstrumentSans/InstrumentSans-Variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "proximaBold";
+  font-weight: 700;
+  font-display: swap;
+  src: url("../public/InstrumentSans/InstrumentSans-Variable.woff2") format("woff2");
+}
+
+/* Display face — editorial/hero moments only, >=28px. See CLAUDE.md §17. */
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url("../public/Fraunces/Fraunces-Variable.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fraunces";
+  font-style: italic;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url("../public/Fraunces/Fraunces-Italic-Variable.woff2") format("woff2");
+}
+
+/* Mono face — prices, ticket codes, OTP. See CLAUDE.md §17. */
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("../public/JetBrainsMono/JetBrainsMono-Variable.woff2") format("woff2");
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -22,6 +56,8 @@
   --font-proximaRegular: "proximaRegular", sans-serif;
   --font-proximaBold: "proximaBold", sans-serif;
   --font-proximaSemiBold: "proximaSemiBold", sans-serif;
+  --font-fraunces: "Fraunces", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 }
 body {
   font-family: proximaRegular;
