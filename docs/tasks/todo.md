@@ -16,6 +16,46 @@ _(nothing active right now)_
 ## Backend — Ready to Build
 _(nothing blocked — all frontend first)_
 
+## India-Launch Content + SEO Plan (Phase 0 done, P0 2/8)
+
+**Phase 0 — done**
+- [x] Brand name confirmed: SwiftTickets (not TickSwitch)
+- [x] Typography system: "Full Liquid" — Instrument Sans (via legacy proximaRegular/Bold/
+      SemiBold utility names) + Fraunces italic accent + JetBrains Mono. See CLAUDE.md §17.
+
+**P0 — launch blockers**
+- [ ] SEO meta tag system (react-helmet-async or equivalent) — nothing exists yet,
+      prerequisite for title/meta work on every page below
+- [ ] Homepage copy rewrite — national India-launch positioning, not Bengaluru-only
+- [ ] Event detail page copy + Event/Offer/BreadcrumbList schema (reseller disclosure)
+- [ ] Buy/sell flow microcopy + error/empty/cold-start states
+- [x] Trust & Safety page (/trust-and-safety) — SecureSwap escrow, refund scenarios, FAQ+schema
+- [x] Fees page (/fees) — live-computed from priceCap.ts
+- [ ] /how-it-works content refresh — worked fee example, escrow timeline, FAQ
+- [ ] Legal stubs — /terms /privacy /refund-policy /grievance — NEEDS LEGAL REVIEW, draft
+      plain-English summary only, do not ship full text as final
+- [ ] Transactional email copy — OTP, listing approved/rejected, sold, payout, reminder
+- [ ] T1 city hubs (Mumbai, Delhi NCR, Bengaluru, Hyderabad) + 4 category pages each
+- [ ] Help center top 10 articles
+
+**P1**
+- [ ] T2 city hubs (Pune, Chennai, Kolkata, Goa) + categories
+- [ ] T1 venue pages (~50) — check if content needs schema (§7 hard stop) or can be static/CMS
+- [ ] Guide content — "is it safe to buy resale tickets in India", "how to sell your ticket",
+      national last-minute-tickets guide, T1 monthly calendars
+- [ ] Artist pages (city-agnostic, national demand aggregator)
+- [ ] About/Contact refresh + formalize "SecureSwap" guarantee branding everywhere
+
+**P2**
+- [ ] T2 venues, competitor comparison pages, press page
+- [ ] Review/rating schema — only once real reviews exist, never seed fake
+- [ ] Hindi content exploration (separate initiative, don't half-ship)
+- [ ] T3 cities — only once live inventory exists
+
+Full plan detail (keyword strategy, URL structure, per-page briefs, voice/tone) was worked
+out in chat — not yet written to a project doc. Ask to have it written to
+`docs/tasks/content-seo-plan.md` if it needs to survive outside conversation history.
+
 ## Parked — Waiting on RazorpayX confirmation
 - [ ] Schema migration — rewrite FinancialProfile 
       (add UPI fields, PayoutMethod enum, make 

@@ -3,6 +3,12 @@
 ## [22 May 2026] — pnpm lockfile
 - **Rule**: Always use pnpm, never npm install or yarn add in app/web
 - **Root cause**: Claude Code CLI used npm install, caused lockfile drift and Vercel build failures
+- **Recurred [16 Jul 2026]**: `@playwright/test` was added to `app/web/package.json` (Playwright
+  setup commit) without regenerating `pnpm-lock.yaml`, so `--frozen-lockfile` failed on Vercel.
+  Not caused by npm this time — a dependency was added and the lockfile step was just skipped.
+  **Extra rule**: after ANY change to `package.json` dependencies, immediately run
+  `pnpm install --lockfile-only` (or a full install) and commit the updated lockfile in the
+  same commit — never as an afterthought.
 
 ## [22 May 2026] — TicketAlert page width alignment (Ticket Alerts vs Entrance Tickets)
 - **Rule**: Any new section added to the `TicketAlert` page (`TicketAlert.tsx`) — e.g. a new ticket category, an upsell banner, a waitlist block — must be placed inside the shared `max-w-3xl mx-auto` flex column container at line 52. Do NOT add a `w-fit` parent or a self-sizing card with `lg:gap-[XXXpx]` hacks. Use `w-full` so all sections share the same single width source.
@@ -71,3 +77,23 @@ Follow-up to the sweep above, per explicit user decision.
 - **Checkout `ticket_id` scoping fixed.** `checkout.controller.ts` accepts optional `ticket_id`; `checkout.service.ts` filters cart items to just that ticket when provided (used by `RazorpayCheckout.tsx` "buy now" flow), falls back to full-cart checkout when absent (used by `DiscountCart.tsx` cart-page flow — unchanged behavior, no `ticket_id` sent).
 - **Follow-on bug caught during this fix**: `verify()` was clearing the buyer's **entire** cart on any paid order. With single-ticket checkout now possible, that would've silently deleted a buyer's other, still-unpaid cart items on payment success. Fixed to only delete cart items matching the paid order's `resale_ticket_id`s.
 - Both `app/api` (tsc) and `app/web` (tsc+vite) build clean after.
+
+## [16 Jul 2026] — Working on a branch with pre-existing unrelated uncommitted WIP
+
+- **What happened**: `feat/dark-mode-toggle` had 59+ dirty files (dark-mode feature, not yet
+  committed) *before* this session started new work (India-launch typography + Trust&Safety/Fees
+  pages) on the same branch. Both sets of changes landed in the same uncommitted working tree,
+  several in the *same files* (e.g. `index.css`, `AboutUs.tsx`).
+- **Root cause**: Started editing without checking `git status`/`git diff --stat` for pre-existing
+  dirty state first, and without asking whether the branch's existing WIP was ready to ship.
+- **Fix pattern that worked**: `git diff --stat` per touched file to see which are net-new-mine
+  vs pre-existing-others'-work. Fully-mine files (insertions only, or new/untracked) are trivially
+  separable. Genuinely mixed files (e.g. `index.css`) need `git show nishant:<path>` to get the
+  pure base, then manually reapply just the intended hunk. `git stash push -u` + `git checkout -b
+  <clean-branch> nishant` + selectively restore files from the stash (`git checkout stash@{0} --
+  <paths>`, `git checkout "stash@{0}^3" -- <untracked-paths>`) keeps the unrelated WIP completely
+  untouched while still shipping the reviewed work. Always `git stash pop` back onto the original
+  branch afterward so nothing is lost.
+- **Rule**: Before starting any git commit/PR/merge flow, run `git status` first. If the branch
+  has unrelated dirty files predating this session's work, ask whether to bundle, split, or
+  isolate — do not assume "commit everything" is safe.
