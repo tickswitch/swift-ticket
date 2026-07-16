@@ -549,19 +549,30 @@ runs `npm run build` to verify its own output beats one generating components in
 This is the single source of truth for all visual decisions. Both active skills (§20) anchor to
 these tokens. Never deviate without a product reason.
 
-### Typography — Proxima Nova (already loaded)
-Proxima Nova font files live in `app/web/public/ProximaNova/` — 9 weights available.
-Use only these. Do not add Google Fonts or any other font family.
+### Typography — Full Liquid (Instrument Sans + Fraunces italic accent)
+Proxima Nova is **retired** — the font files still sit in `app/web/public/ProximaNova/`
+for rollback, but nothing references them. `font-proximaRegular` / `font-proximaBold` /
+`font-proximaSemiBold` are legacy Tailwind utility names kept to avoid a 34-file rename;
+their `@font-face` `src` in `app/web/src/index.css` now points at Instrument Sans
+(`app/web/public/InstrumentSans/`, single variable file, weight set per name: regular=400,
+semibold=600, bold=700). Fraunces (variable, incl. italic — `app/web/public/Fraunces/`) is
+kept **only** for the rare italic accent word. JetBrains Mono (variable —
+`app/web/public/JetBrainsMono/`) is unchanged. Do not add any other font family.
 
 ```
-Display / Headings:  Proxima Nova Bold / ExtraBold
-Body:                Proxima Nova Regular / Light
-UI labels:           Proxima Nova SemiBold
-Monospace (prices, codes): JetBrains Mono — the only exception to the single-family rule
+Display / Hero / UI / body / nav / forms:  Instrument Sans (variable), via the legacy
+                                 font-proximaRegular/SemiBold/Bold utility names.
+                                 One single family across the whole product.
+Accent (sparingly):              Fraunces italic — one word inside a headline at most,
+                                 never a whole heading, never UI chrome.
+Monospace (prices, ticket codes, OTP): JetBrains Mono — overrides Tailwind's default
+                                 `font-mono` utility project-wide
 ```
 
-**Never use**: Inter, Roboto, Arial, Clash Display, Syne, DM Sans, or any system font as primary.
-Proxima Nova is the brand font — it covers all use cases across heading and body.
+**Never use**: Inter, Roboto, Arial, Clash Display, Syne, DM Sans, or any system font as
+primary. Instrument Sans is now the sole UI/body/display face; Fraunces italic is a rare
+accent, not a heading font — if a change wants a whole heading in Fraunces, that's Option A
+("Glass Editorial"), not this system.
 
 ### Color Tokens
 ```css
