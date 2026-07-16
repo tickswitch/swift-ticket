@@ -88,8 +88,8 @@ const TrustSafety = () => {
     <div>
       {/* Hero */}
       <section
-        className="w-full bg-[#0F172A] hero-orbs"
-        style={{ padding: "72px 24px 64px" }}
+        className="w-full bg-[#0F172A] hero-orbs -mt-10 -mx-5 lg:mx-0"
+        style={{ padding: "112px 24px 64px" }}
         data-testid="trust-safety-hero"
       >
         <div className="max-w-[900px] mx-auto text-center">
