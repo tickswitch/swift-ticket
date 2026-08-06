@@ -22,7 +22,7 @@ const AllConcerts = () => {
     localStorage.getItem("selectedLocationCoords") || "null"
   );
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["events/concerts/all", page, latlong],
     queryFn: () =>
       GetSingleData(
@@ -68,7 +68,7 @@ const AllConcerts = () => {
         {isInitialLoad ? (
           <Loader />
         ) : error ? (
-          <ErrorText>
+          <ErrorText onRetry={() => refetch()}>
             {(error as any)?.response?.data?.message || "Something went wrong."}
           </ErrorText>
         ) : allConcerts.length === 0 ? (

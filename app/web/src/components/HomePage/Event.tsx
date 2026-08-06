@@ -11,7 +11,7 @@ const Event = () => {
 
   return (
     <div className="pt-8">
-      {/* Discover tab + location pill row (TicketSwap-style) */}
+      {/* Discover tab + location pill row */}
       <div
         className="flex items-center justify-between gap-4 flex-wrap py-3 border-b border-gray-200"
         data-testid="discover-location-row"
@@ -31,10 +31,7 @@ const Event = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 items-center justify-center gap-4">
         <div className="relative hover:-translate-y-2 transition-all duration-300 h-[420px]">
-          <Link
-            to={"/"}
-            className="w-[657px] h-[100px] md:h-[445px]  rounded-2xl relative"
-          >
+          <div className="w-[657px] h-[100px] md:h-[445px]  rounded-2xl relative">
             <img
               src={eventImg3}
               alt="event image"
@@ -78,7 +75,7 @@ const Event = () => {
                 </p>
               </div>
             </div>
-          </Link>
+          </div>
         </div>
         <div className="sm:grid sm:grid-cols-2 flex flex-wrap items-center justify-center gap-4 w-full">
           <div className="relative w-full max-w-full lg:max-w-[312px] h-[204px] rounded-2xl hover:-translate-y-2 transition-all duration-300">

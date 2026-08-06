@@ -159,11 +159,10 @@ const AddCart = () => {
             Standard protection
           </p>
           <p className="text-[#606060] sm:text-xl text-sm font-proximaRegular text-justify">
-            You’ll get the original tickets as is, plus anti-fraud checks and
-            support. Lorem ipsum dolor sit amet consectetur. Et dolor pretium
-            sit et. Tellus vitae urna feugiat morbi a eget pharetra eget. Nibh
-            massa egestas potenti adipiscing libero urna orci id. Platea nunc
-            velit ornare euismod donec ligula nisi.
+            You'll get the original tickets as is, plus anti-fraud checks and
+            support. Your payment is held safely until your ticket is
+            confirmed valid — the seller is only paid once that check clears,
+            so you're never at risk of paying for a ticket that doesn't exist.
           </p>
         </div>
       </Container>

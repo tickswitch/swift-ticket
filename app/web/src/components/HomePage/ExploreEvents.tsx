@@ -141,7 +141,7 @@ const ExploreVenues = () => {
 
   const locationQuery = hasLocation ? `?lat=${location.lat}&lng=${location.lon}` : "";
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["venues/best", location?.lat, location?.lon],
     queryFn: () => GetData(`venues/best${locationQuery}`),
   });
@@ -188,7 +188,7 @@ const ExploreVenues = () => {
       )}
 
       {hasLocation && isLoading && <SkeletonEventCardRow />}
-      {hasLocation && error && <ErrorText />}
+      {hasLocation && error && <ErrorText onRetry={() => refetch()} />}
 
       {hasLocation && !isLoading && !error && venues.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-2 py-16 text-white/50">

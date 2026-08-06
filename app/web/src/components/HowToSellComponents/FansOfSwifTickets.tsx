@@ -9,7 +9,7 @@ const FansOfSwifTickets = () => {
         <p className="text-[#181818] sm:text-4xl text-3xl font-proximaSemiBold text-center">
         Discover Why Fans Love SwiftTickets
         </p>
-        <p className="text-[#606060] sm:text-2xl text-lg font-proximaRegular text-center"> Whether you're missing a concert, festival, theater show, museum visit, or sports event, selling your ticket is seamless. Fans trust TicketSwap—why not give it a try and see for yourself?</p>
+        <p className="text-[#606060] sm:text-2xl text-lg font-proximaRegular text-center"> Whether you're missing a concert, festival, theater show, museum visit, or sports event, selling your ticket is seamless. Fans trust SwiftTickets—why not give it a try and see for yourself?</p>
       </div>
 
       {/* Cart */}
@@ -33,7 +33,7 @@ const FansOfSwifTickets = () => {
           A Safe & Fair Marketplace for Every Fan
           </p>
           <p className="text-[#606060] font-proximaRegular sm:text-xl text-base text-center">
-          Sell your tickets to another excited fan at a fair price on TicketSwap. With verified buyers and sellers, transparent fees, and a secure process, you can trade with confidence.
+          Sell your tickets to another excited fan at a fair price on SwiftTickets. With verified buyers and sellers, transparent fees, and a secure process, you can trade with confidence.
           </p>
         </div>
 

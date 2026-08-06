@@ -94,7 +94,7 @@ const FilterDropdown = ({
             onClick={() => onChange(option)}
             className={`px-4 py-3 cursor-pointer transition-colors ${option === value
               ? 'bg-cyan-500/20 text-cyan-400'
-              : 'text-gray-800 hover:bg-cyan-400/20'
+              : 'text-gray-800 hover:bg-cyan-400/20 hover:text-cyan-900'
               }`}
           >
             {option}

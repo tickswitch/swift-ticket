@@ -1,19 +1,13 @@
 import {
-  coinbase,
-  droupbox,
   facebook,
   fapple,
   fbtn,
   fplayStore,
   instagram,
   logo,
-  slack,
-  spofiy,
   star,
   twitor,
-  webflow,
 } from "@/assets";
-import Marquee from "react-fast-marquee";
 
 const NavElement = [
   { path: "/", label: "Home" },
@@ -42,39 +36,6 @@ import { NavLink } from "react-router";
 const Footer = () => {
   return (
     <div>
-      {/* Footer Top — Partner Logos */}
-      <div className="bg-[#133240] py-5">
-        <Container>
-          <Marquee direction="right" pauseOnHover={true}>
-            <div className="flex items-center justify-evenly gap-5 sm:gap-10 lg:gap-16">
-              <div className="pl-5 sm:pl-10 lg:pl-16">
-                <p className="text-white sm:text-2xl text-xl font-proximaSemiBold">
-                  10000+ Loyal Partner
-                </p>
-                <p className="text-white sm:text-xl text-base font-proximaRegular">
-                  Become a partner
-                </p>
-              </div>
-              <div>
-                <img className="h-[30px] sm:h-auto" src={coinbase} />
-              </div>
-              <div>
-                <img className="h-[30px] sm:h-auto" src={spofiy} />
-              </div>
-              <div>
-                <img className="h-[30px] sm:h-auto" src={slack} />
-              </div>
-              <div>
-                <img className="h-[30px] sm:h-auto" src={droupbox} />
-              </div>
-              <div>
-                <img className="h-[30px] sm:h-auto" src={webflow} />
-              </div>
-            </div>
-          </Marquee>
-        </Container>
-      </div>
-
       {/* Footer Main */}
       <div className="bg-black py-16" data-testid="footer-main">
         <Container className="grid md:grid-cols-4 gap-10 md:gap-8">

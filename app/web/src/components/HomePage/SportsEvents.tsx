@@ -45,7 +45,7 @@ const SportsEvents = () => {
 
   const swiperRef = React.useRef<SwiperClass | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["events/by-groupe", locationCoords?.lat, locationCoords?.lon],
     queryFn: () => GetData(`events/by-groupe${locationQuery}`),
   });
@@ -114,7 +114,7 @@ const SportsEvents = () => {
       {isLoading ? (
         <SkeletonEventCardRow />
       ) : error ? (
-        <ErrorText>{(error as any)?.response?.data?.message || "Something went wrong."}</ErrorText>
+        <ErrorText onRetry={() => refetch()}>{(error as any)?.response?.data?.message || "Something went wrong."}</ErrorText>
       ) : isEmpty ? (
         <ErrorText>No Sports Found</ErrorText>
       ) : (

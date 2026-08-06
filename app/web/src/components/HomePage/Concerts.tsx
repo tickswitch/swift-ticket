@@ -18,7 +18,7 @@ const Concerts = () => {
   );
 
   const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}` : "";
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["events/concerts", latlong?.lat, latlong?.lon],
     queryFn: () => GetData(`/events/concerts${locationQuery}`),
   });
@@ -53,7 +53,7 @@ const Concerts = () => {
       {isLoading ? (
         <SkeletonEventCardRow />
       ) : error ? (
-        <ErrorText>
+        <ErrorText onRetry={() => refetch()}>
           {error?.response?.data?.message || "Something went wrong."}
         </ErrorText>
       ) : data?.length < 1 ? (
