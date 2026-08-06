@@ -65,7 +65,7 @@ const AboutUs = () => {
             trips. We protect buyers from overpricing by keeping to a maximum
             20% mark-up from the original sales price. In countries where
             specific laws and regulations determine the maximum resale price,
-            TicketSwap adjusts its mark-up accordingly. As a buyer, you know
+            SwiftTickets adjusts its mark-up accordingly. As a buyer, you know
             you’ll always be paying a fair price for your tickets. Fraud is
             prevented by user-checks and through partnerships and collaborations
             with event organisers.
@@ -79,15 +79,13 @@ const AboutUs = () => {
           </p>
           <p className="text-[#606060] sm:text-xl text-base font-proximaRegular">
 
-            Lorem ipsum dolor sit amet consectetur. Lectus purus orci dictum
-            felis lobortis. Ultricies enim et sed habitasse quis diam non. Massa
-            a purus vitae neque neque tristique suscipit. Etiam habitasse semper
-            cras tempus egestas volutpat. Aliquet nunc condimentum vivamus
-            blandit risus ac purus sed. Nam semper arcu egestas ut porttitor
-            lacinia hendrerit. Eu tortor arcu scelerisque nisl aliquam id
-            mauris. Lectus fringilla leo elit ac tellus non elementum ante
-            pellentesque. Sit donec dolor vulputate sagittis pulvinar ultrices
-            tincidunt. Nibh ligula quis neque.
+            We started SwiftTickets after watching too many fans get burned by
+            scalpers and fake listings on unregulated resale groups. Every
+            person on this team has queued for a ticket that never existed.
+            That's why we built a platform where every listing is checked
+            before it goes live, every price is capped, and every rupee is
+            held safely until your ticket is confirmed real — so buying and
+            selling tickets in India finally feels as safe as it should.
           </p>
           <div className="mt-4 w-full sm:h-[646px] h-[323px]   ">
             <img className="rounded-xl w-full h-full " src={aboutBg} />

@@ -413,7 +413,7 @@ const ReviewAndFinish = () => {
                       <div>
                         <p className=" sm:text-xl text-base text-[#838383] font-proximaRegular text-left">
                           If you decide to use tickets yourself or sell them
-                          elsewhere, you’ll need to remove them from TicketSwap
+                          elsewhere, you'll need to remove them from SwiftTickets
                           first.
                         </p>
                       </div>

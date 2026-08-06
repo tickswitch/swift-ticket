@@ -32,7 +32,7 @@ const topics = [
   {
     id: 3,
     question: "How ticket swap works",
-    answer: "TicketSwap connects buyers and sellers safely. Here's how...",
+    answer: "SwiftTickets connects buyers and sellers safely. Here's how...",
   },
   {
     id: 4,
