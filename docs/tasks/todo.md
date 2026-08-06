@@ -3,6 +3,31 @@
 ## In Progress
 _(nothing active right now)_
 
+## From /impeccable critique — redesign branch (feat/redesign), 2026-07-25/26
+Site-wide critique found the site was 53% (17/32) — mostly a reskinned template
+(Lorem Ipsum, "TicketSwap"/Webflow-demo content, CORS blocking all data) with a broken
+buyer-trust surface. Fixed CORS + copy + error states + the two worst code bugs, score
+moved to 69% (25/36). Remaining from that pass:
+- [ ] Raw SVG props unconverted to camelCase (`stroke-width`, `fill-rule`, etc.) —
+      throws React DOM warnings sitewide, plus one invalid `<div>`-in-`<p>` nesting
+      in the ticket-listing empty state (via `TickertAlertIcons`)
+- [ ] Contrast failures on /howitworks — `#fec100 on #eff6ff` (1.5:1) and
+      `#57bae3 on #eff6ff` (2.0:1), both fail WCAG AA (need 4.5:1)
+- [ ] Login has no phone-OTP tab — only email OTP / email+password, contradicts
+      CLAUDE.md §17 India-first primary-auth mandate
+- [ ] FansOfSwifTickets.tsx (/howtosell) still claims "14 million fans across 46
+      countries" and "earnings transferred...within 5 business days" — inherited
+      template stats, don't fit an India-only pre-launch product with payouts not
+      yet built (RazorpayX payout flow is still Parked below)
+- [ ] Home hero footer "Join 15.1 million fans" + identical "4.7 — 9000+ reviews"
+      badge on both app stores — same class of uncalibrated placeholder stat
+- [ ] `ErrorText`'s retry state uses `role="status"`; `role="alert"` would be more
+      semantically correct for an actual error (minor, current choice is defensible)
+- [ ] Seed real resale ticket listings so the buyer flow (`/availabletickets/:id/:name`)
+      can actually be tested end to end — **blocked**: nishant branch's Neon DB is
+      test/dev per Nishant, but no DB writes without explicit confirmation each time
+      (see CLAUDE.md §7 unresolved hard-stop). Do not do this without asking first.
+
 ## Frontend — Ready to Build
 - [ ] Social share button — listing card + seller detail page. 
       Web Share API + copy link fallback. Branch: feature/social-share
@@ -84,6 +109,27 @@ out in chat — not yet written to a project doc. Ask to have it written to
 - [ ] Shared resale — organiser gets cut of seller markup
 
 ## Completed
+- [x] CORS fix — CORS_ORIGIN missing from app/api/.env entirely; localhost:5173
+      was never allowed, blocking all frontend→backend calls in dev
+- [x] Brand-name collision cleanup — "TicketSwap" (a real EU competitor's name)
+      replaced with SwiftTickets across 10 files; Lorem Ipsum paragraphs (About,
+      /howitworks, Add-to-Cart) rewritten with real copy; /howtosell FAQ (3 of 6
+      items were literally about Webflow, all 6 answers were Latin placeholder)
+      rewritten with real seller Q&A; fake "10000+ Loyal Partner" logo strip
+      (Dropbox/Webflow/Coinbase/Spotify) removed from footer
+- [x] Home error/retry state — ErrorText now has role="status"/aria-live +
+      "Try again" button wired to refetch(), across all 6 Home event-fetching
+      sections (previously: infinite grey skeleton, no error UI at all)
+- [x] Home hero — fixed invalid nested <a>-in-<a> (outer Link pointed at "/",
+      itself, dead click target + React hydration warning + broken screen-reader
+      semantics)
+- [x] TicketBadge zero-state relabeled "0 tickets left" → "No resale listings
+      yet" — old label read as broken/sold-out for the normal case of an event
+      with no seller listings yet; also removed the redundant duplicate
+      "0 available · 0 sold · 0 wanted" stat line on event-details page
+- [x] EventFiltersBar.tsx contrast fix (gray-800/cyan-400 hover) — turned out to
+      be a detector false positive on re-check (classes never render
+      simultaneously) but the added hover:text-cyan-900 is harmless
 - [x] Profile page — light theme redesign
 - [x] Payout page — built + light theme (feature/payout-profile)
 - [x] UpiInput — light theme fix

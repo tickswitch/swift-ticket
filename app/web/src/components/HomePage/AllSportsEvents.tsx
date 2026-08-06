@@ -16,7 +16,7 @@ const AllSportsEvents = () => {
 
 
     const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}&radius=100` : "";
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error, refetch } = useQuery({
         queryKey: ["sports-nearby", latlong?.lat, latlong?.lon],
         queryFn: () => GetData(`events/sports-in-area${locationQuery}`),
     });
@@ -42,7 +42,7 @@ const AllSportsEvents = () => {
                 {isLoading ? (
                     <Loader />
                 ) : error ? (
-                    <ErrorText>{error?.response?.data?.message || "Something went wrong."}</ErrorText>
+                    <ErrorText onRetry={() => refetch()}>{error?.response?.data?.message || "Something went wrong."}</ErrorText>
                 ) : data?.length < 1 ? (
                     <ErrorText>No Sports Found</ErrorText>
                 ) : (

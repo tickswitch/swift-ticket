@@ -49,7 +49,7 @@ const Trending: React.FC = () => {
   };
   
   const locationQuery = latlong?.lat && latlong?.lon ? `?lat=${latlong.lat}&lng=${latlong.lon}` : "";
-  const { data, isLoading, error } = useQuery<TrendingEvent[], Error>({
+  const { data, isLoading, error, refetch } = useQuery<TrendingEvent[], Error>({
     queryKey: ["trending", latlong?.lat, latlong?.lon],
     queryFn: () => GetData(`events/trending-nearby${locationQuery}`),
   });
@@ -98,7 +98,7 @@ const Trending: React.FC = () => {
       {isLoading ? (
         <SkeletonEventCardRow />
       ) : error ? (
-        <ErrorText />
+        <ErrorText onRetry={() => refetch()} />
       ) : data && data.length < 1 ? (
         <ErrorText>No Event found</ErrorText>
       ) : (

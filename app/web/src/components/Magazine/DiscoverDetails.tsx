@@ -78,7 +78,7 @@ const DiscoverDetails = () => {
             <div className="mt-6">
               <p className="text-[#606060] sm:text-xl text-base font-proximaRegular">
                 Missed out on Melbourne tickets? Buy or sell yours securely on
-                <span className="text-primary001 cursor-pointer"> TicketSwap
+                <span className="text-primary001 cursor-pointer"> SwiftTickets
                 </span>
                 and be part of the season opener!
               </p>
@@ -106,14 +106,14 @@ const DiscoverDetails = () => {
                   {" "}
                   July 29, 2024 to February 8, 2025,{" "}
                 </span>
-                the average monthly active recipients of the TicketSwap service
+                the average monthly active recipients of the SwiftTickets service
                 within the EU was well below 45 million. This information has
                 been prepared for Article 24(2) of the DSA. This information may
                 differ from user metrics reported in other contexts and should
                 not be used for any other purposes.
                 <br />
                 Any inquiries regarding the Digital Services Act can be directed
-                to complaints@ticketswap.com.
+                to complaints@swifttickets.in.
               </p>
             </div>
           </div>
@@ -163,7 +163,7 @@ const DiscoverDetails = () => {
                 Missed out on Melbourne tickets? Buy or sell yours securely on
                 <span className="text-primary001 cursor-pointer">
                   {" "}
-                  TicketSwap{" "}
+                  SwiftTickets{" "}
                 </span>
                 and be part of the season opener!
               </p>
@@ -189,14 +189,14 @@ const DiscoverDetails = () => {
                 Over the six month period from
                 <span className="text-primary001 cursor-pointer"> July 29, 2024 to February 8, 2025,
                 </span>
-                the average monthly active recipients of the TicketSwap service
+                the average monthly active recipients of the SwiftTickets service
                 within the EU was well below 45 million. This information has
                 been prepared for Article 24(2) of the DSA. This information may
                 differ from user metrics reported in other contexts and should
                 not be used for any other purposes.
                 <br />
                 Any inquiries regarding the Digital Services Act can be directed
-                to <span className=" underline text-primary001 cursor-pointer "> complaints@ticketswap.com.</span>
+                to <span className=" underline text-primary001 cursor-pointer "> complaints@swifttickets.in.</span>
               </p>
             </div>
           </div>

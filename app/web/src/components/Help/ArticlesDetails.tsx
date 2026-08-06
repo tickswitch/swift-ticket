@@ -34,19 +34,19 @@ const ArticlesDetails = () => {
             excitement of Formula 1 back to its traditional opening venue. This
             high-speed street circuit, set around a picturesque lake, challenges
             drivers with its tricky corners and rapid straights. Missed out on
-            Melbourne tickets? Buy or sell yours securely on TicketSwap and be
+            Melbourne tickets? Buy or sell yours securely on SwiftTickets and be
             part of the season opener! Digital Services Act Pursuant to Article
             24 (2) of Regulation (EU) 2022/2065 (DSA), providers of online
             platforms are required to publish information on the average monthly
             active recipients of the service in the European Union every six
             months starting from February 17, 2023. Over the six month period
             from July 29, 2024 to February 8, 2025, the average monthly active
-            recipients of the TicketSwap service within the EU was well below 45
+            recipients of the SwiftTickets service within the EU was well below 45
             million. This information has been prepared for Article 24(2) of the
             DSA. This information may differ from user metrics reported in other
             contexts and should not be used for any other purposes. Any
             inquiries regarding the Digital Services Act can be directed to
-            complaints@ticketswap.com.
+            complaints@swifttickets.in.
           </p>
         </div>
         <div className="flex flex-col gap-3">
@@ -81,19 +81,19 @@ const ArticlesDetails = () => {
             excitement of Formula 1 back to its traditional opening venue. This
             high-speed street circuit, set around a picturesque lake, challenges
             drivers with its tricky corners and rapid straights. Missed out on
-            Melbourne tickets? Buy or sell yours securely on TicketSwap and be
+            Melbourne tickets? Buy or sell yours securely on SwiftTickets and be
             part of the season opener! Digital Services Act Pursuant to Article
             24 (2) of Regulation (EU) 2022/2065 (DSA), providers of online
             platforms are required to publish information on the average monthly
             active recipients of the service in the European Union every six
             months starting from February 17, 2023. Over the six month period
             from July 29, 2024 to February 8, 2025, the average monthly active
-            recipients of the TicketSwap service within the EU was well below 45
+            recipients of the SwiftTickets service within the EU was well below 45
             million. This information has been prepared for Article 24(2) of the
             DSA. This information may differ from user metrics reported in other
             contexts and should not be used for any other purposes. Any
             inquiries regarding the Digital Services Act can be directed to
-            complaints@ticketswap.com.
+            complaints@swifttickets.in.
           </p>
         </div>
       </div>

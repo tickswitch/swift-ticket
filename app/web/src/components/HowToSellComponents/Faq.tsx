@@ -31,9 +31,9 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060] sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    Upload your ticket, confirm the event and seat details, and
+                    set your price — our 9-step wizard walks you through it in
+                    a few minutes. Once approved, it's live for buyers.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -43,7 +43,7 @@ const Faq = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger className=" cursor-pointer hover:no-underline  text-[#181818] sm:text-2xl text-xl font-proximaRegular group flex justify-between items-center [&>svg]:hidden after:hidden">
-                    <span>When did Webflow was founded?</span>
+                    <span>Is there a limit on how much I can charge?</span>
                     <span>
                       <div className=" w-8 h-8 group-data-[state=open]:bg-primary001 bg-primary001/8 rounded-sm pl-1 pt-1">
                         <Plus className="h-6 w-6 text-[#6F6C90] group-data-[state=open]:hidden" />
@@ -52,9 +52,10 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060] sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    Yes — listings are capped at 120% of the ticket's original
+                    face value. The cap is enforced automatically when you set
+                    your price, so buyers always know they're getting a fair
+                    deal.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -64,7 +65,7 @@ const Faq = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger className=" cursor-pointer hover:no-underline  text-[#181818] sm:text-2xl text-xl font-proximaRegular group flex justify-between items-center [&>svg]:hidden after:hidden">
-                    <span>Is NoCode the future of the web?</span>
+                    <span>What fees do I pay as a seller?</span>
                     <span>
                       <div className=" w-8 h-8 group-data-[state=open]:bg-primary001 bg-primary001/8 rounded-sm pl-1 pt-1">
                         <Plus className="h-6 w-6 text-[#6F6C90] group-data-[state=open]:hidden" />
@@ -73,9 +74,9 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060]sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    A 6% seller fee (₹25 minimum) is deducted from your payout
+                    — it's fixed the moment you list, so there are no surprise
+                    deductions later.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -92,7 +93,7 @@ const Faq = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger className=" cursor-pointer hover:no-underline  text-[#181818] sm:text-2xl text-xl font-proximaRegular group flex justify-between items-center [&>svg]:hidden after:hidden">
-                    <span>Is NoCode the future of the web?</span>
+                    <span>When do I get paid?</span>
                     <span>
                       <div className=" w-8 h-8 group-data-[state=open]:bg-primary001 bg-primary001/8 rounded-sm pl-1 pt-1">
                         <Plus className="h-6 w-6 text-[#6F6C90] group-data-[state=open]:hidden" />
@@ -101,9 +102,9 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060] sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    Your buyer's payment is held in escrow until your ticket is
+                    confirmed valid — you're paid out right after that check
+                    clears, not before.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -113,7 +114,7 @@ const Faq = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger className=" cursor-pointer hover:no-underline  text-[#181818] sm:text-2xl text-xl font-proximaRegular group flex justify-between items-center [&>svg]:hidden after:hidden">
-                    <span>How to launch a Webflow website?</span>
+                    <span>Do I need to upload proof of my ticket?</span>
                     <span>
                       <div className=" w-8 h-8 group-data-[state=open]:bg-primary001 bg-primary001/8 rounded-sm pl-1 pt-1">
                         <Plus className="h-6 w-6 text-[#6F6C90] group-data-[state=open]:hidden" />
@@ -122,9 +123,9 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060] sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    Yes — every ticket is checked against its original booking
+                    before listing and again at the gate, so buyers know
+                    what they're getting is real.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -134,7 +135,7 @@ const Faq = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger className=" cursor-pointer hover:no-underline  text-[#181818] sm:text-2xl text-xl font-proximaRegular group flex justify-between items-center [&>svg]:hidden after:hidden">
-                    <span>Who are the Webflow founders?</span>
+                    <span>What if my ticket doesn't sell?</span>
                     <span>
                       <div className=" w-8 h-8 group-data-[state=open]:bg-primary001 bg-primary001/8 rounded-sm pl-1 pt-1">
                         <Plus className="h-6 w-6 text-[#6F6C90] group-data-[state=open]:hidden" />
@@ -143,9 +144,8 @@ const Faq = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="text-[#606060] sm:text-xl tex-base font-proximaRegular">
-                    Ut enim ad minim veniam quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat aute irure
-                    dolor
+                    You can remove your listing at any time before it sells —
+                    there's no penalty for changing your mind.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

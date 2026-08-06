@@ -43,11 +43,13 @@ const TicketAlert = () => {
         <div className="pt-5">
           <div className="flex flex-col gap-2 items-center justify-center">
             <Title className="text-center">{data?.title}</Title>
-            <p>
-              {data?.total_quantity || "0"} available *{" "}
-              {data?.total_sold_quantity || "0"} sold *{" "}
-              {data?.total_reserved_quantity || "0"} wanted
-            </p>
+            {!!data?.total_quantity && (
+              <p>
+                {data.total_quantity} available *{" "}
+                {data?.total_sold_quantity || "0"} sold *{" "}
+                {data?.total_reserved_quantity || "0"} wanted
+              </p>
+            )}
           </div>
           <div className="py-5 w-full max-w-3xl mx-auto flex flex-col gap-2">
             <Alert />
