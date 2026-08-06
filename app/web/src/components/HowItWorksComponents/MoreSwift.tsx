@@ -17,9 +17,9 @@ const MoreSwift = () => {
         {/* Description */}
         <div className="mt-3">
           <p className="text-white font-proximaRegular sm:text-xl text-base text-center">
-            Lorem ipsum dolor sit amet consectetur. Sed amet posuere interdum
-            maecenas nec risus vel. Orci euismod vestibulum nunc etiam. Non
-            magna interdum sit nisi. Eu maecenas neque feugiat risus arcu.
+            India's trusted fan-to-fan ticket marketplace — verified sellers,
+            price-capped listings, and payment held safe until your ticket is
+            confirmed real.
           </p>
         </div>
         {/* Button */}

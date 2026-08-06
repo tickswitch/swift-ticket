@@ -4,10 +4,14 @@ import type { CSSProperties } from "react";
  * TicketBadge — availability indicator pill.
  *
  * Colour logic driven by `count`:
- *   • 0        → grey   "0 tickets left"
+ *   • 0        → grey   "No resale listings yet"
  *   • 1–3      → amber  "Only X left"
  *   • 4–10     → green  "X tickets left"
  *   • 10+ (>10) → blue  "Available"
+ *
+ * `count` reflects current resale listings, not whether the event itself is
+ * sold out — most events show 0 simply because no seller has listed a ticket
+ * for it yet, so the zero-state label must not read as "broken."
  *
  * Renders nothing when `count` is not a finite non-negative number.
  */
@@ -30,7 +34,7 @@ const getBadgeTheme = (count: number): BadgeTheme => {
       background: "rgba(100,116,139,0.12)",
       color: "#64748B",
       border: "1px solid rgba(100,116,139,0.20)",
-      label: "0 tickets left",
+      label: "No resale listings yet",
     };
   }
   if (count <= 3) {
